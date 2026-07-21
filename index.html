@@ -504,6 +504,25 @@
   .mix-cell .pct-sign{color:var(--ink-soft); font-size:12.5px;}
   .min-cell{font-family:'IBM Plex Mono',monospace; color:var(--ink-soft);}
 
+  /* ---------- stock: filtros ---------- */
+  .stock-filter-select{
+    appearance:none;
+    -webkit-appearance:none;
+    -moz-appearance:none;
+    padding:9px 30px 9px 12px;
+    border-radius:8px;
+    border:1px solid var(--line);
+    background:#fff url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="6" viewBox="0 0 10 6"><path d="M1 1l4 4 4-4" stroke="%23555" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>') no-repeat right 10px center;
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:12.5px;
+    color:var(--ink);
+    min-width:180px;
+  }
+  .stock-filter-select:focus{ outline:none; border-color:var(--blue); box-shadow:0 0 0 3px rgba(20,40,214,0.12); }
+  #stockTable td, #stockTable th{ padding:9px 12px; }
+  #stockTable .mono{ font-family:'IBM Plex Mono',monospace; }
+
   /* ---------- bonus section ---------- */
   .bonus-grid{
     display:grid;
@@ -737,6 +756,7 @@ var SUPABASE_ANON_KEY = "sb_publishable_ieKMBlB07Pz0ii7s1XFe8w_HOvQYAty";
         document.querySelectorAll(".page").forEach(function(p){ p.classList.remove("active"); });
         var targetPage = document.getElementById("page-" + target);
         if(targetPage) targetPage.classList.add("active");
+        if(target === "stock" && typeof loadStock === "function") loadStock();
       });
     });
 
@@ -773,7 +793,10 @@ var SUPABASE_ANON_KEY = "sb_publishable_ieKMBlB07Pz0ii7s1XFe8w_HOvQYAty";
     </div>
     <nav class="sidebar-nav pending" id="sidebarNav">
       <button class="nav-item" data-page="powerbi">
-        <span class="nav-icon">📊</span> <span class="nav-label">POWER BI</span>
+        <span class="nav-icon">📊</span> <span class="nav-label">Power Bi</span>
+      </button>
+      <button class="nav-item" data-page="stock">
+        <span class="nav-icon">📦</span> <span class="nav-label">Stock</span>
       </button>
       <button class="nav-item active" data-page="calculadora">
         <span class="nav-icon">🧮</span> <span class="nav-label">Calculadora de comisiones</span>
@@ -902,6 +925,53 @@ var SUPABASE_ANON_KEY = "sb_publishable_ieKMBlB07Pz0ii7s1XFe8w_HOvQYAty";
 
     </section>
 
+    <section class="page" id="page-stock">
+
+      <div class="topbar">
+        <button class="topbar-toggle" aria-label="Mostrar u ocultar menú" title="Mostrar u ocultar menú">☰</button>
+        <div style="flex:1;">
+          <h1>Stock</h1>
+        </div>
+      </div>
+
+      <div class="wrap" style="margin-top:26px;">
+
+        <section class="table-card">
+          <div class="heading" style="justify-content:space-between; align-items:center; width:100%;">
+            <div>
+              <h2>Equipos</h2>
+              <span class="hint" id="stockUpdatedHint">Cargando datos…</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px; margin-left:auto; flex-wrap:wrap;">
+              <select id="stockFilterPunto" class="stock-filter-select">
+                <option value="">PUNTO DE VENTA · Todo</option>
+              </select>
+              <select id="stockFilterMarca" class="stock-filter-select">
+                <option value="">MARCA · Todo</option>
+              </select>
+              <button class="reset-btn" id="stockRefreshBtn" style="background:var(--blue); border-color:var(--blue);">Actualizar</button>
+            </div>
+          </div>
+          <div class="table-scroll">
+            <table id="stockTable">
+              <thead>
+                <tr>
+                  <th>Punto de venta</th>
+                  <th>Marca</th>
+                  <th>Modelo</th>
+                  <th>SKU</th>
+                  <th>Serie</th>
+                </tr>
+              </thead>
+              <tbody id="stockTbody"></tbody>
+            </table>
+          </div>
+        </section>
+
+      </div>
+
+    </section>
+
     <section class="page" id="page-powerbi">
 
       <div class="topbar">
@@ -933,11 +1003,11 @@ var SUPABASE_ANON_KEY = "sb_publishable_ieKMBlB07Pz0ii7s1XFe8w_HOvQYAty";
 <script>
 (function(){
   var PRODUCTS = [
-    { id:"oss", name:"OSS MONO + OSS LLAA", mix:0.25, tope:false, bono:10, bonoLabel:"c/u extra",
+    { id:"oss", name:"OSS MONO + OSS LLAA", mix:0.25, tope:true, bono:10, bonoLabel:"c/u extra",
       condicion:"S/10 por cada OSS adicional a la cuota." },
-    { id:"opp", name:"OPP BASE", mix:0.05, tope:false, bono:5, bonoLabel:"c/u extra",
+    { id:"opp", name:"OPP BASE", mix:0.05, tope:true, bono:5, bonoLabel:"c/u extra",
       condicion:"S/5 por cada OPP adicional a la cuota." },
-    { id:"vrbase", name:"VR LLAA BASE", mix:0.25, tope:false, bono:10, bonoLabel:"c/u extra",
+    { id:"vrbase", name:"VR LLAA BASE", mix:0.25, tope:true, bono:10, bonoLabel:"c/u extra",
       condicion:"S/10 por cada VR BASE adicional a la cuota." },
     { id:"vrcaptura", name:"VR CAPTURA", mix:0.08, tope:true, bono:0, bonoLabel:"",
       condicion:"Cumplimiento con tope de 100%." },
@@ -1173,6 +1243,220 @@ var SUPABASE_ANON_KEY = "sb_publishable_ieKMBlB07Pz0ii7s1XFe8w_HOvQYAty";
 
   loadState();
   recalc();
+})();
+</script>
+
+<script>
+(function(){
+  // ======================================================================
+  // STOCK — pega aquí la URL publicada como CSV de tu Google Sheet
+  // Archivo -> Compartir -> Publicar en la Web -> elige la pestaña -> CSV
+  // ======================================================================
+  var STOCK_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ5jEBH9aFLKg49xu7TDUkA--s1M74rgK1sOQl_m6t_0hP75zzOSfxdLc4yoaFgeTyl33t20etYOwwq/pub?gid=791449454&single=true&output=csv";
+
+  // Nombres de columna esperados en el CSV (no distingue mayúsculas ni tildes).
+  // Si tu hoja usa otro nombre para alguna de estas, agrégalo a la lista correspondiente.
+  var COLUMN_ALIASES = {
+    punto:   ["TEX", "PUNTO DE VENTA"],
+    marca:   ["MARCA"],
+    modelo:  ["MODELO", "DESCRIPCION", "DESCRIPCIÓN"],
+    sku:     ["SKU"],
+    serie:   ["SERIE"],
+    tipo:    ["TIPO"],
+    almacen: ["ALMACEN (NUEVO/USADO)", "ALMACEN", "ALMACÉN", "NUEVO/USADO", "ESTADO"]
+  };
+
+  // Filtro interno fijo: siempre se aplica antes de mostrar cualquier dato,
+  // no es editable desde la interfaz.
+  var FIXED_FILTERS = {
+    tipo: "EQUIPO",
+    almacen: "NUEVO"
+  };
+
+  var stockLoaded = false;
+  var stockFixedFilterWarning = false;
+  var stockItems = [];   // lista plana: [{punto, marca, modelo, sku, serie}, ...]
+
+  function normalize(s){
+    return (s || "").toString().trim().toUpperCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  }
+
+  function findColIndex(headers, aliases){
+    var normHeaders = headers.map(normalize);
+    for(var i=0; i<aliases.length; i++){
+      var idx = normHeaders.indexOf(normalize(aliases[i]));
+      if(idx !== -1) return idx;
+    }
+    return -1;
+  }
+
+  function parseCSV(text){
+    var rows = [];
+    var row = [];
+    var field = "";
+    var inQuotes = false;
+    for(var i=0; i<text.length; i++){
+      var c = text[i];
+      if(inQuotes){
+        if(c === '"'){
+          if(text[i+1] === '"'){ field += '"'; i++; }
+          else{ inQuotes = false; }
+        }else{
+          field += c;
+        }
+      }else{
+        if(c === '"'){ inQuotes = true; }
+        else if(c === ','){ row.push(field); field = ""; }
+        else if(c === '\n'){ row.push(field); rows.push(row); row = []; field = ""; }
+        else if(c === '\r'){ /* ignorar */ }
+        else{ field += c; }
+      }
+    }
+    if(field.length || row.length){ row.push(field); rows.push(row); }
+    return rows.filter(function(r){ return r.length > 1 || (r[0] && r[0].trim() !== ""); });
+  }
+
+  function buildItems(headers, rows){
+    var idx = {
+      punto:   findColIndex(headers, COLUMN_ALIASES.punto),
+      marca:   findColIndex(headers, COLUMN_ALIASES.marca),
+      modelo:  findColIndex(headers, COLUMN_ALIASES.modelo),
+      sku:     findColIndex(headers, COLUMN_ALIASES.sku),
+      serie:   findColIndex(headers, COLUMN_ALIASES.serie),
+      tipo:    findColIndex(headers, COLUMN_ALIASES.tipo),
+      almacen: findColIndex(headers, COLUMN_ALIASES.almacen)
+    };
+    if(idx.punto === -1){
+      return { ok:false };
+    }
+    var items = rows.map(function(r){
+      return {
+        punto:  (r[idx.punto] || "").trim(),
+        marca:  idx.marca  !== -1 ? (r[idx.marca]  || "").trim() : "",
+        modelo: idx.modelo !== -1 ? (r[idx.modelo] || "") : "",
+        sku:    idx.sku    !== -1 ? (r[idx.sku]    || "") : "",
+        serie:  idx.serie  !== -1 ? (r[idx.serie]  || "") : "",
+        _tipo:    idx.tipo    !== -1 ? normalize(r[idx.tipo])    : null,
+        _almacen: idx.almacen !== -1 ? normalize(r[idx.almacen]) : null
+      };
+    }).filter(function(it){ return it.punto; });
+
+    // Filtro interno fijo: solo TIPO = EQUIPO y ALMACEN = NUEVO.
+    // Si alguna de esas columnas no existe en la hoja, ese filtro simplemente no se aplica
+    // (para no ocultar todo por un nombre de columna distinto).
+    items = items.filter(function(it){
+      if(it._tipo !== null && it._tipo !== normalize(FIXED_FILTERS.tipo)) return false;
+      if(it._almacen !== null && it._almacen !== normalize(FIXED_FILTERS.almacen)) return false;
+      return true;
+    });
+
+    return { ok:true, items:items, foundTipo: idx.tipo !== -1, foundAlmacen: idx.almacen !== -1 };
+  }
+
+  function populateFilters(){
+    var puntoSelect = document.getElementById("stockFilterPunto");
+    var marcaSelect = document.getElementById("stockFilterMarca");
+    var puntosSet = {}, marcasSet = {};
+    stockItems.forEach(function(it){
+      if(it.punto) puntosSet[it.punto] = true;
+      if(it.marca) marcasSet[it.marca] = true;
+    });
+    var puntos = Object.keys(puntosSet).sort();
+    var marcas = Object.keys(marcasSet).sort();
+
+    puntoSelect.innerHTML = '<option value="">PUNTO DE VENTA · Todo</option>' +
+      puntos.map(function(p){ return '<option value="' + p.replace(/"/g,"&quot;") + '">' + p + '</option>'; }).join("");
+    marcaSelect.innerHTML = '<option value="">MARCA · Todo</option>' +
+      marcas.map(function(m){ return '<option value="' + m.replace(/"/g,"&quot;") + '">' + m + '</option>'; }).join("");
+  }
+
+  function escapeHtml(s){
+    return (s || "").toString().replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  }
+
+  function renderStockTable(){
+    var tbody = document.getElementById("stockTbody");
+    var filtroPunto = document.getElementById("stockFilterPunto").value;
+    var filtroMarca = document.getElementById("stockFilterMarca").value;
+
+    var filtered = stockItems.filter(function(it){
+      if(filtroPunto && it.punto !== filtroPunto) return false;
+      if(filtroMarca && it.marca !== filtroMarca) return false;
+      return true;
+    });
+
+    filtered.sort(function(a, b){
+      return a.marca.localeCompare(b.marca, "es")
+        || a.punto.localeCompare(b.punto, "es")
+        || a.modelo.localeCompare(b.modelo, "es");
+    });
+
+    var html = "";
+    if(filtered.length === 0){
+      html = '<tr><td colspan="5" style="text-align:center; color:var(--ink-soft);">No se encontraron resultados con esos filtros.</td></tr>';
+    }else{
+      filtered.forEach(function(it){
+        html += '<tr>' +
+          '<td>' + escapeHtml(it.punto) + '</td>' +
+          '<td>' + escapeHtml(it.marca) + '</td>' +
+          '<td>' + escapeHtml(it.modelo) + '</td>' +
+          '<td class="mono">' + escapeHtml(it.sku) + '</td>' +
+          '<td class="mono">' + escapeHtml(it.serie) + '</td>' +
+          '</tr>';
+      });
+    }
+    tbody.innerHTML = html;
+
+    var hint = document.getElementById("stockUpdatedHint");
+    var now = new Date();
+    hint.textContent = "Actualizado a las " + now.toLocaleTimeString("es-PE",{hour:"2-digit",minute:"2-digit"}) +
+      " — " + filtered.length + " equipos" +
+      (stockFixedFilterWarning ? " (⚠ no se encontró la columna TIPO y/o ALMACÉN; el filtro fijo Equipo/Nuevo no se aplicó)" : "");
+  }
+
+  window.loadStock = async function(){
+    var hint = document.getElementById("stockUpdatedHint");
+    if(STOCK_CSV_URL.indexOf("PON_AQUI") !== -1){
+      hint.textContent = "Falta configurar el link del CSV publicado de Google Sheets.";
+      return;
+    }
+    hint.textContent = "Cargando datos…";
+    try{
+      var sep = STOCK_CSV_URL.indexOf("?") === -1 ? "?" : "&";
+      var res = await fetch(STOCK_CSV_URL + sep + "_=" + Date.now());
+      if(!res.ok) throw new Error("HTTP " + res.status);
+      var text = await res.text();
+      var table = parseCSV(text);
+      if(table.length === 0){
+        hint.textContent = "La hoja no devolvió datos.";
+        return;
+      }
+      var headers = table[0];
+      var rows = table.slice(1);
+      var built = buildItems(headers, rows);
+      if(!built.ok){
+        hint.textContent = "No se encontró la columna TEX (punto de venta) en la hoja. Revisa el nombre de columna.";
+        return;
+      }
+      stockItems = built.items;
+      stockFixedFilterWarning = (!built.foundTipo || !built.foundAlmacen);
+      populateFilters();
+      renderStockTable();
+      stockLoaded = true;
+    }catch(e){
+      hint.textContent = "No se pudo cargar el stock. Verifica tu conexión e intenta de nuevo.";
+    }
+  };
+
+  document.addEventListener("DOMContentLoaded", function(){
+    var puntoSelect = document.getElementById("stockFilterPunto");
+    var marcaSelect = document.getElementById("stockFilterMarca");
+    if(puntoSelect) puntoSelect.addEventListener("change", renderStockTable);
+    if(marcaSelect) marcaSelect.addEventListener("change", renderStockTable);
+    var refreshBtn = document.getElementById("stockRefreshBtn");
+    if(refreshBtn) refreshBtn.addEventListener("click", function(){ window.loadStock(); });
+  });
 })();
 </script>
 
