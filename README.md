@@ -24,6 +24,54 @@ Sitio estático de una sola página (`index.html`, sin dependencias de backend) 
    `https://TU_USUARIO.github.io/comisiones-fortalecernos/`
 6. Comparte esa URL con el equipo. Cada vez que subas un nuevo commit a `main`, la página se actualiza sola.
 
+## Configurar el acceso con Supabase (login + panel para agregar/quitar accesos)
+
+El sitio pide correo y contraseña antes de mostrar la calculadora. La verificación ocurre en los servidores
+de Supabase (no en el navegador), y tú administras quién entra desde un panel web, sin tocar código. Es
+gratis, sin tarjeta, para el tamaño de tu equipo.
+
+### 1. Crear el proyecto en Supabase (gratis, sin tarjeta)
+
+1. Ve a [supabase.com](https://supabase.com) → **Start your project** → crea una cuenta (puedes usar tu Gmail).
+2. Dale **New project**, ponle un nombre (ej. "comisiones-fortalecernos"), elige una contraseña para la base
+   de datos (guárdala, no es la que usarán los empleados) y una región cercana (ej. South America).
+3. Espera 1-2 minutos a que se cree el proyecto.
+
+### 2. Copiar la URL y la llave pública al código
+
+1. En el panel de tu proyecto, ve a **Project Settings (ícono de engranaje) → Data API**.
+2. Copia el **Project URL** (algo como `https://xxxxxxxx.supabase.co`).
+3. Ve a **Project Settings → API Keys** y copia la llave **anon public** (NO la `service_role`, esa es secreta
+   y nunca debe ir en el sitio web).
+4. En `index.html`, busca estas líneas y reemplaza los valores:
+   ```js
+   var SUPABASE_URL = "https://TU_PROYECTO.supabase.co";
+   var SUPABASE_ANON_KEY = "TU_ANON_KEY_PUBLICA";
+   ```
+
+### 3. Desactivar el registro público (para que solo tú puedas crear cuentas)
+
+1. Ve a **Authentication → Sign In / Providers** (o **Authentication → Settings**, según la versión del panel).
+2. Busca la opción **"Allow new users to sign up"** (permitir que nuevos usuarios se registren) y **desactívala**.
+   Así nadie puede crearse una cuenta por su cuenta — solo las que tú agregues manualmente van a poder entrar.
+
+### 4. Agregar o quitar accesos del equipo
+
+Todo esto se hace desde **Authentication → Users**, sin tocar el código ni volver a subir nada:
+
+- **Agregar a alguien**: botón **Add user → Create new user**. Pon su correo y una contraseña temporal
+  (dile que la cambie después, o compártesela de forma segura). Marca **Auto Confirm User** para que no
+  necesite confirmar por email.
+- **Quitarle acceso**: busca su usuario en la lista y dale **Delete user**, o usa **Ban user** si quieres
+  bloquearlo temporalmente sin borrar su cuenta.
+
+### Nota sobre el plan gratis
+
+Los proyectos gratis de Supabase se "pausan" automáticamente si nadie los usa durante 7 días seguidos. Como
+tu equipo va a iniciar sesión seguido, esto no debería pasar; pero si alguna vez el login tarda mucho o falla
+después de varios días sin uso, entra al panel de Supabase (esto ya lo "despierta") y vuelve a intentar en un
+par de minutos.
+
 ## Notas sobre el cálculo
 
 - **Cumplimiento** = Venta ÷ Cuota, por producto.

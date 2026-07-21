@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
   :root{
     --blue-deep:#0d1a9e;
@@ -46,7 +47,103 @@
   h1,h2,h3{font-family:'Space Grotesk',sans-serif; margin:0;}
   .mono{font-family:'IBM Plex Mono',monospace; font-variant-numeric:tabular-nums;}
 
-  /* ---------- header ---------- */
+  /* ---------- login gate ---------- */
+  .login-gate{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:
+      radial-gradient(1200px 500px at 10% -10%, rgba(255,90,46,0.10), transparent),
+      radial-gradient(900px 500px at 100% 0%, rgba(20,40,214,0.16), transparent),
+      var(--bg);
+    padding:20px;
+  }
+  .login-card{
+    background:var(--card);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    border:1px solid var(--line);
+    padding:36px 32px;
+    max-width:380px;
+    width:100%;
+    text-align:center;
+  }
+  .login-card .logo-mark{
+    width:56px;height:56px;
+    margin:0 auto 18px;
+    background:#fff;
+    box-shadow:0 2px 10px rgba(0,0,0,0.15);
+  }
+  .login-card h2{font-size:19px; margin-bottom:6px;}
+  .login-card .sub{font-size:12.5px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:18px;}
+  .login-form{display:flex; flex-direction:column; gap:14px; margin-top:6px; text-align:left;}
+  .login-form .f{display:flex; flex-direction:column; gap:6px;}
+  .login-form label{font-size:11.5px; font-weight:600; color:var(--ink-soft); text-transform:uppercase; letter-spacing:0.05em;}
+  .login-form input{
+    padding:11px 12px; border-radius:9px; border:1px solid var(--line);
+    font-family:'Inter',sans-serif; font-size:14px; color:var(--ink);
+  }
+  .login-form input:focus{outline:none; border-color:var(--blue); box-shadow:0 0 0 3px rgba(20,40,214,0.12);}
+  .login-submit-btn{
+    margin-top:4px;
+    background:var(--blue);
+    color:#fff;
+    border:none;
+    padding:12px 16px;
+    border-radius:9px;
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:600;
+    font-size:14.5px;
+    cursor:pointer;
+    transition:background .2s ease;
+  }
+  .login-submit-btn:hover{background:var(--blue-deep);}
+  .login-submit-btn:disabled{opacity:0.6; cursor:default;}
+  .login-card .login-note{font-size:12px; color:var(--ink-soft); margin-top:16px; line-height:1.5;}
+  .login-denied{
+    display:none;
+    margin-top:16px;
+    background:#fdeceb;
+    border:1px solid #f6b9b3;
+    border-left:4px solid var(--bad);
+    border-radius:10px;
+    padding:12px 14px;
+    font-size:12.5px;
+    color:#8a1f1f;
+    text-align:left;
+    line-height:1.5;
+  }
+  .login-denied.show{display:block;}
+  .switch-account-btn{
+    margin-top:10px;
+    background:none;
+    border:none;
+    color:var(--blue);
+    font-size:12.5px;
+    font-weight:600;
+    text-decoration:underline;
+    cursor:pointer;
+    padding:0;
+  }
+  .logout-btn{
+    background:rgba(255,255,255,0.14);
+    border:1px solid rgba(255,255,255,0.3);
+    color:#fff;
+    padding:8px 14px;
+    border-radius:8px;
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:12px;
+    cursor:pointer;
+  }
+  .logout-btn:hover{background:rgba(255,255,255,0.24);}
+  .user-pill{
+    display:flex; align-items:center; gap:8px;
+    font-size:11.5px; color:rgba(255,255,255,0.75);
+  }
+
+  /* ---------- topbar ---------- */
   .topbar{
     background:linear-gradient(120deg,var(--blue-deep),var(--blue) 60%, var(--blue-glow));
     padding:22px clamp(16px,4vw,48px);
@@ -338,13 +435,129 @@
 </head>
 <body>
 
+<!-- ---------- Pantalla de inicio de sesión ---------- -->
+<div class="login-gate" id="loginGate">
+  <div class="login-card">
+    <div class="logo-mark">
+      <img src="https://github.com/guevaralizarragaf/Calculadora_FLN/blob/main/assets/logo%20solo.png?raw=true" alt="Logo Fortalecernos SAC">
+    </div>
+    <div class="sub">Fortalecernos SAC</div>
+    <h2>Calculadora de comisiones</h2>
+
+    <form id="loginForm" class="login-form">
+      <div class="f">
+        <label for="loginEmail">Correo</label>
+        <input type="email" id="loginEmail" required autocomplete="username" placeholder="tu.correo@ejemplo.com">
+      </div>
+      <div class="f">
+        <label for="loginPassword">Contraseña</label>
+        <input type="password" id="loginPassword" required autocomplete="current-password" placeholder="••••••••">
+      </div>
+      <button type="submit" class="login-submit-btn" id="loginSubmitBtn">Iniciar sesión</button>
+    </form>
+
+    <div class="login-denied" id="loginDenied">
+      <span id="loginErrorText">Correo o contraseña incorrectos.</span>
+    </div>
+    <p class="login-note">Acceso restringido al equipo de Fortalecernos SAC. Si no tienes credenciales, pídeselas al administrador.</p>
+  </div>
+</div>
+
+<script>
+(function(){
+  // ======================================================================
+  // LISTA DE CORREOS AUTORIZADOS
+  // Agrega o quita correos de Gmail del equipo aquí (en minúsculas).
+  // ======================================================================
+  // ======================================================================
+  // CONFIGURACIÓN DE SUPABASE
+  // Reemplaza estos dos valores con los de tu proyecto de Supabase:
+  // Project Settings → API → Project URL / anon public key
+  // ======================================================================
+var SUPABASE_URL = "https://zarpfzsvkqfuhvjglmaa.supabase.co";
+var SUPABASE_ANON_KEY = "sb_publishable_ieKMBlB07Pz0ii7s1XFe8w_HOvQYAty";
+
+  var supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  function showApp(email){
+    document.getElementById("loginGate").style.display = "none";
+    document.getElementById("appContent").style.display = "block";
+    var label = document.getElementById("userEmailLabel");
+    if(label) label.textContent = email;
+  }
+
+  function showLoginError(message){
+    document.getElementById("loginErrorText").textContent = message;
+    document.getElementById("loginDenied").classList.add("show");
+  }
+
+  function hideLoginError(){
+    document.getElementById("loginDenied").classList.remove("show");
+  }
+
+  async function checkExistingSession(){
+    try{
+      var res = await supabaseClient.auth.getSession();
+      var session = res && res.data && res.data.session;
+      if(session && session.user && session.user.email){
+        showApp(session.user.email);
+      }
+    }catch(e){ /* sin sesión previa */ }
+  }
+
+  document.addEventListener("DOMContentLoaded", function(){
+    checkExistingSession();
+
+    var form = document.getElementById("loginForm");
+    if(form){
+      form.addEventListener("submit", async function(e){
+        e.preventDefault();
+        hideLoginError();
+        var email = document.getElementById("loginEmail").value.trim();
+        var password = document.getElementById("loginPassword").value;
+        var btn = document.getElementById("loginSubmitBtn");
+        btn.disabled = true;
+        btn.textContent = "Ingresando…";
+        try{
+          var result = await supabaseClient.auth.signInWithPassword({ email: email, password: password });
+          if(result.error){
+            showLoginError("Correo o contraseña incorrectos.");
+          }else{
+            showApp(result.data.user.email);
+          }
+        }catch(err){
+          showLoginError("No se pudo conectar. Intenta nuevamente.");
+        }
+        btn.disabled = false;
+        btn.textContent = "Iniciar sesión";
+      });
+    }
+
+    var logoutBtn = document.getElementById("logoutBtn");
+    if(logoutBtn){
+      logoutBtn.addEventListener("click", async function(){
+        try{ await supabaseClient.auth.signOut(); }catch(e){}
+        window.location.reload();
+      });
+    }
+  });
+})();
+</script>
+
+<!-- ---------- Contenido de la app (oculto hasta iniciar sesión) ---------- -->
+<div id="appContent" style="display:none;">
+
 <div class="topbar">
   <div class="logo-mark">
     <img src="https://github.com/guevaralizarragaf/Calculadora_FLN/blob/main/assets/logo%20solo.png?raw=true" alt="Logo Fortalecernos SAC">
   </div>
-  <div>
+  <div style="flex:1;">
     <div class="sub">Fortalecernos SAC</div>
     <h1>Calculadora de comisiones</h1>
+  </div>
+  <div class="user-pill">
+    <span id="userEmailLabel"></span>
+    <button class="logout-btn" id="logoutBtn">Cerrar sesión</button>
   </div>
 </div>
 
@@ -447,6 +660,8 @@
   adicional (OSS, OPP, VR BASE) se pagan por cada unidad vendida por encima de la cuota. Los datos se guardan
   automáticamente en este navegador.
 </footer>
+
+</div><!-- /#appContent -->
 
 <script>
 (function(){
