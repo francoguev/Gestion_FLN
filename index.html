@@ -169,9 +169,23 @@
     border-bottom:1px solid rgba(255,255,255,0.14);
     margin-bottom:18px;
   }
+  .sidebar-toggle{
+    background:rgba(255,255,255,0.1);
+    border:none;
+    color:#fff;
+    width:34px; height:34px;
+    border-radius:8px;
+    font-size:16px;
+    cursor:pointer;
+    flex:0 0 auto;
+    display:flex; align-items:center; justify-content:center;
+    transition:background .15s ease;
+  }
+  .sidebar-toggle:hover{background:rgba(255,255,255,0.2);}
+  .sidebar-brand .brand-text{min-width:0;}
+  .sidebar-brand .brand-sub{font-size:10.5px; letter-spacing:0.14em; text-transform:uppercase; color:rgba(255,255,255,0.6); white-space:nowrap;}
+  .sidebar-brand .brand-title{font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:14.5px; line-height:1.25; margin-top:2px; white-space:nowrap;}
   .sidebar-brand .logo-mark{width:40px; height:40px; flex:0 0 auto;}
-  .sidebar-brand .brand-sub{font-size:10.5px; letter-spacing:0.14em; text-transform:uppercase; color:rgba(255,255,255,0.6);}
-  .sidebar-brand .brand-title{font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:14.5px; line-height:1.25; margin-top:2px;}
   .sidebar-nav{display:flex; flex-direction:column; gap:6px; flex:1;}
   .nav-item{
     display:flex; align-items:center; gap:10px;
@@ -182,6 +196,8 @@
     cursor:pointer;
     transition:background .15s ease, color .15s ease;
     width:100%;
+    white-space:nowrap;
+    overflow:hidden;
   }
   .nav-item .nav-icon{font-size:16px; width:20px; text-align:center; flex:0 0 auto;}
   .nav-item:hover{background:rgba(255,255,255,0.08); color:#fff;}
@@ -196,6 +212,19 @@
     font-size:11.5px; color:rgba(255,255,255,0.75);
   }
   .sidebar-footer .user-pill span{word-break:break-all;}
+
+  /* ---------- sidebar colapsado (modo solo iconos) ---------- */
+  .sidebar.collapsed{ width:76px; }
+  .sidebar.collapsed .sidebar-brand{ justify-content:center; }
+  .sidebar.collapsed .brand-text,
+  .sidebar.collapsed .nav-label,
+  .sidebar.collapsed .user-pill > span{ display:none; }
+  .sidebar.collapsed .sidebar-brand .logo-mark{ margin:0 auto; }
+  .sidebar.collapsed .nav-item{ justify-content:center; padding:11px 0; }
+  .sidebar.collapsed .nav-item .nav-icon{ width:auto; }
+  .sidebar.collapsed .sidebar-footer{ align-items:center; }
+  .sidebar.collapsed .sidebar-footer .user-pill{ align-items:center; }
+  .sidebar.collapsed .logout-btn{ padding:8px 10px; }
 
   .main-content{
     flex:1;
@@ -538,8 +567,7 @@
     <div class="logo-mark">
       <img src="https://github.com/guevaralizarragaf/Calculadora_FLN/blob/main/assets/logo%20solo.png?raw=true" alt="Logo Fortalecernos SAC">
     </div>
-    <div class="sub">Fortalecernos SAC</div>
-    <h2>Gestión Fortalecernos</h2>
+    <h2>Gestión Fortalecernos SAC</h2>
 
     <form id="loginForm" class="login-form">
       <div class="f">
@@ -649,6 +677,19 @@ var SUPABASE_ANON_KEY = "sb_publishable_ieKMBlB07Pz0ii7s1XFe8w_HOvQYAty";
         if(targetPage) targetPage.classList.add("active");
       });
     });
+
+    var SIDEBAR_KEY = "fortalecernos_sidebar_collapsed";
+    var sidebar = document.getElementById("sidebar");
+    var sidebarToggle = document.getElementById("sidebarToggle");
+    if(sidebar && sidebarToggle){
+      try{
+        if(localStorage.getItem(SIDEBAR_KEY) === "1"){ sidebar.classList.add("collapsed"); }
+      }catch(e){}
+      sidebarToggle.addEventListener("click", function(){
+        sidebar.classList.toggle("collapsed");
+        try{ localStorage.setItem(SIDEBAR_KEY, sidebar.classList.contains("collapsed") ? "1" : "0"); }catch(e){}
+      });
+    }
   });
 })();
 </script>
@@ -657,22 +698,22 @@ var SUPABASE_ANON_KEY = "sb_publishable_ieKMBlB07Pz0ii7s1XFe8w_HOvQYAty";
 <div id="appContent" style="display:none;">
 <div class="app-shell">
 
-  <aside class="sidebar">
+  <aside class="sidebar" id="sidebar">
     <div class="sidebar-brand">
+      <button class="sidebar-toggle" id="sidebarToggle" aria-label="Mostrar u ocultar menú" title="Mostrar u ocultar menú">☰</button>
       <div class="logo-mark">
         <img src="https://github.com/guevaralizarragaf/Calculadora_FLN/blob/main/assets/logo%20solo.png?raw=true" alt="Logo Fortalecernos SAC">
       </div>
-      <div>
-        <div class="brand-sub">Fortalecernos SAC</div>
-        <div class="brand-title">GESTIÓN FORTALECERNOS</div>
+      <div class="brand-text">
+        <div class="brand-title">GESTIÓN FORTALECERNOS SAC</div>
       </div>
     </div>
     <nav class="sidebar-nav">
-      <button class="nav-item active" data-page="calculadora">
-        <span class="nav-icon">🧮</span> Calculadora de comisiones
-      </button>
       <button class="nav-item" data-page="powerbi">
-        <span class="nav-icon">📊</span> POWER BI
+        <span class="nav-icon">📊</span> <span class="nav-label">POWER BI</span>
+      </button>
+      <button class="nav-item active" data-page="calculadora">
+        <span class="nav-icon">🧮</span> <span class="nav-label">Calculadora de comisiones</span>
       </button>
     </nav>
     <div class="sidebar-footer">
@@ -689,7 +730,6 @@ var SUPABASE_ANON_KEY = "sb_publishable_ieKMBlB07Pz0ii7s1XFe8w_HOvQYAty";
 
       <div class="topbar">
         <div style="flex:1;">
-          <div class="sub">Fortalecernos SAC</div>
           <h1>Calculadora de comisiones</h1>
         </div>
       </div>
@@ -800,7 +840,6 @@ var SUPABASE_ANON_KEY = "sb_publishable_ieKMBlB07Pz0ii7s1XFe8w_HOvQYAty";
 
       <div class="topbar">
         <div style="flex:1;">
-          <div class="sub">Fortalecernos SAC</div>
           <h1>Power BI</h1>
         </div>
       </div>
