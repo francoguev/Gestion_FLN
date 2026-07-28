@@ -9,6 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script async src="https://tally.so/widgets/embed.js"></script>
 <style>
   :root{
@@ -457,6 +458,131 @@
   }
   .table-card .heading h2{font-size:18px;}
   .table-card .heading .hint{font-size:12.5px; color:var(--ink-soft);}
+
+  /* ---------- novedades ---------- */
+  .novedad-form{display:flex; flex-direction:column; gap:14px;}
+  .novedad-form .f{display:flex; flex-direction:column; gap:6px;}
+  .novedad-form label{font-size:11.5px; font-weight:600; color:var(--ink-soft); text-transform:uppercase; letter-spacing:0.05em;}
+  .novedad-form input[type="text"],
+  .novedad-form textarea{
+    padding:11px 12px; border-radius:9px; border:1px solid var(--line);
+    font-family:'Inter',sans-serif; font-size:14px; color:var(--ink); resize:vertical;
+  }
+  .novedad-form input[type="text"]:focus,
+  .novedad-form textarea:focus{outline:none; border-color:var(--blue); box-shadow:0 0 0 3px rgba(20,40,214,0.12);}
+  .novedad-form input[type="file"]{font-size:13px;}
+  .novedad-important-check{
+    display:flex; align-items:center; gap:8px;
+    font-size:13px; color:var(--ink); font-weight:600;
+    text-transform:none; letter-spacing:0;
+  }
+  .novedad-important-check input{width:16px; height:16px;}
+
+  .novedades-list{ display:flex; flex-direction:column; gap:18px; margin-top:20px; }
+  .novedad-card{
+    display:flex;
+    gap:20px;
+    background:var(--card);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    border:1px solid var(--line);
+    padding:20px 22px;
+  }
+  .novedad-card .novedad-img{
+    flex:0 0 50%;
+    max-width:50%;
+    height:380px;
+    border-radius:12px;
+    overflow:hidden;
+    background:var(--lilac);
+    position:relative;
+    cursor:zoom-in;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .novedad-card .novedad-img img{width:100%; height:100%; object-fit:contain; display:block;}
+  .novedad-card .novedad-img::after{
+    content:"⤢";
+    position:absolute; top:10px; right:10px;
+    width:28px; height:28px; border-radius:50%;
+    background:rgba(10,10,30,0.55); color:#fff;
+    display:flex; align-items:center; justify-content:center;
+    font-size:14px; opacity:0; transition:opacity .15s ease;
+  }
+  .novedad-card .novedad-img:hover::after{ opacity:1; }
+  .novedad-card .novedad-body{flex:0 0 50%; max-width:50%; min-width:0;}
+  .novedad-important-badge{
+    display:inline-block; background:var(--orange); color:#fff; font-size:10.5px; font-weight:700;
+    padding:3px 10px; border-radius:999px; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:8px;
+  }
+  .novedad-birthday-badge{
+    background:linear-gradient(120deg, var(--purple-2), var(--blue-glow));
+  }
+  .novedad-card .novedad-title{font-family:'Space Grotesk',sans-serif; font-size:16px; font-weight:700; margin-bottom:4px; color:var(--purple);}
+  .novedad-card .novedad-meta{font-size:11.5px; color:var(--ink-soft); margin-bottom:10px;}
+  .novedad-card .novedad-content{font-size:13.5px; line-height:1.6; color:var(--ink); word-break:break-word;}
+  .novedad-card .novedad-content p{margin:0 0 10px;}
+  .novedad-card .novedad-content ul, .novedad-card .novedad-content ol{margin:0 0 10px 20px;}
+  .novedad-card .novedad-content img{max-width:100%; border-radius:8px;}
+  .novedad-card .novedad-actions{margin-top:12px; display:flex; gap:10px;}
+  .novedad-edit-btn{
+    background:none; border:1px solid var(--blue); color:var(--blue);
+    border-radius:999px; padding:6px 14px; font-size:12px; font-weight:600; cursor:pointer;
+  }
+  .novedad-edit-btn:hover{background:var(--blue); color:#fff;}
+  .novedad-delete-btn{
+    background:none; border:1px solid var(--bad); color:var(--bad);
+    border-radius:999px; padding:6px 14px; font-size:12px; font-weight:600; cursor:pointer;
+  }
+  .novedad-delete-btn:hover{background:var(--bad); color:#fff;}
+  @media (max-width:640px){
+    .novedad-card{flex-direction:column;}
+    .novedad-card .novedad-img{flex:0 0 auto; max-width:100%; height:180px;}
+  }
+
+  .novedad-popup-overlay{
+    position:fixed; inset:0; background:rgba(10,10,30,0.55);
+    display:flex; align-items:center; justify-content:center;
+    z-index:999; padding:20px;
+  }
+  .novedad-popup-card{
+    background:#fff; border-radius:18px; max-width:480px; width:100%;
+    padding:28px 24px 24px; position:relative; box-shadow:0 24px 60px rgba(0,0,0,0.35);
+    max-height:86vh; overflow-y:auto;
+  }
+  .novedad-popup-close{
+    position:absolute; top:14px; right:14px; width:32px; height:32px; border-radius:50%;
+    border:none; background:var(--bg); color:var(--ink); font-size:20px; line-height:1; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .novedad-popup-close:hover{background:var(--line);}
+  .novedad-popup-important-badge{
+    display:inline-block; background:var(--orange); color:#fff; font-size:11px; font-weight:700;
+    padding:4px 12px; border-radius:999px; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:14px;
+  }
+  .novedad-popup-img{ width:100%; max-height:220px; overflow:hidden; border-radius:12px; margin-bottom:14px; }
+  .novedad-popup-img img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .novedad-popup-title{font-family:'Space Grotesk',sans-serif; font-size:18px; font-weight:700; margin-bottom:10px; color:var(--purple);}
+  .novedad-popup-content{font-size:14px; line-height:1.6; color:var(--ink); word-break:break-word;}
+  .novedad-popup-content p{margin:0 0 10px;}
+  .novedad-popup-content ul, .novedad-popup-content ol{margin:0 0 10px 20px;}
+
+  .novedad-lightbox-overlay{
+    position:fixed; inset:0; background:rgba(10,10,20,0.86);
+    display:flex; align-items:center; justify-content:center;
+    z-index:1000; padding:24px; cursor:zoom-out;
+  }
+  .novedad-lightbox-overlay img{
+    max-width:92vw; max-height:92vh; object-fit:contain;
+    border-radius:10px; box-shadow:0 20px 60px rgba(0,0,0,0.5);
+  }
+  .novedad-lightbox-close{
+    position:absolute; top:18px; right:22px; width:40px; height:40px; border-radius:50%;
+    border:none; background:rgba(255,255,255,0.15); color:#fff; font-size:22px; line-height:1; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .novedad-lightbox-close:hover{background:rgba(255,255,255,0.3);}
 
   .table-scroll{overflow-x:auto; padding:8px 0 18px;}
   .table-scroll table{border-collapse:separate; border-spacing:0 10px; width:100%; min-width:980px; padding:0 14px;}
@@ -938,6 +1064,8 @@ var SUPABASE_ANON_KEY = "sb_publishable_ieKMBlB07Pz0ii7s1XFe8w_HOvQYAty";
       var vistasRaw = (res.data && res.data.vistas) ? res.data.vistas : "calculadora";
       var allowed = vistasRaw.split(",").map(function(v){ return v.trim(); }).filter(Boolean);
       applyViewPermissions(allowed);
+      if(typeof window.loadNovedadesPage === "function") window.loadNovedadesPage();
+      if(typeof window.checkImportantNovedadPopup === "function") window.checkImportantNovedadPopup();
     }catch(e){
       console.error("Excepción cargando profiles:", e);
       if(nameLabel) nameLabel.textContent = "";
@@ -945,6 +1073,8 @@ var SUPABASE_ANON_KEY = "sb_publishable_ieKMBlB07Pz0ii7s1XFe8w_HOvQYAty";
       window.currentUserProfile = { email: email, fullName:"", pdv:"" };
       // si algo falla, por seguridad solo se deja ver la calculadora
       applyViewPermissions(["calculadora"]);
+      if(typeof window.loadNovedadesPage === "function") window.loadNovedadesPage();
+      if(typeof window.checkImportantNovedadPopup === "function") window.checkImportantNovedadPopup();
     }
   }
 
@@ -953,13 +1083,14 @@ var SUPABASE_ANON_KEY = "sb_publishable_ieKMBlB07Pz0ii7s1XFe8w_HOvQYAty";
     var firstAllowedItem = null;
     navItems.forEach(function(item){
       var page = item.getAttribute("data-page");
-      var isAllowed = allowed.indexOf(page) !== -1;
+      var isAllowed = page === "novedades" || allowed.indexOf(page) !== -1;
       item.style.display = isAllowed ? "" : "none";
       if(isAllowed && !firstAllowedItem) firstAllowedItem = item;
     });
 
     var activeItem = document.querySelector(".nav-item.active");
-    var activeAllowed = activeItem && allowed.indexOf(activeItem.getAttribute("data-page")) !== -1;
+    var activePageName = activeItem && activeItem.getAttribute("data-page");
+    var activeAllowed = activePageName === "novedades" || (activeItem && allowed.indexOf(activePageName) !== -1);
     if(!activeAllowed && firstAllowedItem){
       navItems.forEach(function(i){ i.classList.remove("active"); });
       firstAllowedItem.classList.add("active");
@@ -1039,6 +1170,7 @@ var SUPABASE_ANON_KEY = "sb_publishable_ieKMBlB07Pz0ii7s1XFe8w_HOvQYAty";
         if(target === "stock" && typeof loadStock === "function") loadStock();
         if(target === "avance" && typeof loadAvance === "function") loadAvance();
         if(target === "xstore" && typeof loadXstore === "function") loadXstore();
+        if(target === "novedades" && typeof window.loadNovedadesPage === "function") window.loadNovedadesPage();
       });
     });
 
@@ -1074,13 +1206,16 @@ var SUPABASE_ANON_KEY = "sb_publishable_ieKMBlB07Pz0ii7s1XFe8w_HOvQYAty";
       </div>
     </div>
     <nav class="sidebar-nav pending" id="sidebarNav">
+      <button class="nav-item active" data-page="novedades">
+        <span class="nav-icon">📣</span> <span class="nav-label">Novedades</span>
+      </button>
       <button class="nav-item" data-page="powerbi">
         <span class="nav-icon">📊</span> <span class="nav-label">Power Bi</span>
       </button>
       <button class="nav-item" data-page="stock">
         <span class="nav-icon">📦</span> <span class="nav-label">Stock</span>
       </button>
-      <button class="nav-item active" data-page="calculadora">
+      <button class="nav-item" data-page="calculadora">
         <span class="nav-icon">🧮</span> <span class="nav-label">Calculadora de comisiones</span>
       </button>
       <button class="nav-item" data-page="formulario">
@@ -1090,7 +1225,7 @@ var SUPABASE_ANON_KEY = "sb_publishable_ieKMBlB07Pz0ii7s1XFe8w_HOvQYAty";
         <span class="nav-icon">📈</span> <span class="nav-label">Avance Link</span>
       </button>
       <button class="nav-item" data-page="xstore">
-        <span class="nav-icon">🍱</span> <span class="nav-label">Control Xstore</span>
+        <span class="nav-icon">🏦</span> <span class="nav-label">Control Xstore</span>
       </button>
       <button class="nav-item" data-page="comprobante">
         <span class="nav-icon">🧾</span> <span class="nav-label">Comprobante de Pago</span>
@@ -1108,7 +1243,58 @@ var SUPABASE_ANON_KEY = "sb_publishable_ieKMBlB07Pz0ii7s1XFe8w_HOvQYAty";
 
   <main class="main-content">
 
-    <section class="page active" id="page-calculadora">
+    <section class="page active" id="page-novedades">
+
+      <div class="topbar">
+        <button class="topbar-toggle" aria-label="Mostrar u ocultar menú" title="Mostrar u ocultar menú">☰</button>
+        <div style="flex:1;">
+          <h1>Novedades</h1>
+        </div>
+      </div>
+
+      <div class="wrap" style="margin-top:26px;">
+
+        <div class="table-card" id="novedadesAdminCard" style="display:none; padding:20px 22px;">
+          <h2 style="margin-bottom:4px;" id="novedadFormTitle">Publicar novedad</h2>
+          <p class="hint" style="margin-bottom:16px;">Solo el equipo de Operaciones puede publicar, editar o eliminar novedades. Todos los demás solo las ven.</p>
+          <form id="novedadForm" class="novedad-form">
+            <div class="f">
+              <label for="novedadTitulo">Título (opcional)</label>
+              <input type="text" id="novedadTitulo" placeholder="Ej: Nuevo horario de atención">
+            </div>
+            <div class="f">
+              <label for="novedadImagen">Imagen (opcional)</label>
+              <input type="file" id="novedadImagen" accept="image/*">
+              <span class="hint" id="novedadCurrentImgHint"></span>
+            </div>
+            <div class="f">
+              <label for="novedadTexto">Texto (admite Markdown: **negrita**, _cursiva_, listas, etc.)</label>
+              <textarea id="novedadTexto" rows="6" placeholder="Escribe el comunicado aquí…"></textarea>
+            </div>
+            <label class="novedad-important-check">
+              <input type="checkbox" id="novedadImportante">
+              Marcar como importante (aparece como pop-up a todo el equipo)
+            </label>
+            <label class="novedad-important-check">
+              <input type="checkbox" id="novedadCumple">
+              🎉 Es un saludo de cumpleaños (aparece como pop-up "¡Estamos de fiesta!" a todo el equipo)
+            </label>
+            <div style="display:flex; align-items:center; gap:14px; margin-top:4px;">
+              <button type="submit" class="login-submit-btn" id="novedadSubmitBtn" style="width:auto; padding:11px 22px;">Publicar</button>
+              <button type="button" class="switch-account-btn" id="novedadCancelEditBtn" style="display:none;">Cancelar edición</button>
+              <span class="hint" id="novedadFormMsg"></span>
+            </div>
+          </form>
+        </div>
+
+        <div id="novedadesList" class="novedades-list">
+          <p class="hint">Cargando novedades…</p>
+        </div>
+
+      </div>
+    </section>
+
+    <section class="page" id="page-calculadora">
 
       <div class="topbar">
         <button class="topbar-toggle" aria-label="Mostrar u ocultar menú" title="Mostrar u ocultar menú">☰</button>
@@ -1230,7 +1416,7 @@ var SUPABASE_ANON_KEY = "sb_publishable_ieKMBlB07Pz0ii7s1XFe8w_HOvQYAty";
 
       <div class="form-wrap">
         <div class="form-frame-box">
-          <iframe data-tally-src="https://tally.so/r/worNlM?transparentBackground=1"
+          <iframe data-tally-src="https://tally.so/r/worNlM"
                   width="100%" height="100%" frameborder="0" marginheight="0" marginwidth="0"
                   title="Registro de Ventas FLN">
           </iframe>
@@ -1574,6 +1760,382 @@ var SUPABASE_ANON_KEY = "sb_publishable_ieKMBlB07Pz0ii7s1XFe8w_HOvQYAty";
 
 </div><!-- /.app-shell -->
 </div><!-- /#appContent -->
+
+<div class="novedad-popup-overlay" id="novedadPopupOverlay" style="display:none;">
+  <div class="novedad-popup-card">
+    <button type="button" class="novedad-popup-close" id="novedadPopupClose" aria-label="Cerrar">&times;</button>
+    <div class="novedad-popup-important-badge" id="novedadPopupBadge">Importante</div>
+    <div class="novedad-popup-img" id="novedadPopupImg" style="display:none;">
+      <img id="novedadPopupImgTag" src="" alt="">
+    </div>
+    <div class="novedad-popup-title" id="novedadPopupTitle"></div>
+    <div class="novedad-popup-content" id="novedadPopupContent"></div>
+  </div>
+</div>
+
+<div class="novedad-lightbox-overlay" id="novedadLightboxOverlay" style="display:none;">
+  <button type="button" class="novedad-lightbox-close" id="novedadLightboxClose" aria-label="Cerrar">&times;</button>
+  <img id="novedadLightboxImg" src="" alt="">
+</div>
+
+<script>
+(function(){
+  var NOVEDADES_TABLE = "novedades";
+  var NOVEDADES_BUCKET = "novedades";
+  var DISMISSED_KEY = "fortalecernos_novedades_dismissed";
+  var isOperaciones = false;
+  var realtimeChannel = null;
+  var novedadesCache = [];   // últimos datos cargados, para poder editar sin volver a pedirlos
+  var editingId = null;      // id de la novedad que se está editando (null = modo "publicar nueva")
+  var editingItemImageUrl = "";
+
+  function getDismissedSet(){
+    try{
+      var raw = localStorage.getItem(DISMISSED_KEY);
+      return raw ? JSON.parse(raw) : [];
+    }catch(e){ return []; }
+  }
+  function addDismissed(id){
+    try{
+      var arr = getDismissedSet();
+      if(arr.indexOf(id) === -1){ arr.push(id); localStorage.setItem(DISMISSED_KEY, JSON.stringify(arr)); }
+    }catch(e){}
+  }
+
+  function escapeHtmlN(s){
+    return (s || "").toString().replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  }
+
+  function renderMarkdown(md){
+    try{
+      if(window.marked && window.marked.parse){ return window.marked.parse(md || ""); }
+    }catch(e){}
+    return "<p>" + escapeHtmlN(md || "").replace(/\n/g,"<br>") + "</p>";
+  }
+
+  function formatFecha(iso){
+    try{
+      var d = new Date(iso);
+      return d.toLocaleDateString("es-PE",{day:"2-digit",month:"short",year:"numeric"}) + " · " +
+        d.toLocaleTimeString("es-PE",{hour:"2-digit",minute:"2-digit"});
+    }catch(e){ return ""; }
+  }
+
+  function novedadCardHtml(item){
+    var imgHtml = item.image_url
+      ? '<div class="novedad-img"><img src="' + escapeHtmlN(item.image_url) + '" alt=""></div>'
+      : "";
+    var badge = item.is_birthday
+      ? '<span class="novedad-important-badge novedad-birthday-badge">🎉 Estamos de fiesta</span>'
+      : (item.important ? '<span class="novedad-important-badge">Importante</span>' : "");
+    var titleHtml = item.title ? '<div class="novedad-title">' + escapeHtmlN(item.title) + '</div>' : "";
+    var metaBits = [formatFecha(item.created_at)];
+    if(item.created_by) metaBits.push(escapeHtmlN(item.created_by));
+    var actions = isOperaciones
+      ? '<div class="novedad-actions">' +
+          '<button type="button" class="novedad-edit-btn" data-id="' + item.id + '">Editar</button>' +
+          '<button type="button" class="novedad-delete-btn" data-id="' + item.id + '">Eliminar</button>' +
+        '</div>'
+      : "";
+    return '<div class="novedad-card">' +
+      imgHtml +
+      '<div class="novedad-body">' +
+        badge +
+        titleHtml +
+        '<div class="novedad-meta">' + metaBits.join(" · ") + '</div>' +
+        '<div class="novedad-content">' + renderMarkdown(item.content_md) + '</div>' +
+        actions +
+      '</div>' +
+    '</div>';
+  }
+
+  async function loadNovedades(){
+    var list = document.getElementById("novedadesList");
+    if(!list || !window.supabaseClient) return;
+    list.innerHTML = '<p class="hint">Cargando novedades…</p>';
+    try{
+      var res = await window.supabaseClient.from(NOVEDADES_TABLE).select("*").order("created_at",{ascending:false});
+      if(res.error){ list.innerHTML = '<p class="hint">No se pudieron cargar las novedades.</p>'; return; }
+      var items = res.data || [];
+      novedadesCache = items;
+      if(!items.length){
+        list.innerHTML = '<p class="hint">Todavía no hay novedades publicadas.</p>';
+        return;
+      }
+      list.innerHTML = items.map(novedadCardHtml).join("");
+      wireDeleteButtons();
+      wireEditButtons();
+    }catch(e){
+      list.innerHTML = '<p class="hint">No se pudieron cargar las novedades.</p>';
+    }
+  }
+
+  function wireDeleteButtons(){
+    document.querySelectorAll(".novedad-delete-btn").forEach(function(btn){
+      btn.addEventListener("click", async function(){
+        if(!confirm("¿Eliminar esta novedad? Esta acción no se puede deshacer.")) return;
+        var id = btn.getAttribute("data-id");
+        btn.disabled = true;
+        btn.textContent = "Eliminando…";
+        try{
+          await window.supabaseClient.from(NOVEDADES_TABLE).delete().eq("id", id);
+          if(String(editingId) === String(id)) exitEditMode();
+          loadNovedades();
+        }catch(e){
+          alert("No se pudo eliminar. Intenta de nuevo.");
+          btn.disabled = false;
+          btn.textContent = "Eliminar";
+        }
+      });
+    });
+  }
+
+  function wireEditButtons(){
+    document.querySelectorAll(".novedad-edit-btn").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        var id = btn.getAttribute("data-id");
+        var item = novedadesCache.find(function(n){ return String(n.id) === String(id); });
+        if(item) enterEditMode(item);
+      });
+    });
+  }
+
+  function enterEditMode(item){
+    editingId = item.id;
+    editingItemImageUrl = item.image_url || "";
+    document.getElementById("novedadTitulo").value = item.title || "";
+    document.getElementById("novedadTexto").value = item.content_md || "";
+    document.getElementById("novedadImportante").checked = !!item.important && !item.is_birthday;
+    document.getElementById("novedadCumple").checked = !!item.is_birthday;
+    document.getElementById("novedadImagen").value = "";
+    var imgHint = document.getElementById("novedadCurrentImgHint");
+    imgHint.textContent = item.image_url
+      ? "Ya tiene una imagen. Elige un archivo solo si quieres reemplazarla."
+      : "";
+    document.getElementById("novedadFormTitle").textContent = "Editar novedad";
+    document.getElementById("novedadSubmitBtn").textContent = "Guardar cambios";
+    document.getElementById("novedadCancelEditBtn").style.display = "";
+    document.getElementById("novedadFormMsg").textContent = "";
+    var adminCard = document.getElementById("novedadesAdminCard");
+    if(adminCard) adminCard.scrollIntoView({behavior:"smooth", block:"start"});
+  }
+
+  function exitEditMode(){
+    editingId = null;
+    editingItemImageUrl = "";
+    var form = document.getElementById("novedadForm");
+    if(form) form.reset();
+    document.getElementById("novedadCurrentImgHint").textContent = "";
+    document.getElementById("novedadFormTitle").textContent = "Publicar novedad";
+    document.getElementById("novedadSubmitBtn").textContent = "Publicar";
+    document.getElementById("novedadCancelEditBtn").style.display = "none";
+  }
+
+  function openNovedadLightbox(src){
+    var overlay = document.getElementById("novedadLightboxOverlay");
+    var img = document.getElementById("novedadLightboxImg");
+    if(!overlay || !img) return;
+    img.src = src;
+    overlay.style.display = "flex";
+  }
+
+  function closeNovedadLightbox(){
+    var overlay = document.getElementById("novedadLightboxOverlay");
+    if(overlay) overlay.style.display = "none";
+  }
+
+  function showNovedadPopup(item){
+    var overlay = document.getElementById("novedadPopupOverlay");
+    if(!overlay) return;
+    var imgWrap = document.getElementById("novedadPopupImg");
+    var imgTag = document.getElementById("novedadPopupImgTag");
+    if(item.image_url){
+      imgTag.src = item.image_url;
+      imgWrap.style.display = "";
+    }else{
+      imgWrap.style.display = "none";
+    }
+    var badgeEl = document.getElementById("novedadPopupBadge");
+    if(badgeEl){
+      badgeEl.textContent = item.is_birthday ? "🎉 Estamos de fiesta" : "Importante";
+      badgeEl.classList.toggle("novedad-birthday-badge", !!item.is_birthday);
+    }
+    document.getElementById("novedadPopupTitle").textContent = item.title || "Novedad importante";
+    document.getElementById("novedadPopupContent").innerHTML = renderMarkdown(item.content_md);
+    overlay.style.display = "flex";
+    overlay.setAttribute("data-current-id", item.id);
+  }
+
+  function hideNovedadPopup(){
+    var overlay = document.getElementById("novedadPopupOverlay");
+    if(!overlay) return;
+    var id = overlay.getAttribute("data-current-id");
+    if(id) addDismissed(isNaN(Number(id)) ? id : Number(id));
+    overlay.style.display = "none";
+  }
+
+  async function checkImportantPopupOnOpen(){
+    if(!window.supabaseClient) return;
+    try{
+      var res = await window.supabaseClient.from(NOVEDADES_TABLE)
+        .select("*").eq("important", true).order("created_at",{ascending:false}).limit(1);
+      if(res.error || !res.data || !res.data.length) return;
+      var item = res.data[0];
+      var dismissed = getDismissedSet();
+      if(dismissed.indexOf(item.id) === -1){
+        showNovedadPopup(item);
+      }
+    }catch(e){}
+  }
+
+  function subscribeRealtime(){
+    if(realtimeChannel || !window.supabaseClient) return;
+    realtimeChannel = window.supabaseClient
+      .channel("novedades-realtime")
+      .on("postgres_changes", { event:"INSERT", schema:"public", table:NOVEDADES_TABLE }, function(payload){
+        var row = payload.new;
+        var activePage = document.getElementById("page-novedades");
+        if(activePage && activePage.classList.contains("active")) loadNovedades();
+        if(row && row.important) showNovedadPopup(row);
+      })
+      .on("postgres_changes", { event:"DELETE", schema:"public", table:NOVEDADES_TABLE }, function(){
+        var activePage = document.getElementById("page-novedades");
+        if(activePage && activePage.classList.contains("active")) loadNovedades();
+      })
+      .subscribe();
+  }
+
+  async function checkIsOperaciones(){
+    var profile = window.currentUserProfile;
+    var adminCard = document.getElementById("novedadesAdminCard");
+    if(!profile || !profile.email || !window.supabaseClient){
+      isOperaciones = false;
+      if(adminCard) adminCard.style.display = "none";
+      return;
+    }
+    try{
+      var res = await window.supabaseClient.from("profiles").select("cargo").eq("email", profile.email).maybeSingle();
+      var cargo = (res.data && res.data.cargo) || "";
+      isOperaciones = cargo.trim().toLowerCase() === "operaciones";
+    }catch(e){ isOperaciones = false; }
+    if(adminCard) adminCard.style.display = isOperaciones ? "" : "none";
+  }
+
+  window.loadNovedadesPage = async function(){
+    await checkIsOperaciones();
+    await loadNovedades();
+    subscribeRealtime();
+  };
+
+  // Se llama justo después de iniciar sesión, sin importar en qué página
+  // aterrice el usuario: muestra el pop-up si hay algo importante pendiente.
+  window.checkImportantNovedadPopup = checkImportantPopupOnOpen;
+
+  document.addEventListener("DOMContentLoaded", function(){
+    var closeBtn = document.getElementById("novedadPopupClose");
+    if(closeBtn) closeBtn.addEventListener("click", hideNovedadPopup);
+    var overlay = document.getElementById("novedadPopupOverlay");
+    if(overlay){
+      overlay.addEventListener("click", function(e){
+        if(e.target === overlay) hideNovedadPopup();
+      });
+    }
+
+    var list = document.getElementById("novedadesList");
+    if(list){
+      list.addEventListener("click", function(e){
+        var imgEl = e.target.closest ? e.target.closest(".novedad-img img") : null;
+        if(imgEl) openNovedadLightbox(imgEl.src);
+      });
+    }
+    var lightboxOverlay = document.getElementById("novedadLightboxOverlay");
+    var lightboxClose = document.getElementById("novedadLightboxClose");
+    if(lightboxOverlay){
+      lightboxOverlay.addEventListener("click", function(e){
+        if(e.target === lightboxOverlay) closeNovedadLightbox();
+      });
+    }
+    if(lightboxClose) lightboxClose.addEventListener("click", closeNovedadLightbox);
+
+    var importanteCheck = document.getElementById("novedadImportante");
+    var cumpleCheck = document.getElementById("novedadCumple");
+    if(importanteCheck && cumpleCheck){
+      importanteCheck.addEventListener("change", function(){
+        if(importanteCheck.checked) cumpleCheck.checked = false;
+      });
+      cumpleCheck.addEventListener("change", function(){
+        if(cumpleCheck.checked) importanteCheck.checked = false;
+      });
+    }
+
+    var form = document.getElementById("novedadForm");
+    if(form){
+      form.addEventListener("submit", async function(e){
+        e.preventDefault();
+        var msg = document.getElementById("novedadFormMsg");
+        var submitBtn = document.getElementById("novedadSubmitBtn");
+        var titulo = document.getElementById("novedadTitulo").value.trim();
+        var texto = document.getElementById("novedadTexto").value.trim();
+        var importanteChecked = document.getElementById("novedadImportante").checked;
+        var cumpleChecked = document.getElementById("novedadCumple").checked;
+        var importante = importanteChecked || cumpleChecked;
+        var fileInput = document.getElementById("novedadImagen");
+        var file = fileInput.files && fileInput.files[0];
+        var isEditing = editingId !== null;
+        var existingImageUrl = isEditing ? editingItemImageUrl : "";
+
+        if(!texto && !file && !existingImageUrl){
+          msg.textContent = "Escribe un texto o agrega una imagen.";
+          return;
+        }
+        submitBtn.disabled = true;
+        submitBtn.textContent = isEditing ? "Guardando…" : "Publicando…";
+        msg.textContent = "";
+        try{
+          var imageUrl = existingImageUrl;
+          if(file){
+            var path = Date.now() + "_" + file.name.replace(/[^a-zA-Z0-9._-]/g,"_");
+            var upRes = await window.supabaseClient.storage.from(NOVEDADES_BUCKET).upload(path, file);
+            if(upRes.error) throw upRes.error;
+            var pub = window.supabaseClient.storage.from(NOVEDADES_BUCKET).getPublicUrl(path);
+            imageUrl = pub.data && pub.data.publicUrl ? pub.data.publicUrl : "";
+          }
+          var profile = window.currentUserProfile || {};
+          var payload = {
+            title: titulo || null,
+            content_md: texto,
+            image_url: imageUrl || null,
+            important: importante,
+            is_birthday: cumpleChecked
+          };
+          if(isEditing){
+            var updRes = await window.supabaseClient.from(NOVEDADES_TABLE).update(payload).eq("id", editingId);
+            if(updRes.error) throw updRes.error;
+            msg.textContent = "¡Cambios guardados!";
+            exitEditMode();
+          }else{
+            payload.created_by = profile.fullName || profile.email || "";
+            var insertRes = await window.supabaseClient.from(NOVEDADES_TABLE).insert(payload);
+            if(insertRes.error) throw insertRes.error;
+            form.reset();
+            msg.textContent = "¡Publicado!";
+          }
+          loadNovedades();
+        }catch(err){
+          console.error("Error al guardar novedad:", err);
+          var detail = (err && (err.message || err.error_description || err.hint)) || "";
+          msg.textContent = (isEditing ? "No se pudo guardar" : "No se pudo publicar") + (detail ? ": " + detail : ". Intenta de nuevo.");
+        }
+        submitBtn.disabled = false;
+        submitBtn.textContent = editingId !== null ? "Guardar cambios" : "Publicar";
+      });
+    }
+
+    var cancelEditBtn = document.getElementById("novedadCancelEditBtn");
+    if(cancelEditBtn) cancelEditBtn.addEventListener("click", exitEditMode);
+  });
+})();
+</script>
 
 <script>
 (function(){
