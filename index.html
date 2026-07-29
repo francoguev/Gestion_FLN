@@ -75,6 +75,9 @@
       <button class="nav-item" data-page="arribos">
         <span class="nav-icon">👥</span> <span class="nav-label">Arribos</span>
       </button>
+      <button class="nav-item" data-page="horario">
+        <span class="nav-icon">🗓️</span> <span class="nav-label">Horario</span>
+      </button>
       <button class="nav-item" data-page="xstore">
         <span class="nav-icon">🏦</span> <span class="nav-label">Control Xstore</span>
       </button>
@@ -354,6 +357,69 @@
         </div>
       </div>
 
+    </section>
+
+    <section class="page" id="page-horario">
+      <div class="topbar">
+        <button class="topbar-toggle" aria-label="Mostrar u ocultar menú" title="Mostrar u ocultar menú">☰</button>
+        <div style="flex:1;"><h1>Horario</h1></div>
+      </div>
+      <div class="wrap horario-wrap">
+        <section class="table-card horario-card">
+          <div class="heading horario-heading">
+            <div><h2 id="horarioTitle">Horario semanal</h2><span class="hint" id="horarioHint">Selecciona una semana para consultar los turnos.</span></div>
+            <div class="horario-week-controls" aria-label="Navegación semanal">
+              <button type="button" class="horario-week-arrow" id="horarioPrevWeek" aria-label="Ver semana anterior" title="Semana anterior">←</button>
+              <button type="button" class="horario-current-week" id="horarioWeekLabel" title="Volver a la semana actual"></button>
+              <button type="button" class="horario-week-arrow" id="horarioNextWeek" aria-label="Ver semana siguiente" title="Semana siguiente">→</button>
+              <button type="button" class="horario-export-btn" id="horarioExportSchedule">Descargar Excel</button>
+            </div>
+          </div>
+          <div class="horario-tools">
+            <div class="horario-pdv-filter" id="horarioPdvFilter">
+              <button type="button" class="stock-filter-select horario-pdv-filter-button" id="horarioPdvFilterButton" aria-expanded="false">PDV · Todos</button>
+              <div class="horario-pdv-filter-menu" id="horarioPdvFilterMenu" hidden></div>
+            </div>
+            <button type="button" class="horario-copy-week-btn" id="horarioCopyPrevious" style="display:none;">Copiar semana anterior</button>
+          </div>
+          <div class="horario-table-scroll" id="horarioScheduleHolder"></div>
+        </section>
+        <section class="table-card horario-editor" id="horarioEditor" hidden>
+          <div class="heading"><div><h2>Configurar turno</h2><span class="hint" id="horarioEditorLabel"></span></div></div>
+          <div class="horario-presets" aria-label="Turnos rápidos">
+            <button type="button" class="horario-preset" data-start="09:00" data-end="18:00">09:00–18:00</button>
+            <button type="button" class="horario-preset" data-start="10:00" data-end="19:00">10:00–19:00</button>
+            <button type="button" class="horario-preset" data-start="11:00" data-end="20:00">11:00–20:00</button>
+            <button type="button" class="horario-preset horario-preset-off" data-off="true">Libre</button>
+          </div>
+          <div class="horario-editor-fields">
+            <label>Ingreso <input type="time" id="horarioStartTime" required></label><label>Salida <input type="time" id="horarioEndTime" required></label>
+            <label>Inicio de refrigerio <input type="time" id="horarioBreakStart"></label><label>Fin de refrigerio <input type="time" id="horarioBreakEnd"></label>
+          </div>
+          <div class="horario-editor-actions">
+            <button type="button" class="reset-btn" id="horarioCopyShift">Copiar horario</button>
+            <button type="button" class="reset-btn" id="horarioPasteShift">Pegar horario</button>
+            <button type="button" class="reset-btn" id="horarioCancelEdit">Cancelar</button>
+            <button type="button" class="reset-btn" id="horarioSaveEdit">Guardar turno</button>
+          </div>
+        </section>
+        <section class="table-card horario-coverage" id="horarioCoverageCard" hidden>
+          <div class="heading horario-heading"><div><h2>Cobertura por PDV</h2><span class="hint">Cantidad de asesores programados por hora. Pasa el cursor sobre una celda para ver los nombres.</span></div><div class="horario-coverage-actions"><select class="stock-filter-select" id="horarioCoverageDay" aria-label="Día de cobertura"></select><button type="button" class="horario-export-btn" id="horarioExportCoverage">Descargar Excel</button></div></div>
+          <div class="horario-table-scroll" id="horarioCoverageHolder"></div>
+        </section>
+
+        <div class="horario-copy-modal" id="horarioCopyModal" hidden role="dialog" aria-modal="true" aria-labelledby="horarioCopyModalTitle">
+          <div class="horario-copy-dialog">
+            <div class="horario-copy-dialog-header">
+              <div><h2 id="horarioCopyModalTitle">Copiar semana anterior</h2><p id="horarioCopyModalHint">Elige los PDV y asesores cuyo horario deseas copiar.</p></div>
+              <button type="button" class="horario-modal-close" id="horarioCopyCancel" aria-label="Cerrar">×</button>
+            </div>
+            <div class="horario-copy-tree" id="horarioCopyTree"></div>
+            <p class="horario-copy-status" id="horarioCopyStatus"></p>
+            <div class="horario-copy-modal-actions"><button type="button" class="reset-btn" id="horarioCopyCancelBottom">Cancelar</button><button type="button" class="horario-copy-week-btn" id="horarioCopyConfirm">Copiar seleccionados</button></div>
+          </div>
+        </div>
+      </div>
     </section>
 
     <section class="page" id="page-xstore">
@@ -735,6 +801,7 @@
 <script src="js/stock.js"></script>
 <script src="js/avance.js"></script>
 <script src="js/arribos.js"></script>
+<script src="js/horario.js"></script>
 <script src="js/xstore.js"></script>
 <script src="js/comprobante.js"></script>
 </body>

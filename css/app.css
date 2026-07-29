@@ -1057,3 +1057,90 @@
     .cxp-receipt{ position:absolute; top:0; left:0; box-shadow:none; max-width:100%; width:100%; }
     .cxp-tear{ display:none; }
   }
+
+  /* ---------- horario ---------- */
+  .horario-wrap{ margin-top:26px; }
+  .horario-card,.horario-editor,.horario-coverage{ margin-bottom:20px; }
+  .horario-heading{ width:100%; align-items:center; justify-content:space-between; gap:18px; }
+  .horario-week-controls,.horario-tools,.horario-editor-actions{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .horario-week-controls{ margin-left:auto; flex-wrap:nowrap; }
+  .horario-coverage-actions{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .horario-week-arrow,.horario-current-week{ border:1px solid #cfd8ff; background:#fff; color:var(--blue-deep); cursor:pointer; font-family:'Space Grotesk',sans-serif; font-weight:700; }
+  .horario-week-arrow{ width:38px; height:38px; border-radius:9px; font-size:19px; line-height:1; }
+  .horario-current-week{ min-width:230px; min-height:38px; border-radius:9px; padding:8px 13px; font-size:12px; }
+  .horario-week-arrow:hover,.horario-current-week:hover{ background:#eaf0ff; border-color:var(--blue); }
+  .horario-tools{ margin:18px 22px 14px; }
+  .horario-pdv-filter{ position:relative; min-width:190px; }
+  .horario-pdv-filter-button{ width:100%; text-align:left; cursor:pointer; background:#fff; color:var(--ink); border-color:var(--line); }
+  .horario-pdv-filter-button:disabled{ cursor:default; opacity:.72; }
+  .horario-pdv-filter-menu{ position:absolute; top:calc(100% + 6px); left:0; z-index:20; width:max-content; min-width:250px; max-width:min(360px,calc(100vw - 50px)); max-height:310px; overflow:auto; background:#fff; border:1px solid var(--line); border-radius:11px; box-shadow:var(--shadow); padding:8px; }
+  .horario-pdv-filter-menu label{ display:block; padding:8px 9px; border-radius:7px; color:var(--ink); font-size:13px; cursor:pointer; }
+  .horario-pdv-filter-menu label:hover{ background:#f3f1fb; }
+  .horario-pdv-filter-menu input{ accent-color:var(--purple); margin-right:7px; }
+  .horario-pdv-filter-menu .horario-pdv-all{ color:var(--purple); font-weight:800; border-bottom:1px solid var(--line); margin-bottom:4px; }
+  .horario-copy-week-btn{ border:1px solid var(--purple); border-radius:9px; background:var(--purple); color:#fff; padding:10px 14px; font:700 13px 'Space Grotesk',sans-serif; cursor:pointer; box-shadow:0 3px 8px rgba(61,21,104,.16); }
+  .horario-copy-week-btn:hover{ background:var(--purple-2); }
+  .horario-export-btn{ border:1px solid var(--teal); border-radius:9px; background:var(--teal); color:#fff; padding:10px 13px; font:700 12px 'Space Grotesk',sans-serif; cursor:pointer; white-space:nowrap; }
+  .horario-export-btn:hover{ filter:brightness(.93); }
+  .horario-table-scroll{ overflow:auto; border:1px solid var(--line); border-radius:12px; margin:0 22px 22px; }
+  .horario-table{ width:100%; border-collapse:separate; border-spacing:0; min-width:920px; font-size:13px; }
+  .horario-table th{ background:var(--purple); color:#fff; padding:11px 10px; font-family:'Space Grotesk',sans-serif; font-size:12px; text-align:center; white-space:nowrap; }
+  .horario-table th:first-child{ min-width:210px; text-align:left; position:sticky; left:0; z-index:2; }
+  .horario-table td{ padding:7px; text-align:center; border-bottom:1px solid var(--line); background:#fff; }
+  .horario-table tr:last-child td{ border-bottom:0; }
+  .horario-table td:first-child{ position:sticky; left:0; z-index:1; text-align:left; font-weight:700; color:var(--ink); background:#fff; min-width:210px; }
+  .horario-table th:last-child{ min-width:105px; }
+  .horario-week-total{ background:#f0edff !important; color:var(--purple); font-family:'Space Grotesk',sans-serif; font-weight:800; white-space:nowrap; }
+  .horario-table .horario-pdv-name{ display:block; font-size:11px; font-weight:500; color:var(--ink-soft); margin-top:2px; }
+  .horario-shift{ width:100%; min-width:90px; border:1px solid transparent; border-radius:8px; padding:8px 6px; font:inherit; font-weight:700; color:var(--blue-deep); background:#eaf0ff; }
+  button.horario-shift{ cursor:pointer; }
+  button.horario-shift:hover{ border-color:var(--blue); background:#dce6ff; }
+  .horario-shift.is-off{ color:var(--ink-soft); background:#f2f1f5; font-weight:600; }
+  .horario-shift small{ display:block; margin-top:2px; font-size:10px; font-weight:500; color:var(--ink-soft); }
+  .horario-empty{ padding:24px; color:var(--ink-soft); text-align:center; }
+  .horario-editor{ border-left:4px solid var(--orange); }
+  .horario-editor-row td{ position:static !important; min-width:0 !important; padding:0 !important; background:#f8f7fc !important; }
+  .horario-editor-row .horario-editor{ margin:0 !important; border:0; border-left:4px solid var(--orange); border-radius:0; box-shadow:none; }
+  .horario-presets{ display:flex; flex-wrap:wrap; gap:9px; margin:16px 22px; }
+  .horario-preset{ border:1px solid #cfd8ff; color:var(--blue-deep); background:#eef2ff; border-radius:8px; padding:9px 13px; font:700 13px 'Space Grotesk',sans-serif; cursor:pointer; }
+  .horario-preset:hover{ background:#dbe4ff; }
+  .horario-preset-off{ color:#616176; background:#f1f0f4; border-color:#dedde5; }
+  .horario-editor-fields{ display:grid; grid-template-columns:repeat(4,minmax(130px,1fr)); gap:12px; margin:0 22px; }
+  .horario-editor-fields label{ display:grid; gap:6px; color:var(--ink-soft); font-size:12px; font-weight:700; }
+  .horario-editor-fields input{ width:100%; border:1px solid var(--line); border-radius:8px; padding:10px; color:var(--ink); font:inherit; }
+  .horario-editor-actions{ justify-content:flex-end; margin:18px 22px 22px; }
+  #horarioSaveEdit{ background:var(--blue); border-color:var(--blue); color:#fff; }
+  #horarioCopyShift{ color:var(--purple); border-color:#cdbce6; }
+  #horarioPasteShift{ background:var(--purple); border-color:var(--purple); color:#fff; }
+  #horarioPasteShift:disabled,#horarioCopyShift:disabled{ cursor:not-allowed; opacity:.48; }
+  .horario-coverage .horario-table th:first-child,.horario-coverage .horario-table td:first-child{ min-width:155px; }
+  .horario-coverage-cell{ font-weight:800; min-width:54px; }
+  .horario-coverage-cell.is-empty{ color:#a62d3a; background:#ffe8ea; }
+  .horario-coverage-cell.is-low{ color:#835a00; background:#fff1c9; }
+  .horario-coverage-cell.is-good{ color:#0b6e43; background:#dff7e9; }
+  .horario-copy-modal[hidden]{ display:none; }
+  .horario-copy-modal{ position:fixed; inset:0; z-index:100; display:flex; align-items:center; justify-content:center; padding:22px; background:rgba(18,17,42,.48); }
+  .horario-copy-dialog{ width:min(620px,100%); max-height:min(720px,calc(100vh - 44px)); overflow:auto; background:#fff; border-radius:16px; box-shadow:0 24px 60px rgba(0,0,0,.25); }
+  .horario-copy-dialog-header{ display:flex; justify-content:space-between; align-items:flex-start; gap:18px; padding:22px 22px 14px; border-bottom:1px solid var(--line); }
+  .horario-copy-dialog-header h2{ font-size:20px; }
+  .horario-copy-dialog-header p{ margin:5px 0 0; color:var(--ink-soft); font-size:13px; line-height:1.45; }
+  .horario-modal-close{ border:0; background:transparent; color:var(--ink-soft); font-size:28px; line-height:1; cursor:pointer; padding:0 3px; }
+  .horario-copy-tree{ padding:10px 22px; }
+  .horario-copy-pdv{ border-bottom:1px solid var(--line); padding:9px 0; }
+  .horario-copy-pdv summary{ cursor:pointer; color:var(--ink); }
+  .horario-copy-pdv summary label{ cursor:pointer; }
+  .horario-copy-pdv summary span{ color:var(--ink-soft); font-size:12px; margin-left:6px; }
+  .horario-copy-pdv > div{ display:grid; gap:7px; padding:10px 0 2px 28px; }
+  .horario-copy-advisor{ color:var(--ink-soft); font-size:13px; cursor:pointer; }
+  .horario-copy-pdv input,.horario-copy-advisor input{ accent-color:var(--purple); }
+  .horario-copy-status{ min-height:20px; margin:0; padding:0 22px 14px; color:var(--ink-soft); font-size:12px; }
+  .horario-copy-modal-actions{ display:flex; justify-content:flex-end; gap:10px; flex-wrap:wrap; padding:14px 22px 22px; border-top:1px solid var(--line); }
+  .horario-copy-modal-actions .reset-btn{ background:#fff; color:var(--ink-soft); border-color:var(--line); }
+  @media(max-width:760px){
+    .horario-heading{ align-items:flex-start; }
+    .horario-week-controls{ width:100%; margin-left:0; }
+    .horario-current-week{ min-width:0; flex:1; }
+    .horario-coverage-actions{ width:100%; }
+    .horario-editor-fields{ grid-template-columns:repeat(2,minmax(120px,1fr)); }
+    .horario-tools,.horario-table-scroll,.horario-presets,.horario-editor-fields,.horario-editor-actions{ margin-left:14px; margin-right:14px; }
+  }

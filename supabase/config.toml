@@ -1,0 +1,2 @@
+[functions.tally-ingest]
+verify_jwt = false

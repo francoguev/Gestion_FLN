@@ -154,6 +154,7 @@ var SUPABASE_ANON_KEY = "sb_publishable_ieKMBlB07Pz0ii7s1XFe8w_HOvQYAty";
         if(target === "stock" && typeof loadStock === "function") loadStock();
         if(target === "avance" && typeof loadAvance === "function") loadAvance();
         if(target === "arribos" && typeof window.loadArribos === "function") window.loadArribos();
+        if(target === "horario" && typeof window.loadHorario === "function") window.loadHorario();
         if(target === "xstore" && typeof loadXstore === "function") loadXstore();
         if(target === "novedades" && typeof window.loadNovedadesPage === "function") window.loadNovedadesPage();
       });
