@@ -49,6 +49,7 @@ var SUPABASE_ANON_KEY = "sb_publishable_ieKMBlB07Pz0ii7s1XFe8w_HOvQYAty";
       var vistasRaw = (res.data && res.data.vistas) ? res.data.vistas : "calculadora";
       var allowed = vistasRaw.split(",").map(function(v){ return v.trim(); }).filter(Boolean);
       applyViewPermissions(allowed);
+      restoreLastPage(allowed);
       if(typeof window.loadNovedadesPage === "function") window.loadNovedadesPage();
       if(typeof window.checkImportantNovedadPopup === "function") window.checkImportantNovedadPopup();
     }catch(e){
@@ -86,6 +87,32 @@ var SUPABASE_ANON_KEY = "sb_publishable_ieKMBlB07Pz0ii7s1XFe8w_HOvQYAty";
 
     var sidebarNav = document.getElementById("sidebarNav");
     if(sidebarNav) sidebarNav.classList.remove("pending");
+  }
+
+  function openAppPage(target){
+    var item = document.querySelector('.nav-item[data-page="' + target + '"]');
+    var page = document.getElementById("page-" + target);
+    if(!item || !page || item.style.display === "none") return;
+    document.querySelectorAll(".nav-item").forEach(function(navItem){ navItem.classList.remove("active"); });
+    item.classList.add("active");
+    document.querySelectorAll(".page").forEach(function(section){ section.classList.remove("active"); });
+    page.classList.add("active");
+    try{ sessionStorage.setItem("pulso-active-page", target); }catch(e){}
+    if(target === "stock" && typeof loadStock === "function") loadStock();
+    if(target === "avance" && typeof loadAvance === "function") loadAvance();
+    if(target === "avancedia" && typeof window.loadAvanceDia === "function") window.loadAvanceDia();
+    if(target === "arribos" && typeof window.loadArribos === "function") window.loadArribos();
+    if(target === "horario" && typeof window.loadHorario === "function") window.loadHorario();
+    if(target === "xstore" && typeof loadXstore === "function") loadXstore();
+    if(target === "novedades" && typeof window.loadNovedadesPage === "function") window.loadNovedadesPage();
+  }
+
+  function restoreLastPage(allowed){
+    var saved = null;
+    try{ saved = sessionStorage.getItem("pulso-active-page"); }catch(e){}
+    if(!saved) return; // Primera apertura: se mantiene Novedades.
+    if(saved !== "novedades" && allowed.indexOf(saved) === -1) return;
+    openAppPage(saved);
   }
 
   function showLoginError(message){
@@ -139,28 +166,17 @@ var SUPABASE_ANON_KEY = "sb_publishable_ieKMBlB07Pz0ii7s1XFe8w_HOvQYAty";
     if(logoutBtn){
       logoutBtn.addEventListener("click", async function(){
         try{ await supabaseClient.auth.signOut(); }catch(e){}
+        try{ sessionStorage.removeItem("pulso-active-page"); }catch(e){}
         window.location.reload();
       });
     }
 
     var navItems = document.querySelectorAll(".nav-item");
-    navItems.forEach(function(item){
-      item.addEventListener("click", function(){
-        var target = item.getAttribute("data-page");
-        navItems.forEach(function(i){ i.classList.remove("active"); });
-        item.classList.add("active");
-        document.querySelectorAll(".page").forEach(function(p){ p.classList.remove("active"); });
-        var targetPage = document.getElementById("page-" + target);
-        if(targetPage) targetPage.classList.add("active");
-        if(target === "stock" && typeof loadStock === "function") loadStock();
-        if(target === "avance" && typeof loadAvance === "function") loadAvance();
-        if(target === "avancedia" && typeof window.loadAvanceDia === "function") window.loadAvanceDia();
-        if(target === "arribos" && typeof window.loadArribos === "function") window.loadArribos();
-        if(target === "horario" && typeof window.loadHorario === "function") window.loadHorario();
-        if(target === "xstore" && typeof loadXstore === "function") loadXstore();
-        if(target === "novedades" && typeof window.loadNovedadesPage === "function") window.loadNovedadesPage();
+      navItems.forEach(function(item){
+        item.addEventListener("click", function(){
+        openAppPage(item.getAttribute("data-page"));
+        });
       });
-    });
 
     var sidebar = document.getElementById("sidebar");
     var sidebarToggles = document.querySelectorAll(".topbar-toggle");
