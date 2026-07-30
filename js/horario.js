@@ -51,6 +51,34 @@
     var blob=new Blob(["\ufeff",documentHtml],{type:"application/vnd.ms-excel;charset=utf-8"});
     var link=document.createElement("a"); link.href=URL.createObjectURL(blob); link.download=fileName+".xls"; document.body.appendChild(link); link.click(); link.remove(); setTimeout(function(){URL.revokeObjectURL(link.href);},0);
   }
+  var captureLoader=null;
+  function loadHtml2Canvas(){
+    if(window.html2canvas) return Promise.resolve(window.html2canvas);
+    if(captureLoader) return captureLoader;
+    captureLoader=new Promise(function(resolve,reject){
+      var script=document.createElement("script"); script.src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js";
+      script.onload=function(){resolve(window.html2canvas);}; script.onerror=function(){reject(new Error("No se pudo cargar el generador de capturas."));}; document.head.appendChild(script);
+    });
+    return captureLoader;
+  }
+  async function copyTableCapture(holderId,fileName,button){
+    var table=document.querySelector("#"+holderId+" table");
+    if(!table){ alert("Primero carga la tabla que deseas capturar."); return; }
+    var original=button.textContent, stage=document.createElement("div"), copy=table.cloneNode(true);
+    button.disabled=true; button.textContent="Generando…";
+    try{
+      copy.querySelectorAll("th:first-child,td:first-child").forEach(function(cell){cell.style.position="static";cell.style.boxShadow="none";});
+      copy.style.width="max-content"; copy.style.minWidth="0";
+      stage.style.cssText="position:fixed;left:-100000px;top:0;z-index:-1;background:#fff;padding:18px;width:max-content;max-width:none;";
+      stage.appendChild(copy); document.body.appendChild(stage);
+      var html2canvas=await loadHtml2Canvas();
+      var canvas=await html2canvas(copy,{backgroundColor:"#ffffff",scale:2,useCORS:true,logging:false,width:copy.scrollWidth,height:copy.scrollHeight});
+      var blob=await new Promise(function(resolve){canvas.toBlob(resolve,"image/png");}); if(!blob) throw new Error("No se pudo crear la imagen.");
+      if(navigator.clipboard&&window.ClipboardItem){await navigator.clipboard.write([new ClipboardItem({"image/png":blob})]);button.textContent="¡Copiada!";}
+      else{var link=document.createElement("a");link.href=URL.createObjectURL(blob);link.download=fileName+".png";document.body.appendChild(link);link.click();link.remove();setTimeout(function(){URL.revokeObjectURL(link.href);},0);button.textContent="Imagen descargada";}
+    }catch(error){console.error(error);alert("No se pudo copiar la captura. Prueba desde la versión publicada con HTTPS.");}
+    finally{if(stage.parentNode)stage.remove();setTimeout(function(){button.disabled=false;button.textContent=original;},1200);}
+  }
   function setHint(text, isError){ var el=document.getElementById("horarioHint"); if(el){ el.textContent=text; el.style.color=isError ? "var(--bad)" : ""; } }
 
   async function loadProfile(){
@@ -161,6 +189,41 @@
     }).join("");
     holder.innerHTML=rows?'<table class="horario-table"><thead><tr><th>PDV</th>'+head+'</tr></thead><tbody>'+rows+'</tbody></table>':'<div class="horario-empty">No hay PDV con asesores asignados.</div>';
   }
+  function monthDates(){
+    var first=new Date(state.weekStart.getFullYear(),state.weekStart.getMonth(),1), last=new Date(state.weekStart.getFullYear(),state.weekStart.getMonth()+1,0), result=[];
+    for(var date=new Date(first);date<=last;date=addDays(date,1)) result.push(new Date(date));
+    return result;
+  }
+  async function openMonthView(mode){
+    var modal=document.getElementById("horarioMonthModal"), holder=document.getElementById("horarioMonthHolder"), title=document.getElementById("horarioMonthTitle"), hint=document.getElementById("horarioMonthHint"), dates=monthDates(), from=dateKey(dates[0]), to=dateKey(dates[dates.length-1]), selected=selectedPdvs();
+    title.textContent=(mode==="schedule"?"Horario mensual":"Cobertura mensual por PDV")+" · "+monthNames[dates[0].getMonth()]+" "+dates[0].getFullYear();
+    hint.textContent="Vista de solo lectura. Puedes usar Copiar captura para compartir el mes completo.";
+    holder.innerHTML='<div class="horario-empty">Cargando vista mensual…</div>'; modal.hidden=false; modal.dataset.mode=mode;
+    try{
+      var query=window.supabaseClient.from("horario_turnos").select("advisor_email,pdv,shift_date,start_time,end_time,break_start,break_end,is_day_off").gte("shift_date",from).lte("shift_date",to);
+      if(selected.length) query=query.in("pdv",selected);
+      var response=await query; if(response.error) throw response.error;
+      var shifts=response.data||[];
+      if(mode==="schedule"){
+        var people=state.roster.filter(function(person){return !selected.length||selected.indexOf(person.pdv)!==-1;});
+        var head=dates.map(function(date){return '<th>'+days[(date.getDay()+6)%7].slice(0,3)+'<br><small>'+date.getDate()+"/"+String(date.getMonth()+1).padStart(2,"0")+'</small></th>';}).join("");
+        var body=people.map(function(person){
+          var total=0, cells=dates.map(function(date){var shift=shifts.find(function(item){return clean(item.advisor_email).toLowerCase()===clean(person.email).toLowerCase()&&item.shift_date===dateKey(date);});total+=effectiveShiftMinutes(shift);var text="Libre",cls="is-off";if(shift&&!shift.is_day_off){text=timeValue(shift.start_time)+"–"+timeValue(shift.end_time);cls="";if(shift.break_start&&shift.break_end)text+='<small>Ref. '+timeValue(shift.break_start)+"–"+timeValue(shift.break_end)+"</small>";}return '<td><div class="horario-shift '+cls+'">'+text+'</div></td>';}).join("");
+          return '<tr><td>'+escapeHtml(person.full_name||person.email)+'<span class="horario-pdv-name">'+escapeHtml(person.pdv||"Sin PDV")+'</span></td>'+cells+'<td class="horario-week-total">'+formatWeeklyHours(total)+'</td></tr>';
+        }).join("");
+        holder.innerHTML=body?'<table class="horario-table horario-month-table"><thead><tr><th>Asesor / PDV</th>'+head+'<th>Horas<br>mensuales</th></tr></thead><tbody>'+body+'</tbody></table>':'<div class="horario-empty">No hay asesores para el filtro seleccionado.</div>';
+      }else{
+        var pdvs=Array.from(new Set(state.roster.map(function(person){return person.pdv;}).filter(Boolean))).filter(function(pdv){return !selected.length||selected.indexOf(pdv)!==-1;}).sort();
+        var coverageHead=dates.map(function(date){return '<th>'+days[(date.getDay()+6)%7].slice(0,3)+'<br><small>'+date.getDate()+"/"+String(date.getMonth()+1).padStart(2,"0")+'</small></th>';}).join("");
+        var coverageRows=pdvs.map(function(pdv){
+          var cells=dates.map(function(date){var hours=0;for(var hour=8;hour<22;hour++){var count=shifts.filter(function(shift){return shift.pdv===pdv&&shift.shift_date===dateKey(date)&&!shift.is_day_off&&inRange(hour,shift.start_time,shift.end_time)&&!inRange(hour,shift.break_start,shift.break_end);}).length;hours+=count;}var cls=hours===0?"is-empty":hours<10?"is-low":"is-good";return '<td class="horario-coverage-cell '+cls+'" title="'+hours+' horas-persona de cobertura">'+hours+' h</td>';}).join("");
+          return '<tr><td>'+escapeHtml(pdv)+'</td>'+cells+'</tr>';
+        }).join("");
+        holder.innerHTML=coverageRows?'<table class="horario-table horario-month-table"><thead><tr><th>PDV</th>'+coverageHead+'</tr></thead><tbody>'+coverageRows+'</tbody></table>':'<div class="horario-empty">No hay PDV para el filtro seleccionado.</div>';
+      }
+    }catch(error){console.error(error);holder.innerHTML='<div class="horario-empty">No se pudo cargar la vista mensual.</div>';}
+  }
+  function closeMonthView(){document.getElementById("horarioMonthModal").hidden=true;}
   function moveEditorHome(){
     var editor=document.getElementById("horarioEditor");
     var editorRow=editor && editor.closest("tr.horario-editor-row");
@@ -298,6 +361,14 @@
     document.getElementById("horarioCoverageDay").addEventListener("change",renderCoverage);
     document.getElementById("horarioExportSchedule").addEventListener("click",function(){ exportTableToExcel("horarioScheduleHolder","horario-semanal-"+dateKey(state.weekStart)); });
     document.getElementById("horarioExportCoverage").addEventListener("click",function(){ var day=document.getElementById("horarioCoverageDay").value || dateKey(state.weekStart); exportTableToExcel("horarioCoverageHolder","cobertura-pdv-"+day); });
+    document.getElementById("horarioCaptureSchedule").addEventListener("click",function(){ copyTableCapture("horarioScheduleHolder","horario-semanal-"+dateKey(state.weekStart),this); });
+    document.getElementById("horarioCaptureCoverage").addEventListener("click",function(){ var day=document.getElementById("horarioCoverageDay").value || dateKey(state.weekStart); copyTableCapture("horarioCoverageHolder","cobertura-pdv-"+day,this); });
+    document.getElementById("horarioMonthSchedule").addEventListener("click",function(){openMonthView("schedule");});
+    document.getElementById("horarioMonthCoverage").addEventListener("click",function(){openMonthView("coverage");});
+    document.getElementById("horarioMonthClose").addEventListener("click",closeMonthView);
+    document.getElementById("horarioMonthCloseBottom").addEventListener("click",closeMonthView);
+    document.getElementById("horarioMonthCapture").addEventListener("click",function(){var mode=document.getElementById("horarioMonthModal").dataset.mode||"mes";copyTableCapture("horarioMonthHolder","horario-"+mode+"-mensual-"+dateKey(state.weekStart),this);});
+    document.getElementById("horarioMonthExport").addEventListener("click",function(){var mode=document.getElementById("horarioMonthModal").dataset.mode||"mes";exportTableToExcel("horarioMonthHolder","horario-"+mode+"-mensual-"+dateKey(state.weekStart));});
     document.getElementById("horarioCancelEdit").addEventListener("click",closeEditor);
     document.getElementById("horarioCopyShift").addEventListener("click",copyEditorShift);
     document.getElementById("horarioPasteShift").addEventListener("click",function(){pasteCopiedShift().catch(function(e){alert("No se pudo pegar: "+e.message);});});

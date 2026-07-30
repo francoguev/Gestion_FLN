@@ -2,6 +2,8 @@
   var ARRIBOS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSKUPtQOobapucdj6Izz7ZO2BT20Gws-RbXzeSxo733C7EZHOgscVXx7BDj_2JghU8PeNMvlN6Jrqb3/pub?gid=0&single=true&output=csv";
 
   var _arRows = [];          // filas crudas parseadas de la hoja
+  var _arRowsLoadedAt = 0;
+  var DATA_CACHE_MS_AR = 3 * 60 * 1000;
   var _arIsAsesor = false;
   var _arPdv = "";
   var _arMonthsList = [];
@@ -242,7 +244,17 @@
     });
   }
 
-  function populateArribosSegmentadores(scopedRows){
+  function todayDateAr(){
+    var now = new Date();
+    return now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2,"0") + "-" + String(now.getDate()).padStart(2,"0");
+  }
+
+  function dayLabelAr(dateKey){
+    var date = new Date(dateKey + "T12:00:00");
+    return date.toLocaleDateString("es-PE", { day:"2-digit", month:"short" }).replace(".", "");
+  }
+
+  function populateArribosSegmentadoresLegacy(scopedRows){
     var tiendaSelect = document.getElementById("arribosFiltroTienda");
     var asesorSelect = document.getElementById("arribosFiltroAsesor");
     if(!tiendaSelect || !asesorSelect) return;
@@ -268,10 +280,35 @@
     if(asesorKeys.indexOf(asesorVal) !== -1) asesorSelect.value = asesorVal;
   }
 
+  function populateArribosSegmentadores(scopedRows){
+    var diaSelect = document.getElementById("arribosFiltroDia");
+    var tiendaSelect = document.getElementById("arribosFiltroTienda");
+    var asesorSelect = document.getElementById("arribosFiltroAsesor");
+    if(!diaSelect || !tiendaSelect || !asesorSelect) return;
+
+    var diaVal = diaSelect.value, tiendaVal = tiendaSelect.value, asesorVal = asesorSelect.value;
+    var dias = {}, tiendas = {}, asesores = {};
+    scopedRows.forEach(function(r){ dias[r.fecha] = true; tiendas[r.tienda] = true; asesores[r.asesor] = true; });
+    var diaKeys = Object.keys(dias).sort().reverse();
+    var tiendaKeys = Object.keys(tiendas).sort(function(a,b){ return a.localeCompare(b, "es"); });
+    var asesorKeys = Object.keys(asesores).sort(function(a,b){ return a.localeCompare(b, "es"); });
+
+    diaSelect.innerHTML = '<option value="">DÍA · Todos</option>' + diaKeys.map(function(d){ return '<option value="' + d + '">DÍA · ' + dayLabelAr(d) + '</option>'; }).join("");
+    tiendaSelect.innerHTML = '<option value="">TIENDA · Todas</option>' + tiendaKeys.map(function(t){ return '<option value="' + escapeHtmlAr(t) + '">' + escapeHtmlAr(t) + '</option>'; }).join("");
+    asesorSelect.innerHTML = '<option value="">ASESOR · Todos</option>' + asesorKeys.map(function(a){ return '<option value="' + escapeHtmlAr(a) + '">' + escapeHtmlAr(a) + '</option>'; }).join("");
+
+    if(diaKeys.indexOf(diaVal) !== -1) diaSelect.value = diaVal;
+    else if(diaKeys.indexOf(todayDateAr()) !== -1) diaSelect.value = todayDateAr();
+    if(tiendaKeys.indexOf(tiendaVal) !== -1) tiendaSelect.value = tiendaVal;
+    if(asesorKeys.indexOf(asesorVal) !== -1) asesorSelect.value = asesorVal;
+  }
+
   function applyArribosSegmentadores(scopedRows){
+    var diaVal = document.getElementById("arribosFiltroDia").value;
     var tiendaVal = document.getElementById("arribosFiltroTienda").value;
     var asesorVal = document.getElementById("arribosFiltroAsesor").value;
     return scopedRows.filter(function(r){
+      if(diaVal && r.fecha !== diaVal) return false;
       if(tiendaVal && r.tienda !== tiendaVal) return false;
       if(asesorVal && r.asesor !== asesorVal) return false;
       return true;
@@ -343,6 +380,34 @@
         '</div>';
       }).join("");
     }
+
+    // Conversión por asesor
+    var porAsesor = {};
+    rowsForMonth.forEach(function(r){
+      var key = r.asesor;
+      if(!porAsesor[key]) porAsesor[key] = { concretadas:0, total:0, tienda:r.tienda };
+      porAsesor[key].total++;
+      if(r.concretada) porAsesor[key].concretadas++;
+    });
+    var asesorConversionKeys = Object.keys(porAsesor).sort(function(a,b){
+      var pa = porAsesor[a].total ? porAsesor[a].concretadas / porAsesor[a].total : 0;
+      var pb = porAsesor[b].total ? porAsesor[b].concretadas / porAsesor[b].total : 0;
+      return pa - pb;
+    });
+    var asesorConversionHolder = document.getElementById("arribosConversionAsesorHolder");
+    if(!asesorConversionKeys.length){
+      asesorConversionHolder.innerHTML = '<p class="hint">Sin datos.</p>';
+    }else{
+      asesorConversionHolder.innerHTML = asesorConversionKeys.map(function(asesor){
+        var data = porAsesor[asesor];
+        var pct = data.total ? Math.round((data.concretadas / data.total) * 1000) / 10 : 0;
+        var cls = pct >= 85 ? "is-good" : (pct >= 70 ? "is-warn" : "is-bad");
+        return '<div class="arribos-bar-row">' +
+          '<div class="arribos-bar-label"><span class="name" title="' + escapeHtmlAr(asesor) + '">' + escapeHtmlAr(asesor) + '</span><span class="val">' + pct + '% (' + data.concretadas + '/' + data.total + ')</span></div>' +
+          '<div class="arribos-bar-track"><div class="arribos-bar-fill ' + cls + '" style="width:' + pct + '%;"></div></div>' +
+        '</div>';
+      }).join("");
+    }
   }
 
   var _arScopedRowsForMonth = []; // filas del mes ya filtradas por rol (tienda del asesor), sin aplicar segmentadores
@@ -391,7 +456,10 @@
         document.getElementById("arribosStoresHolder").innerHTML = "";
         return;
       }
-      _arRows = await loadRawArribos();
+      if(!_arRows.length || Date.now() - _arRowsLoadedAt > DATA_CACHE_MS_AR){
+        _arRows = await loadRawArribos();
+        _arRowsLoadedAt = Date.now();
+      }
       _arMonthsList = buildAvailableMonthsAr(_arRows);
       if(!_arMonthsList.length){
         if(hint) hint.textContent = "No se encontraron fechas válidas en la hoja de arribos.";
@@ -426,11 +494,13 @@
         if(_arRows.length) renderArribosForMonth(monthSelect.value);
       });
     }
+    var diaFiltro = document.getElementById("arribosFiltroDia");
     var tiendaFiltro = document.getElementById("arribosFiltroTienda");
     var asesorFiltro = document.getElementById("arribosFiltroAsesor");
     function reRenderNoConcretada(){
       renderNoConcretadaAnalysis(applyArribosSegmentadores(_arScopedRowsForMonth));
     }
+    if(diaFiltro) diaFiltro.addEventListener("change", reRenderNoConcretada);
     if(tiendaFiltro) tiendaFiltro.addEventListener("change", reRenderNoConcretada);
     if(asesorFiltro) asesorFiltro.addEventListener("change", reRenderNoConcretada);
   });

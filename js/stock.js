@@ -28,6 +28,8 @@
   var stockLoaded = false;
   var stockFixedFilterWarning = false;
   var stockItems = [];   // lista plana: [{punto, marca, modelo, sku, serie}, ...]
+  var stockLoadedAt = 0;
+  var STOCK_CACHE_MS = 3 * 60 * 1000;
 
   function normalize(s){
     return (s || "").toString().trim().toUpperCase()
@@ -246,6 +248,11 @@
       hint.textContent = "Falta configurar el link del CSV publicado de Google Sheets.";
       return;
     }
+    if(stockItems.length && Date.now() - stockLoadedAt <= STOCK_CACHE_MS){
+      renderStock();
+      hint.textContent = "Datos recientes en memoria.";
+      return;
+    }
     hint.textContent = "Cargando datos…";
     try{
       var sep = STOCK_CSV_URL.indexOf("?") === -1 ? "?" : "&";
@@ -265,6 +272,7 @@
         return;
       }
       stockItems = built.items;
+      stockLoadedAt = Date.now();
       stockFixedFilterWarning = !built.foundAlmacen;
       populateFilters();
 

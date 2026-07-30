@@ -80,8 +80,22 @@
     if(t.indexOf("NO REGISTRADO") !== -1 || t.indexOf("SIN REGISTRO") !== -1) return "status-bad";
     return "";
   }
+  function amountX(value){
+    // La hoja usa valores como "S/.115.0"; el punto después de S/ es
+    // parte del símbolo, no un decimal.
+    var raw=(value||"").toString().replace(/s\s*\/\s*\.?/i,"").replace(/\s/g,"").replace(/,/g,"");
+    var parsed=parseFloat(raw);
+    return isNaN(parsed)?0:parsed;
+  }
+  function moneyPillClassX(value, compareTo, isDeposit){
+    if(value <= 0) return "xstore-money-zero";
+    if(!isDeposit) return "xstore-money-good";
+    return value >= compareTo ? "xstore-money-good" : "xstore-money-bad";
+  }
 
   var _xRows = null;      // todas las filas ya parseadas (de todos los meses)
+  var _xRowsLoadedAt = 0;
+  var DATA_CACHE_MS_X = 3 * 60 * 1000;
   var _isAsesorX = true;
   var _profileX = null;
 
@@ -207,13 +221,14 @@
       var estadoRegistroClass = statusClassX(r.estadoRegistro);
       var estadoDepositoClass = statusClassX(r.estadoDeposito);
       var payjoyTag = r.payjoy ? ' <span class="payjoy-tag">Payjoy</span>' : "";
+      var montoNumber = amountX(r.monto), depositoNumber = amountX(r.deposito);
 
       html += '<tr' + (isNewDate ? ' data-newdate="1"' : '') + '>' +
         '<td>' + escapeHtmlX(r.dateLabel) + '</td>' +
         '<td class="xstore-pdv-col' + (showPdvCol ? "" : " is-hidden") + '">' + escapeHtmlX(r.pdv) + '</td>' +
-        '<td class="xstore-money">' + escapeHtmlX(r.monto) + '</td>' +
+        '<td class="xstore-money"><span class="xstore-money-pill ' + moneyPillClassX(montoNumber,0,false) + '">' + escapeHtmlX(r.monto) + '</span></td>' +
         '<td class="' + estadoRegistroClass + '">' + escapeHtmlX(r.estadoRegistro) + '</td>' +
-        '<td class="xstore-money">' + escapeHtmlX(r.deposito) + '</td>' +
+        '<td class="xstore-money"><span class="xstore-money-pill ' + moneyPillClassX(depositoNumber,montoNumber,true) + '">' + escapeHtmlX(r.deposito) + '</span></td>' +
         '<td class="' + estadoDepositoClass + '">' + escapeHtmlX(r.estadoDeposito) + payjoyTag + '</td>' +
         '</tr>';
     });
@@ -256,7 +271,10 @@
 
     hint.textContent = "Cargando datos…";
     try{
-      _xRows = await loadXstoreRows();
+      if(!_xRows || Date.now() - _xRowsLoadedAt > DATA_CACHE_MS_X){
+        _xRows = await loadXstoreRows();
+        _xRowsLoadedAt = Date.now();
+      }
       if(_xRows.length === 0){
         hint.textContent = "No se encontraron datos en el archivo.";
         tbody.innerHTML = "";
@@ -292,6 +310,7 @@
     var refreshBtn = document.getElementById("xstoreRefreshBtn");
     if(refreshBtn){
       refreshBtn.addEventListener("click", function(){
+        _xRows = null; _xRowsLoadedAt = 0;
         if(typeof window.loadXstore === "function") window.loadXstore();
       });
     }

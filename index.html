@@ -34,7 +34,7 @@
     <div class="login-denied" id="loginDenied">
       <span id="loginErrorText">Correo o contraseña incorrectos.</span>
     </div>
-    <p class="login-note">Acceso restringido al equipo de Fortalecernos SAC. Si no tienes credenciales, pídeselas al administrador.</p>
+    <p class="login-note">Acceso restringido al equipo de Fortalecernos SAC.</p>
   </div>
 </div>
 
@@ -71,6 +71,9 @@
       </button>
       <button class="nav-item" data-page="avance">
         <span class="nav-icon">📈</span> <span class="nav-label">Avance Link</span>
+      </button>
+      <button class="nav-item" data-page="avancedia">
+        <span class="nav-icon">🎯</span> <span class="nav-label">Avance Dia Link</span>
       </button>
       <button class="nav-item" data-page="arribos">
         <span class="nav-icon">👥</span> <span class="nav-label">Arribos</span>
@@ -216,7 +219,7 @@
 
   <section class="bonus-grid">
     <div class="bonus-card">
-      <h3>NPS de venta</h3>
+      <h3>NPS de venta y postventa</h3>
       <div class="desc">Si el NPS logrado es de 70% a más, se suma S/ 50 al ganado.</div>
       <div class="bonus-fields">
         <div class="f">
@@ -302,6 +305,23 @@
 
     </section>
 
+    <section class="page" id="page-avancedia">
+      <div class="topbar">
+        <button class="topbar-toggle" aria-label="Mostrar u ocultar menú" title="Mostrar u ocultar menú">☰</button>
+        <div style="flex:1;"><h1>Avance Dia Link</h1></div>
+        <div class="avance-dia-pdv-filter" id="avanceDiaPdvFilter">
+          <button type="button" class="stock-filter-select avance-dia-pdv-button" id="avanceDiaPdvButton" aria-expanded="false">PDV · Todos</button>
+          <div class="avance-dia-pdv-menu" id="avanceDiaPdvMenu" hidden></div>
+        </div>
+        <select id="avanceDiaMonthSelect" class="stock-filter-select" style="min-width:160px;"><option value="">Mes…</option></select>
+        <input id="avanceDiaDate" class="stock-filter-select avance-day-date" type="date" aria-label="Fecha de avance">
+      </div>
+      <div class="wrap" style="margin-top:26px;">
+        <div class="avance-hint" id="avanceDiaHint">Cargando avance del día…</div>
+        <div id="avanceDiaHolder"></div>
+      </div>
+    </section>
+
     <section class="page" id="page-arribos">
 
       <div class="topbar">
@@ -336,6 +356,9 @@
             </div>
           </div>
           <div class="stock-filters-row" style="margin:4px 0 4px; padding:0;">
+            <select id="arribosFiltroDia" class="stock-filter-select">
+              <option value="">DÍA · Todos</option>
+            </select>
             <select id="arribosFiltroTienda" class="stock-filter-select">
               <option value="">TIENDA · Todas</option>
             </select>
@@ -352,6 +375,10 @@
             <div>
               <h3 class="arribos-subheading">Conversión por tienda</h3>
               <div id="arribosConversionHolder"></div>
+            </div>
+            <div>
+              <h3 class="arribos-subheading">Conversión por asesor</h3>
+              <div id="arribosConversionAsesorHolder"></div>
             </div>
           </div>
         </div>
@@ -372,6 +399,8 @@
               <button type="button" class="horario-week-arrow" id="horarioPrevWeek" aria-label="Ver semana anterior" title="Semana anterior">←</button>
               <button type="button" class="horario-current-week" id="horarioWeekLabel" title="Volver a la semana actual"></button>
               <button type="button" class="horario-week-arrow" id="horarioNextWeek" aria-label="Ver semana siguiente" title="Semana siguiente">→</button>
+              <button type="button" class="horario-month-btn" id="horarioMonthSchedule">Vista mes</button>
+              <button type="button" class="horario-capture-btn" id="horarioCaptureSchedule">Copiar captura</button>
               <button type="button" class="horario-export-btn" id="horarioExportSchedule">Descargar Excel</button>
             </div>
           </div>
@@ -404,9 +433,17 @@
           </div>
         </section>
         <section class="table-card horario-coverage" id="horarioCoverageCard" hidden>
-          <div class="heading horario-heading"><div><h2>Cobertura por PDV</h2><span class="hint">Cantidad de asesores programados por hora. Pasa el cursor sobre una celda para ver los nombres.</span></div><div class="horario-coverage-actions"><select class="stock-filter-select" id="horarioCoverageDay" aria-label="Día de cobertura"></select><button type="button" class="horario-export-btn" id="horarioExportCoverage">Descargar Excel</button></div></div>
+          <div class="heading horario-heading"><div><h2>Cobertura por PDV</h2><span class="hint">Cantidad de asesores programados por hora. Pasa el cursor sobre una celda para ver los nombres.</span></div><div class="horario-coverage-actions"><select class="stock-filter-select" id="horarioCoverageDay" aria-label="Día de cobertura"></select><button type="button" class="horario-month-btn" id="horarioMonthCoverage">Vista mes</button><button type="button" class="horario-capture-btn" id="horarioCaptureCoverage">Copiar captura</button><button type="button" class="horario-export-btn" id="horarioExportCoverage">Descargar Excel</button></div></div>
           <div class="horario-table-scroll" id="horarioCoverageHolder"></div>
         </section>
+
+        <div class="horario-month-modal" id="horarioMonthModal" hidden role="dialog" aria-modal="true" aria-labelledby="horarioMonthTitle">
+          <div class="horario-month-dialog">
+            <div class="horario-copy-dialog-header"><div><h2 id="horarioMonthTitle">Vista mensual</h2><p id="horarioMonthHint">Solo lectura.</p></div><button type="button" class="horario-modal-close" id="horarioMonthClose" aria-label="Cerrar">×</button></div>
+            <div class="horario-month-table-scroll" id="horarioMonthHolder"></div>
+            <div class="horario-copy-modal-actions"><button type="button" class="horario-capture-btn" id="horarioMonthCapture">Copiar captura</button><button type="button" class="horario-export-btn" id="horarioMonthExport">Descargar Excel</button><button type="button" class="reset-btn" id="horarioMonthCloseBottom">Cerrar</button></div>
+          </div>
+        </div>
 
         <div class="horario-copy-modal" id="horarioCopyModal" hidden role="dialog" aria-modal="true" aria-labelledby="horarioCopyModalTitle">
           <div class="horario-copy-dialog">
@@ -734,6 +771,8 @@
 
 </div><!-- /.app-shell -->
 </div><!-- /#appContent -->
+
+<div class="app-credit" aria-label="Autor">By Francisco Guevara</div>
 
 <div class="novedad-popup-overlay" id="novedadPopupOverlay" style="display:none;">
   <div class="novedad-popup-card">

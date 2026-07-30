@@ -43,7 +43,8 @@ var SUPABASE_ANON_KEY = "sb_publishable_ieKMBlB07Pz0ii7s1XFe8w_HOvQYAty";
       window.currentUserProfile = {
         email: email,
         fullName: (res.data && res.data.full_name) || "",
-        pdv: (res.data && res.data.pdv) || ""
+        pdv: (res.data && res.data.pdv) || "",
+        cargo: (res.data && res.data.cargo) || ""
       };
       var vistasRaw = (res.data && res.data.vistas) ? res.data.vistas : "calculadora";
       var allowed = vistasRaw.split(",").map(function(v){ return v.trim(); }).filter(Boolean);
@@ -153,6 +154,7 @@ var SUPABASE_ANON_KEY = "sb_publishable_ieKMBlB07Pz0ii7s1XFe8w_HOvQYAty";
         if(targetPage) targetPage.classList.add("active");
         if(target === "stock" && typeof loadStock === "function") loadStock();
         if(target === "avance" && typeof loadAvance === "function") loadAvance();
+        if(target === "avancedia" && typeof window.loadAvanceDia === "function") window.loadAvanceDia();
         if(target === "arribos" && typeof window.loadArribos === "function") window.loadArribos();
         if(target === "horario" && typeof window.loadHorario === "function") window.loadHorario();
         if(target === "xstore" && typeof loadXstore === "function") loadXstore();
