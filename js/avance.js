@@ -339,6 +339,7 @@
       tienda: findCol(vHeaders, ["TIENDA"]),
       asesor: findCol(vHeaders, ["ASESOR"]),
       transaccion: findCol(vHeaders, ["TRANSACCION","TRANSACCIÓN"]),
+      orden: findCol(vHeaders, ["ORDEN","N° ORDEN","Nº ORDEN","N° DE ORDEN","Nº DE ORDEN","NRO ORDEN","NRO DE ORDEN","NUMERO DE ORDEN","NÚMERO DE ORDEN","ORDER ID"]),
       concreto: findCol(vHeaders, ["SE CONCRETO LA VENTA","¿SE CONCRETO LA VENTA?"]),
       plan: findCol(vHeaders, ["PLAN VENDIDO"]),
       modalidad: findCol(vHeaders, ["MODALIDAD DE VENTA","MODALIDAD VENTA","MODALIDAD"])
@@ -409,6 +410,83 @@
   }
   function countConcreteSales(raw, row){
     return raw.vIdx.concreto === -1 || normA(row[raw.vIdx.concreto]) === "SI";
+  }
+
+  function getOrderCountStatus(raw, row){
+    if(!countConcreteSales(raw, row)) return { considered:false, reason:"No: venta no concretada" };
+    var txn = normA(row[raw.vIdx.transaccion]);
+    var plan = raw.vIdx.plan !== -1 ? row[raw.vIdx.plan] : "";
+    var modalidad = raw.vIdx.modalidad !== -1 ? row[raw.vIdx.modalidad] : "";
+    var matchingCategories = CATEGORIES.filter(function(cat){
+      return cat.txns.some(function(t){ return normA(t) === txn; });
+    });
+    if(!matchingCategories.length) return { considered:false, reason:"No: transacción no incluida" };
+    var isConsidered = matchingCategories.some(function(cat){
+      return (!cat.requiresPlan49 || planFeeOk(plan)) &&
+        (!cat.requiresModalidad || modalidadOk(modalidad));
+    });
+    if(isConsidered) return { considered:true, reason:"Sí: considerada para el conteo" };
+    var failsPlan = matchingCategories.some(function(cat){ return cat.requiresPlan49; }) && !planFeeOk(plan);
+    var failsModalidad = matchingCategories.some(function(cat){ return cat.requiresModalidad; }) && !modalidadOk(modalidad);
+    if(failsPlan && failsModalidad) return { considered:false, reason:"No: plan menor a S/ 49.90 y modalidad no válida" };
+    if(failsPlan) return { considered:false, reason:"No: plan menor a S/ 49.90" };
+    if(failsModalidad) return { considered:false, reason:"No: modalidad no válida" };
+    return { considered:false, reason:"No: no cumple las condiciones del conteo" };
+  }
+
+  function getOrdersForAvance(){
+    if(!_raw || !_ctx) return [];
+    return _raw.vRows.filter(function(row){
+      var date = parseLooseDate(row[_raw.vIdx.fecha]);
+      var store = (_raw.vIdx.tienda === -1 ? "" : (row[_raw.vIdx.tienda] || "")).trim();
+      return date && monthKey(date) === _ctx.mesKey && normA(store) === _ctx.myPdvNorm;
+    });
+  }
+
+  function orderCell(raw, row, index){
+    return index === -1 ? "—" : ((row[index] || "").toString().trim() || "—");
+  }
+
+  function renderConsideredOrders(){
+    var body = document.getElementById("avanceOrdersBody");
+    var advisorFilter = document.getElementById("avanceOrdersAdvisorFilter");
+    var notCountedButton = document.getElementById("avanceOrdersNotCounted");
+    var count = document.getElementById("avanceOrdersCount");
+    var description = document.getElementById("avanceOrdersDescription");
+    if(!body || !advisorFilter || !_raw || !_ctx) return;
+
+    var orders = getOrdersForAvance();
+    var advisors = {};
+    orders.forEach(function(row){
+      var name = orderCell(_raw, row, _raw.vIdx.asesor);
+      if(name !== "—") advisors[normA(name)] = name;
+    });
+    var selectedAdvisor = advisorFilter.value;
+    advisorFilter.innerHTML = '<option value="">Todos los asesores</option>' + Object.keys(advisors).sort(function(a,b){ return advisors[a].localeCompare(advisors[b], "es"); }).map(function(key){
+      return '<option value="' + escapeHtmlAv(key) + '">' + escapeHtmlAv(advisors[key]) + '</option>';
+    }).join("");
+    advisorFilter.value = advisors[selectedAdvisor] ? selectedAdvisor : "";
+
+    var onlyNotCounted = notCountedButton && notCountedButton.getAttribute("aria-pressed") === "true";
+    var visibleOrders = orders.filter(function(row){
+      var matchesAdvisor = !advisorFilter.value || normA(orderCell(_raw, row, _raw.vIdx.asesor)) === advisorFilter.value;
+      return matchesAdvisor && (!onlyNotCounted || !getOrderCountStatus(_raw, row).considered);
+    });
+    body.innerHTML = visibleOrders.length ? visibleOrders.map(function(row){
+      var status = getOrderCountStatus(_raw, row);
+      return '<tr><td>' + escapeHtmlAv(orderCell(_raw, row, _raw.vIdx.fecha)) + '</td>' +
+        '<td>' + escapeHtmlAv(orderCell(_raw, row, _raw.vIdx.tienda)) + '</td>' +
+        '<td>' + escapeHtmlAv(orderCell(_raw, row, _raw.vIdx.asesor)) + '</td>' +
+        '<td>' + escapeHtmlAv(orderCell(_raw, row, _raw.vIdx.transaccion)) + '</td>' +
+        '<td>' + escapeHtmlAv(orderCell(_raw, row, _raw.vIdx.orden)) + '</td>' +
+        '<td>' + escapeHtmlAv(orderCell(_raw, row, _raw.vIdx.plan)) + '</td>' +
+        '<td>' + escapeHtmlAv(orderCell(_raw, row, _raw.vIdx.modalidad)) + '</td>' +
+        '<td><span class="avance-order-status ' + (status.considered ? 'is-counted' : 'is-not-counted') + '">' + escapeHtmlAv(status.reason) + '</span></td></tr>';
+    }).join("") : '<tr><td class="avance-orders-empty" colspan="8">No hay órdenes para este filtro.</td></tr>';
+    var totalConsidered = visibleOrders.filter(function(row){ return getOrderCountStatus(_raw, row).considered; }).length;
+    count.textContent = visibleOrders.length + " orden" + (visibleOrders.length === 1 ? "" : "es") + " · " + totalConsidered + " considerada" + (totalConsidered === 1 ? "" : "s");
+    var totalOrdersConsidered = orders.filter(function(row){ return getOrderCountStatus(_raw, row).considered; }).length;
+    description.textContent = (_ctx.pdvDisplay || "PDV") + " · " + monthLabel(_ctx.monthDate) + " · " + orders.length + " órdenes en total · " + totalOrdersConsidered + " consideradas para el conteo.";
   }
   function pctLocalDay(n){
     if(n === null || n === undefined || isNaN(n) || !isFinite(n)) return "—";
@@ -774,6 +852,8 @@
 
     hint.textContent = "Actualizado a las " + new Date().toLocaleTimeString("es-PE",{hour:"2-digit",minute:"2-digit"}) +
       " — " + monthLabel(monthDate) + " · Día " + diasTranscurridos + " de " + totalDias;
+    var ordersModal = document.getElementById("avanceOrdersModal");
+    if(ordersModal && !ordersModal.hidden) renderConsideredOrders();
     if(_dayViewOpen) await renderDayAdvance(selectedKey);
   }
 
@@ -908,6 +988,35 @@
         var monthSel = document.getElementById("avanceMonthSelect");
         if(monthSel && monthSel.value) renderForMonth(monthSel.value);
       });
+    }
+    var ordersModal = document.getElementById("avanceOrdersModal");
+    var ordersButton = document.getElementById("avanceOrdersBtn");
+    var ordersClose = document.getElementById("avanceOrdersClose");
+    var ordersAdvisorFilter = document.getElementById("avanceOrdersAdvisorFilter");
+    var ordersNotCounted = document.getElementById("avanceOrdersNotCounted");
+    function closeConsideredOrders(){
+      if(!ordersModal) return;
+      ordersModal.hidden = true;
+      if(ordersButton) ordersButton.focus();
+    }
+    if(ordersButton && ordersModal){
+      ordersButton.addEventListener("click", function(){
+        renderConsideredOrders();
+        ordersModal.hidden = false;
+        if(ordersClose) ordersClose.focus();
+      });
+    }
+    if(ordersClose) ordersClose.addEventListener("click", closeConsideredOrders);
+    if(ordersAdvisorFilter) ordersAdvisorFilter.addEventListener("change", renderConsideredOrders);
+    if(ordersNotCounted) ordersNotCounted.addEventListener("click", function(){
+      var active = ordersNotCounted.getAttribute("aria-pressed") !== "true";
+      ordersNotCounted.setAttribute("aria-pressed", String(active));
+      ordersNotCounted.classList.toggle("is-active", active);
+      renderConsideredOrders();
+    });
+    if(ordersModal){
+      ordersModal.addEventListener("click", function(event){ if(event.target === ordersModal) closeConsideredOrders(); });
+      document.addEventListener("keydown", function(event){ if(event.key === "Escape" && !ordersModal.hidden) closeConsideredOrders(); });
     }
     var dayPdvButton = document.getElementById("avanceDiaPdvButton"), dayPdvMenu = document.getElementById("avanceDiaPdvMenu"), dayMonthSelect = document.getElementById("avanceDiaMonthSelect"), dayDateSelect = document.getElementById("avanceDiaDate");
     function rerenderAvanceDia(){

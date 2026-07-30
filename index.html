@@ -289,6 +289,7 @@
         <div style="flex:1;">
           <h1>Avance Link</h1>
         </div>
+        <button type="button" id="avanceOrdersBtn" class="avance-orders-btn">Órdenes consideradas</button>
         <select id="avancePdvSelect" class="stock-filter-select" style="min-width:200px; display:none;">
           <option value="">PDV…</option>
         </select>
@@ -304,6 +305,34 @@
       </div>
 
     </section>
+
+    <div class="avance-orders-modal" id="avanceOrdersModal" hidden role="dialog" aria-modal="true" aria-labelledby="avanceOrdersTitle">
+      <div class="avance-orders-dialog">
+        <div class="avance-orders-dialog-header">
+          <div>
+            <h2 id="avanceOrdersTitle">Órdenes consideradas</h2>
+            <p id="avanceOrdersDescription">Ventas que se consideran para el conteo del avance seleccionado.</p>
+          </div>
+          <button type="button" class="avance-orders-close" id="avanceOrdersClose" aria-label="Cerrar órdenes consideradas" title="Cerrar">×</button>
+        </div>
+        <div class="avance-orders-toolbar">
+          <label for="avanceOrdersAdvisorFilter">Asesor</label>
+          <select id="avanceOrdersAdvisorFilter" class="stock-filter-select">
+            <option value="">Todos los asesores</option>
+          </select>
+          <button type="button" class="avance-orders-not-counted" id="avanceOrdersNotCounted" aria-pressed="false">No Consideradas</button>
+          <span class="avance-orders-count" id="avanceOrdersCount"></span>
+        </div>
+        <div class="avance-orders-table-scroll">
+          <table class="avance-orders-table">
+            <thead>
+              <tr><th>Fecha de Venta</th><th>Tienda</th><th>Asesor</th><th>Transacción</th><th>Orden</th><th>Plan Vendido</th><th>Modalidad de Venta</th><th>Conteo</th></tr>
+            </thead>
+            <tbody id="avanceOrdersBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
 
     <section class="page" id="page-avancedia">
       <div class="topbar">

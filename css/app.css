@@ -1467,6 +1467,31 @@
   .horario-month-table th:first-child,.horario-month-table td:first-child{ position:sticky !important; left:0; background-clip:padding-box; box-shadow:6px 0 10px rgba(15,23,42,.08); }
   .horario-month-table th:first-child{ z-index:12; background-color:var(--purple) !important; color:#fff !important; }
   .horario-month-table td:first-child{ z-index:11; background-color:#fff !important; color:var(--ink) !important; }
+  .avance-orders-btn{ border:1px solid #cbd5e1; border-radius:9px; background:#fff; color:#0e1aa1; padding:10px 13px; font:700 13px 'Inter',sans-serif; white-space:nowrap; cursor:pointer; }
+  .avance-orders-btn:hover{ border-color:#0e1aa1; background:#eef2ff; }
+  .avance-orders-modal[hidden]{ display:none; }
+  .avance-orders-modal{ position:fixed; inset:0; z-index:120; display:flex; align-items:center; justify-content:center; padding:22px; background:rgba(15,23,42,.52); }
+  .avance-orders-dialog{ width:min(1260px,100%); max-height:calc(100vh - 44px); display:flex; flex-direction:column; overflow:hidden; border-radius:16px; background:#fff; box-shadow:0 24px 60px rgba(15,23,42,.30); }
+  .avance-orders-dialog-header{ display:flex; align-items:flex-start; justify-content:space-between; gap:18px; padding:22px 24px 15px; border-bottom:1px solid #e5eaf2; }
+  .avance-orders-dialog-header h2{ font-size:21px; }
+  .avance-orders-dialog-header p{ margin:5px 0 0; color:var(--ink-soft); font-size:13px; line-height:1.45; }
+  .avance-orders-close{ border:0; background:transparent; color:#64748b; padding:0 4px; font-size:30px; line-height:1; cursor:pointer; }
+  .avance-orders-toolbar{ display:flex; align-items:center; gap:10px; padding:14px 24px; border-bottom:1px solid #e5eaf2; background:#f8fafc; }
+  .avance-orders-toolbar label{ color:#475569; font-size:13px; font-weight:750; }
+  .avance-orders-toolbar .stock-filter-select{ min-width:230px; }
+  .avance-orders-not-counted{ border:1px solid #fecaca; border-radius:9px; background:#fff; color:#b91c1c; padding:10px 12px; font:700 13px 'Inter',sans-serif; white-space:nowrap; cursor:pointer; }
+  .avance-orders-not-counted:hover,.avance-orders-not-counted.is-active{ border-color:#dc2626; background:#fee2e2; color:#991b1b; }
+  .avance-orders-count{ margin-left:auto; color:#64748b; font-size:13px; font-weight:650; }
+  .avance-orders-table-scroll{ overflow:auto; padding:0; }
+  .avance-orders-table{ width:100%; min-width:1080px; border-collapse:separate; border-spacing:0; }
+  .avance-orders-table th{ position:sticky; top:0; z-index:1; background:#f8fafc; color:#64748b; font-size:12px; letter-spacing:.03em; text-transform:uppercase; white-space:nowrap; }
+  .avance-orders-table th,.avance-orders-table td{ padding:13px 16px; border-bottom:1px solid #eef2f7; text-align:left; vertical-align:top; }
+  .avance-orders-table td{ color:#334155; font-size:13px; line-height:1.35; }
+  .avance-orders-table tbody tr:hover td{ background:#f8fafc; }
+  .avance-order-status{ display:inline-flex; align-items:center; border-radius:999px; padding:4px 8px; font-size:12px; font-weight:700; white-space:nowrap; }
+  .avance-order-status.is-counted{ background:#dcfce7; color:#166534; }
+  .avance-order-status.is-not-counted{ background:#fee2e2; color:#b91c1c; }
+  .avance-orders-empty{ padding:28px !important; color:#64748b !important; text-align:center !important; }
   @media(max-width:760px){
     .horario-heading{ align-items:flex-start; }
     .horario-week-controls{ width:100%; margin-left:0; }
@@ -1474,6 +1499,11 @@
     .horario-coverage-actions{ width:100%; }
     .horario-editor-fields{ grid-template-columns:repeat(2,minmax(120px,1fr)); }
     .horario-tools,.horario-table-scroll,.horario-presets,.horario-editor-fields,.horario-editor-actions{ margin-left:14px; margin-right:14px; }
+    .avance-orders-modal{ padding:12px; }
+    .avance-orders-dialog-header,.avance-orders-toolbar{ padding-left:16px; padding-right:16px; }
+    .avance-orders-toolbar{ align-items:flex-start; flex-wrap:wrap; }
+    .avance-orders-toolbar .stock-filter-select{ min-width:0; flex:1 1 210px; }
+    .avance-orders-count{ width:100%; margin-left:0; }
   }
 
   /* El movimiento de hover solo existe con puntero preciso: evita estados pegados en móvil. */
