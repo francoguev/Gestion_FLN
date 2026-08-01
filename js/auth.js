@@ -50,8 +50,10 @@ var SUPABASE_ANON_KEY = "sb_publishable_ieKMBlB07Pz0ii7s1XFe8w_HOvQYAty";
       var allowed = vistasRaw.split(",").map(function(v){ return v.trim(); }).filter(Boolean);
       applyViewPermissions(allowed);
       restoreLastPage(allowed);
-      if(typeof window.loadNovedadesPage === "function") window.loadNovedadesPage();
-      if(typeof window.checkImportantNovedadPopup === "function") window.checkImportantNovedadPopup();
+      if(allowed.indexOf("novedades") !== -1){
+        if(typeof window.loadNovedadesPage === "function") window.loadNovedadesPage();
+        if(typeof window.checkImportantNovedadPopup === "function") window.checkImportantNovedadPopup();
+      }
     }catch(e){
       console.error("Excepción cargando profiles:", e);
       if(nameLabel) nameLabel.textContent = "";
@@ -69,14 +71,14 @@ var SUPABASE_ANON_KEY = "sb_publishable_ieKMBlB07Pz0ii7s1XFe8w_HOvQYAty";
     var firstAllowedItem = null;
     navItems.forEach(function(item){
       var page = item.getAttribute("data-page");
-      var isAllowed = page === "novedades" || allowed.indexOf(page) !== -1;
+      var isAllowed = allowed.indexOf(page) !== -1;
       item.style.display = isAllowed ? "" : "none";
       if(isAllowed && !firstAllowedItem) firstAllowedItem = item;
     });
 
     var activeItem = document.querySelector(".nav-item.active");
     var activePageName = activeItem && activeItem.getAttribute("data-page");
-    var activeAllowed = activePageName === "novedades" || (activeItem && allowed.indexOf(activePageName) !== -1);
+    var activeAllowed = activeItem && allowed.indexOf(activePageName) !== -1;
     if(!activeAllowed && firstAllowedItem){
       navItems.forEach(function(i){ i.classList.remove("active"); });
       firstAllowedItem.classList.add("active");
@@ -111,7 +113,7 @@ var SUPABASE_ANON_KEY = "sb_publishable_ieKMBlB07Pz0ii7s1XFe8w_HOvQYAty";
     var saved = null;
     try{ saved = sessionStorage.getItem("pulso-active-page"); }catch(e){}
     if(!saved) return; // Primera apertura: se mantiene Novedades.
-    if(saved !== "novedades" && allowed.indexOf(saved) === -1) return;
+    if(allowed.indexOf(saved) === -1) return;
     openAppPage(saved);
   }
 
