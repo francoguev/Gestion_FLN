@@ -98,6 +98,8 @@
   var DATA_CACHE_MS_X = 3 * 60 * 1000;
   var _isAsesorX = true;
   var _profileX = null;
+  var _selectedXstoreDays = [];
+  var _xstoreAllDays = false;
 
   async function loadXstoreRows(){
     var text = await fetchCsvTextX(XSTORE_CSV_URL);
@@ -167,11 +169,42 @@
     sel.innerHTML = options;
   }
 
+  function defaultXstoreDays(rows){
+    var today = dateLabelX(new Date());
+    if(rows.some(function(row){ return row.dateLabel === today; })) return [today];
+    if(!rows.length) return [];
+    var newest = rows.slice().sort(function(a,b){ return b.dateObj.getTime() - a.dateObj.getTime(); })[0];
+    return newest ? [newest.dateLabel] : [];
+  }
+
+  function updateXstoreDayButton(){
+    var button = document.getElementById("xstoreDayButton");
+    if(!button) return;
+    button.textContent = _xstoreAllDays || !_selectedXstoreDays.length ? "Día · Todos" :
+      (_selectedXstoreDays.length === 1 ? "Día · " + _selectedXstoreDays[0] : "Día · " + _selectedXstoreDays.length + " seleccionados");
+  }
+
+  function populateDayFilterX(rows){
+    var menu = document.getElementById("xstoreDayMenu");
+    if(!menu) return;
+    var seen = {}, days = [];
+    rows.forEach(function(row){
+      if(!seen[row.dateLabel]){ seen[row.dateLabel] = true; days.push({ label:row.dateLabel, time:row.dateObj.getTime() }); }
+    });
+    days.sort(function(a,b){ return b.time - a.time; });
+    var labels = days.map(function(day){ return day.label; });
+    _selectedXstoreDays = _selectedXstoreDays.filter(function(label){ return labels.indexOf(label) !== -1; });
+    if(!_selectedXstoreDays.length && !_xstoreAllDays) _selectedXstoreDays = defaultXstoreDays(rows);
+    menu.innerHTML = '<label class="xstore-day-all"><input type="checkbox" data-xstore-day-all' + (_xstoreAllDays ? ' checked' : '') + '> Todos los días</label>' +
+      days.map(function(day){ return '<label><input type="checkbox" data-xstore-day="' + escapeHtmlX(day.label) + '"' + (_selectedXstoreDays.indexOf(day.label) !== -1 ? ' checked' : '') + '> ' + escapeHtmlX(day.label) + '</label>'; }).join("");
+    updateXstoreDayButton();
+  }
+
   function renderXstoreForMonth(monthKeySel){
     var hint = document.getElementById("xstoreHint");
     var tbody = document.getElementById("xstoreTbody");
     var pdvCols = document.querySelectorAll(".xstore-pdv-col");
-    var daySelect = document.getElementById("xstoreDaySelect");
+    var dayFilter = document.getElementById("xstoreDayFilter");
 
     var showPdvCol = !_isAsesorX;
     pdvCols.forEach(function(el){ el.classList.toggle("is-hidden", !showPdvCol); });
@@ -184,19 +217,17 @@
 
     // El filtro de día solo tiene sentido para la vista de supervisor (varias
     // tiendas a la vez); en la vista de asesor se oculta.
-    var selectedDay = "";
-    if(daySelect){
+    if(dayFilter){
       if(_isAsesorX){
-        daySelect.style.display = "none";
+        dayFilter.style.display = "none";
       }else{
-        daySelect.style.display = "";
-        populateDaySelectX(monthFiltered, daySelect.value);
-        selectedDay = daySelect.value;
+        dayFilter.style.display = "";
+        populateDayFilterX(monthFiltered);
       }
     }
 
-    var filtered = selectedDay
-      ? monthFiltered.filter(function(r){ return r.dateLabel === selectedDay; })
+    var filtered = !_xstoreAllDays && _selectedXstoreDays.length
+      ? monthFiltered.filter(function(r){ return _selectedXstoreDays.indexOf(r.dateLabel) !== -1; })
       : monthFiltered;
 
     filtered.sort(function(a, b){
@@ -284,6 +315,8 @@
       var todayKey = monthKeyX(new Date());
       var defaultKey = monthsList.some(function(m){ return m.key === todayKey; }) ? todayKey : monthsList[0].key;
       populateMonthSelectX(monthsList, defaultKey);
+      _selectedXstoreDays = [];
+      _xstoreAllDays = false;
       renderXstoreForMonth(defaultKey);
     }catch(e){
       hint.textContent = "No se pudo cargar el control Xstore. Verifica tu conexión e intenta de nuevo.";
@@ -297,14 +330,40 @@
       monthSelect.addEventListener("change", function(){
         var daySelect = document.getElementById("xstoreDaySelect");
         if(daySelect) daySelect.value = ""; // al cambiar de mes, se reinicia el filtro de día
+        _selectedXstoreDays = [];
+        _xstoreAllDays = false;
         if(_xRows) renderXstoreForMonth(monthSelect.value);
       });
     }
-    var daySelect = document.getElementById("xstoreDaySelect");
-    if(daySelect){
-      daySelect.addEventListener("change", function(){
+    var dayButton = document.getElementById("xstoreDayButton");
+    var dayMenu = document.getElementById("xstoreDayMenu");
+    if(dayButton && dayMenu){
+      dayButton.addEventListener("click", function(){
+        var isOpening = dayMenu.hidden;
+        dayMenu.hidden = !isOpening;
+        dayButton.setAttribute("aria-expanded", String(isOpening));
+      });
+      dayMenu.addEventListener("change", function(event){
+        var all = dayMenu.querySelector("[data-xstore-day-all]");
+        var checks = Array.prototype.slice.call(dayMenu.querySelectorAll("[data-xstore-day]"));
+        if(event.target.matches("[data-xstore-day-all]")){
+          checks.forEach(function(check){ check.checked = false; });
+          _selectedXstoreDays = [];
+          _xstoreAllDays = true;
+        }else{
+          if(all) all.checked = false;
+          _selectedXstoreDays = checks.filter(function(check){ return check.checked; }).map(function(check){ return check.getAttribute("data-xstore-day"); });
+          _xstoreAllDays = false;
+        }
+        updateXstoreDayButton();
         var monthSel = document.getElementById("xstoreMonthSelect");
         if(_xRows && monthSel) renderXstoreForMonth(monthSel.value);
+      });
+      document.addEventListener("click", function(event){
+        if(!event.target.closest("#xstoreDayFilter")){
+          dayMenu.hidden = true;
+          dayButton.setAttribute("aria-expanded", "false");
+        }
       });
     }
     var refreshBtn = document.getElementById("xstoreRefreshBtn");

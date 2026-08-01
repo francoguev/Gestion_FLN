@@ -496,9 +496,10 @@
           <h1>Control Xstore</h1>
         </div>
         <button class="reset-btn" id="xstoreCrearBtn" style="background:var(--orange); border-color:var(--orange); display:none;">Crear Registro</button>
-        <select id="xstoreDaySelect" class="stock-filter-select" style="min-width:130px; display:none;">
-          <option value="">Día · Todos</option>
-        </select>
+        <div class="xstore-day-filter" id="xstoreDayFilter" style="display:none;">
+          <button type="button" class="stock-filter-select xstore-day-filter-button" id="xstoreDayButton" aria-expanded="false">Día · Todos</button>
+          <div class="xstore-day-filter-menu" id="xstoreDayMenu" hidden></div>
+        </div>
         <select id="xstoreMonthSelect" class="stock-filter-select" style="min-width:160px;">
           <option value="">Mes…</option>
         </select>
