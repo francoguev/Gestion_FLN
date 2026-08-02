@@ -117,7 +117,7 @@
     if(blob.size>1500000) throw new Error("La imagen sigue siendo muy pesada. Toma una foto más cercana o con menor resolución.");
     return blob;
   }
-  function pdvFolder(pdv){ return String(pdv||"").trim().toLowerCase().replace(/\s+/g,"_"); }
+  function pdvFolder(pdv){ return String(pdv||"").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"_").replace(/^_+|_+$/g,""); }
   async function uploadEvidence(file,kind){
     var blob=await compressImage(file), path="pdv/"+pdvFolder(state.profile.pdv)+"/"+kind+"-"+Date.now()+"-"+crypto.randomUUID()+".webp";
     var result=await window.supabaseClient.storage.from("xstore-evidencias").upload(path,blob,{contentType:"image/webp",upsert:false});
