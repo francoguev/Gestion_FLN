@@ -14,8 +14,8 @@
   function isOperations(){ return norm(state.role) === "operaciones"; }
   function setHint(text, isError){ var el=document.getElementById("gxHint"); if(el){ el.textContent=text; el.style.color=isError ? "#b91c1c" : ""; } }
   function setFormHint(id,text,isError){ var el=document.getElementById(id); if(el){ el.textContent=text||""; el.style.color=isError ? "#b91c1c" : ""; } }
-  function statusLabel(status){ return ({missing_cash:"Sin registro de caja",pending_deposit:"Pendiente de depósito",deposit_review:"Depósito en revisión",validated:"Cuadrado",payjoy_validated:"Cuadrado · PayJoy",difference:"Diferencia por revisar",observed:"Observado",no_cash:"Sin recaudo declarado"})[status] || status; }
-  function isFinal(status){ return ["validated","payjoy_validated","difference","no_cash"].indexOf(status) !== -1; }
+  function statusLabel(status){ return ({missing_cash:"Sin registro de caja",pending_deposit:"Pendiente de depósito",deposit_review:"Depósito en revisión",validated:"Cuadrado",payjoy_validated:"Cuadrado · PayJoy",difference:"Diferencia por revisar",observed:"Observado",store_closed:"Tienda no abrió",no_cash:"Recaudo cero declarado"})[status] || status; }
+  function isFinal(status){ return ["validated","payjoy_validated","difference","store_closed","no_cash"].indexOf(status) !== -1; }
   function isEligibleForDeposit(row){ return row.closure_id && row.cash_amount > 0 && !row.review_started_at && ["pending_deposit","deposit_review","observed"].indexOf(row.status) !== -1; }
   function selectedRows(){ return state.selectedPdvs.length ? state.rows.filter(function(r){ return state.selectedPdvs.indexOf(r.pdv)!==-1; }) : state.rows.slice(); }
 
@@ -46,7 +46,7 @@
 
   function renderSummary(rows){
     var missing=rows.filter(function(r){ return r.status==="missing_cash"; }).length;
-    var pending=rows.reduce(function(total,r){ return total+(r.status!=="missing_cash"&&!r.no_cash?Number(r.outstanding_amount||0):0); },0);
+    var pending=rows.reduce(function(total,r){ return total+(r.status!=="missing_cash"&&!r.no_cash&&!r.store_closed?Number(r.outstanding_amount||0):0); },0);
     var review=rows.filter(function(r){ return r.status==="deposit_review"; }).length;
     var difference=rows.filter(function(r){ return r.status==="difference"; }).length;
     var holder=document.getElementById("gxSummary"); if(!holder) return;
@@ -93,7 +93,7 @@
 
   function showPanel(name){
     ["gxCashPanel","gxDepositPanel","gxReviewPanel"].forEach(function(id){ var panel=document.getElementById(id); if(panel) panel.hidden=id!=="gx"+name.charAt(0).toUpperCase()+name.slice(1)+"Panel"; });
-    if(name==="cash"){ document.getElementById("gxCashDate").value=today(); setFormHint("gxCashFormHint",""); }
+    if(name==="cash"){ document.getElementById("gxCashDate").value=today(); syncStoreClosedFields(); setFormHint("gxCashFormHint",""); }
     if(name==="deposit"){ document.getElementById("gxDepositDate").value=today(); setFormHint("gxDepositFormHint",""); populateAllocationList(); }
   }
   function hidePanel(name){ var panel=document.getElementById("gx"+name.charAt(0).toUpperCase()+name.slice(1)+"Panel"); if(panel) panel.hidden=true; }
@@ -123,14 +123,21 @@
     var result=await window.supabaseClient.storage.from("xstore-evidencias").upload(path,blob,{contentType:"image/webp",upsert:false});
     if(result.error) throw result.error; return path;
   }
+  function syncStoreClosedFields(){
+    var closed=document.getElementById("gxStoreClosed").checked, amount=document.getElementById("gxCashAmount"), file=document.getElementById("gxCashFile");
+    amount.disabled=closed;
+    if(closed) amount.value="0";
+    file.required=!closed;
+    document.getElementById("gxStoreClosedReasonWrap").hidden=!closed;
+  }
 
   async function submitCash(event){
     event.preventDefault(); setFormHint("gxCashFormHint","");
-    var noCash=document.getElementById("gxNoCash").checked, amount=Number(document.getElementById("gxCashAmount").value||0), file=document.getElementById("gxCashFile").files[0];
+    var storeClosed=document.getElementById("gxStoreClosed").checked, amount=Number(document.getElementById("gxCashAmount").value||0), file=document.getElementById("gxCashFile").files[0];
     try{
       setFormHint("gxCashFormHint","Guardando evidencia…");
-      var path=noCash?"":await uploadEvidence(file,"caja");
-      var result=await window.supabaseClient.rpc("xstore_submit_cash",{p_cash_date:document.getElementById("gxCashDate").value,p_cash_amount:noCash?0:amount,p_evidence_path:path,p_no_cash:noCash,p_no_cash_reason:document.getElementById("gxNoCashReason").value});
+      var path=storeClosed?"":await uploadEvidence(file,"caja");
+      var result=await window.supabaseClient.rpc("xstore_submit_cash",{p_cash_date:document.getElementById("gxCashDate").value,p_cash_amount:storeClosed?0:amount,p_evidence_path:path,p_store_closed:storeClosed,p_store_closed_reason:document.getElementById("gxStoreClosedReason").value});
       if(result.error) throw result.error;
       event.target.reset(); hidePanel("cash"); await loadData();
     }catch(error){ setFormHint("gxCashFormHint",error.message||"No se pudo guardar el recaudo.",true); }
@@ -192,7 +199,7 @@
     document.getElementById("gxRefreshBtn").addEventListener("click",loadData); document.getElementById("gxExportBtn").addEventListener("click",exportExcel);
     document.querySelectorAll("[data-gx-open]").forEach(function(btn){ btn.addEventListener("click",function(){showPanel(btn.getAttribute("data-gx-open"));}); });
     document.querySelectorAll("[data-gx-close]").forEach(function(btn){ btn.addEventListener("click",function(){hidePanel(btn.getAttribute("data-gx-close"));}); });
-    document.getElementById("gxNoCash").addEventListener("change",function(){ var disabled=this.checked; document.getElementById("gxCashAmount").disabled=disabled; if(disabled) document.getElementById("gxCashAmount").value="0"; document.getElementById("gxCashFile").required=!disabled; document.getElementById("gxNoCashReasonWrap").hidden=!disabled; });
+    document.getElementById("gxStoreClosed").addEventListener("change",syncStoreClosedFields);
     document.getElementById("gxCashForm").addEventListener("submit",submitCash); document.getElementById("gxDepositForm").addEventListener("submit",submitDeposit); document.getElementById("gxReviewForm").addEventListener("submit",submitReview); document.getElementById("gxResolution").addEventListener("change",togglePayjoy);
     document.getElementById("gxAllocationList").addEventListener("change",function(event){ var check=event.target.closest("[data-gx-allocation]"); if(check){ var input=document.querySelector('[data-gx-allocation-amount="'+CSS.escape(check.getAttribute("data-gx-allocation"))+'"]'); input.disabled=!check.checked; input.value=check.checked?Number(check.getAttribute("data-gx-max")).toFixed(2):""; refreshDepositTotal(); } });
     document.getElementById("gxAllocationList").addEventListener("input",refreshDepositTotal);

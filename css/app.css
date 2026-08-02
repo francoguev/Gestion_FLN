@@ -1000,7 +1000,7 @@
   #gxTable th{ white-space:nowrap; }.gx-money{ font-family:'IBM Plex Mono',monospace; font-weight:700; }.gx-amount-muted{ color:var(--ink-soft); }
   .gx-status{ display:inline-flex; align-items:center; padding:4px 8px; border-radius:999px; font-size:12px; font-weight:800; white-space:nowrap; }
   .gx-status.missing_cash,.gx-status.difference{ background:#fee2e2; color:#b91c1c; }.gx-status.pending_deposit,.gx-status.observed{ background:#ffedd5; color:#c2410c; }
-  .gx-status.deposit_review{ background:#dbeafe; color:#1d4ed8; }.gx-status.validated{ background:#dcfce7; color:#15803d; }.gx-status.payjoy_validated{ background:#ede9fe; color:#6d28d9; }.gx-status.no_cash{ background:#e2e8f0; color:#475569; }
+  .gx-status.deposit_review{ background:#dbeafe; color:#1d4ed8; }.gx-status.validated{ background:#dcfce7; color:#15803d; }.gx-status.payjoy_validated{ background:#ede9fe; color:#6d28d9; }.gx-status.no_cash,.gx-status.store_closed{ background:#e2e8f0; color:#475569; }
   .gx-row-actions{ display:flex; gap:6px; }.gx-row-btn{ border:1px solid #dbe2ee; background:#fff; color:var(--blue); padding:6px 8px; border-radius:7px; font-weight:800; font-size:12px; cursor:pointer; }.gx-row-btn:hover{ background:#eef1ff; }
   .gx-export-btn{ background:var(--blue)!important; border-color:var(--blue)!important; }
   @media(max-width:900px){ .gx-form-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); }.gx-summary{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
