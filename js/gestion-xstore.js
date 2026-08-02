@@ -83,7 +83,7 @@
       }
       var trace=row.registered_by_email ? 'Caja: '+row.registered_by_email+(row.updated_by_email&&row.updated_by_email!==row.registered_by_email?' · Act.: '+row.updated_by_email:'') : 'Sin declaración';
       var tableRow='<tr><td>'+dateEs(row.cash_date)+'</td><td>'+esc(row.pdv)+'</td><td class="gx-money '+(!row.closure_id?'gx-amount-muted':'')+'">'+(row.closure_id?money(row.cash_amount):'—')+'</td><td class="gx-money">'+(row.closure_id?money(row.deposit_amount):'—')+'</td><td class="gx-money">'+(row.closure_id?money(row.outstanding_amount):'—')+'</td><td><span class="gx-status '+esc(row.status)+'">'+esc(statusLabel(row.status))+'</span></td><td title="'+esc(trace)+'">'+esc(trace)+'</td><td><div class="gx-row-actions">'+actions.join("")+'</div></td></tr>';
-      return tableRow+(state.reviewingId===row.closure_id?reviewEditor(row):"");
+      return tableRow+(state.reviewingId && row.closure_id && state.reviewingId===row.closure_id?reviewEditor(row):"");
     }).join("");
   }
 
