@@ -948,6 +948,63 @@
   .xstore-money-good{ background:#dcfce7; color:#166534; }
   .xstore-money-bad{ background:#fee2e2; color:#b91c1c; }
   #xstoreTable tbody tr[data-newdate="1"] td{ padding-top:20px; }
+  .xstore-day-filter{ position:relative; min-width:180px; }
+  .xstore-day-filter-button{ width:100%; text-align:left; cursor:pointer; }
+  .xstore-day-filter-menu{ position:absolute; top:calc(100% + 6px); right:0; z-index:35; min-width:230px; max-height:310px; overflow:auto; padding:8px; border:1px solid var(--line); border-radius:11px; background:#fff; box-shadow:var(--shadow); }
+  .xstore-day-filter-menu label{ display:block; padding:8px 9px; border-radius:7px; color:var(--ink); font-size:13px; cursor:pointer; }
+  .xstore-day-filter-menu label:hover{ background:#f3f5f9; }
+  .xstore-day-filter-menu input{ margin-right:7px; accent-color:var(--blue); }
+  .xstore-day-filter-menu .xstore-day-all{ color:var(--blue); font-weight:800; border-bottom:1px solid var(--line); margin-bottom:4px; }
+
+  /* ---------- gestión xstore ---------- */
+  .gx-wrap{ margin-top:26px; padding-bottom:32px; }
+  .gx-topbar{ gap:12px; }
+  .gx-hero{ display:flex; justify-content:space-between; align-items:flex-start; gap:18px; margin-bottom:20px; }
+  .gx-hero h2{ margin:0 0 5px; font-family:'Space Grotesk',sans-serif; font-size:24px; }
+  .gx-hero p{ margin:0; color:var(--ink-soft); }
+  .gx-entry-actions,.gx-form-actions{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .gx-action-btn{ border:0; background:var(--blue); color:#fff; padding:10px 15px; border-radius:10px; font-weight:800; cursor:pointer; transition:transform .18s ease, background .18s ease, box-shadow .18s ease; }
+  .gx-action-btn:hover{ background:#0b157f; transform:translateY(-1px); box-shadow:0 8px 16px rgba(14,26,161,.18); }
+  .gx-action-btn.is-secondary{ background:#e8ecff; color:var(--blue); }
+  .gx-action-btn.is-secondary:hover{ background:#dce3ff; }
+  .gx-entry-panel{ background:#fff; border:1px solid var(--line); border-radius:14px; padding:20px; margin:0 0 18px; box-shadow:0 10px 26px rgba(15,23,42,.06); }
+  .gx-panel-header{ display:flex; justify-content:space-between; align-items:flex-start; gap:14px; padding-bottom:16px; border-bottom:1px solid var(--line); margin-bottom:16px; }
+  .gx-panel-header h2{ margin:0 0 4px; font-size:20px; }
+  .gx-panel-header p{ margin:0; color:var(--ink-soft); font-size:14px; }
+  .gx-close-panel{ border:0; background:#f1f5f9; color:var(--ink); width:32px; height:32px; border-radius:8px; font-size:24px; line-height:1; cursor:pointer; }
+  .gx-form-grid{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:15px; align-items:end; }
+  .gx-form-grid label{ display:grid; gap:7px; color:var(--ink-soft); font-size:12px; letter-spacing:.04em; text-transform:uppercase; font-weight:800; }
+  .gx-form-grid input,.gx-form-grid select{ min-height:42px; box-sizing:border-box; border:1px solid #dbe2ee; border-radius:9px; padding:9px 11px; color:var(--ink); background:#fff; font:inherit; text-transform:none; letter-spacing:normal; font-weight:600; }
+  .gx-form-grid input:focus,.gx-form-grid select:focus{ outline:3px solid rgba(14,26,161,.14); border-color:var(--blue); }
+  .gx-file-field{ grid-column:span 1; }
+  .gx-check-field{ display:flex!important; grid-template-columns:auto 1fr; align-items:center; min-height:42px; text-transform:none!important; letter-spacing:normal!important; font-size:14px!important; color:var(--ink)!important; }
+  .gx-check-field input{ min-height:auto; }
+  .gx-form-actions{ grid-column:1/-1; justify-content:space-between; padding-top:4px; color:var(--ink-soft); font-size:13px; }
+  .gx-allocation-wrap{ grid-column:1/-1; border:1px solid var(--line); border-radius:10px; padding:12px; }
+  .gx-allocation-list{ display:grid; gap:8px; max-height:230px; overflow:auto; margin-top:10px; }
+  .gx-allocation-row{ display:grid; grid-template-columns:auto 1fr 124px; gap:10px; align-items:center; padding:9px; background:#f8fafc; border-radius:8px; font-size:13px; }
+  .gx-allocation-row input[type="checkbox"]{ min-height:auto; width:16px; height:16px; accent-color:var(--blue); }
+  .gx-allocation-row input[type="number"]{ min-height:36px; }
+  .gx-pdv-filter{ position:relative; min-width:180px; }
+  .gx-pdv-filter-button{ width:100%; text-align:left; cursor:pointer; }
+  .gx-pdv-filter-menu{ position:absolute; top:calc(100% + 6px); right:0; z-index:35; min-width:230px; max-height:310px; overflow:auto; padding:8px; border:1px solid var(--line); border-radius:11px; background:#fff; box-shadow:var(--shadow); }
+  .gx-pdv-filter-menu label{ display:block; padding:8px 9px; border-radius:7px; color:var(--ink); font-size:13px; cursor:pointer; }
+  .gx-pdv-filter-menu label:hover{ background:#f3f5f9; }
+  .gx-pdv-filter-menu input{ margin-right:7px; accent-color:var(--blue); }
+  .gx-pdv-filter-menu .gx-pdv-all{ color:var(--blue); font-weight:800; border-bottom:1px solid var(--line); margin-bottom:4px; }
+  .gx-summary{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin:0 0 18px; }
+  .gx-summary-card{ background:#fff; border:1px solid var(--line); border-radius:13px; padding:16px; }
+  .gx-summary-card span{ display:block; color:var(--ink-soft); font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.05em; }
+  .gx-summary-card strong{ display:block; margin-top:8px; font-size:24px; font-variant-numeric:tabular-nums; }
+  .gx-summary-card.is-alert strong{ color:#c2410c; }.gx-summary-card.is-danger strong{ color:#b91c1c; }.gx-summary-card.is-good strong{ color:#15803d; }
+  #gxTable th{ white-space:nowrap; }.gx-money{ font-family:'IBM Plex Mono',monospace; font-weight:700; }.gx-amount-muted{ color:var(--ink-soft); }
+  .gx-status{ display:inline-flex; align-items:center; padding:4px 8px; border-radius:999px; font-size:12px; font-weight:800; white-space:nowrap; }
+  .gx-status.missing_cash,.gx-status.difference{ background:#fee2e2; color:#b91c1c; }.gx-status.pending_deposit,.gx-status.observed{ background:#ffedd5; color:#c2410c; }
+  .gx-status.deposit_review{ background:#dbeafe; color:#1d4ed8; }.gx-status.validated{ background:#dcfce7; color:#15803d; }.gx-status.payjoy_validated{ background:#ede9fe; color:#6d28d9; }.gx-status.no_cash{ background:#e2e8f0; color:#475569; }
+  .gx-row-actions{ display:flex; gap:6px; }.gx-row-btn{ border:1px solid #dbe2ee; background:#fff; color:var(--blue); padding:6px 8px; border-radius:7px; font-weight:800; font-size:12px; cursor:pointer; }.gx-row-btn:hover{ background:#eef1ff; }
+  .gx-export-btn{ background:var(--blue)!important; border-color:var(--blue)!important; }
+  @media(max-width:900px){ .gx-form-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); }.gx-summary{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
+  @media(max-width:650px){ .gx-topbar,.gx-hero{ flex-wrap:wrap; }.gx-pdv-filter,.gx-topbar select{ flex:1 1 150px; }.gx-entry-actions{ width:100%; }.gx-action-btn{ flex:1; }.gx-form-grid{ grid-template-columns:1fr; }.gx-file-field{ grid-column:auto; }.gx-summary{ grid-template-columns:1fr 1fr; }.gx-allocation-row{ grid-template-columns:auto 1fr; }.gx-allocation-row input[type="number"]{ grid-column:2; } }
 
   /* ---------- bonus section ---------- */
   .bonus-grid{

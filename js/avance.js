@@ -641,6 +641,15 @@
       var advisorKey = normA(advisorName);
       if(!store.asesores[advisorKey]) store.asesores[advisorKey] = { name:advisorName, productos:{} };
       var txn = normA(r[raw.vIdx.transaccion]), plan = raw.vIdx.plan === -1 ? "" : r[raw.vIdx.plan], modalidad = raw.vIdx.modalidad === -1 ? "" : r[raw.vIdx.modalidad];
+      // Estas dos transacciones solo incrementan SS TOTAL de Avance Dia Link.
+      // No se agregan a ninguna de las tablas de producto ni al Avance Link mensual.
+      if(txn === "PORTA OPP MONO" || txn === "PORTA OPP LLAA CAPTURA"){
+        [store, store.asesores[advisorKey]].forEach(function(target){
+          if(!target.productos.sstotal_opp_extra) target.productos.sstotal_opp_extra = { venta:0, ventaDia:0 };
+          if(dateKeyAv(d) <= cutoffKey) target.productos.sstotal_opp_extra.venta++;
+          if(dateKeyAv(d) === dateKeyAv(selectedDate)) target.productos.sstotal_opp_extra.ventaDia++;
+        });
+      }
       CATEGORIES.forEach(function(cat){
         var match = cat.txns.some(function(t){ return normA(t) === txn; });
         if(!match || (cat.requiresPlan49 && !planFeeOk(plan)) || (cat.requiresModalidad && !modalidadOk(modalidad))) return;
@@ -673,7 +682,7 @@
       });
     }catch(e){ console.warn("No se pudieron cargar los arribos para Avance día.", e); }
     var diaAnterior = Math.max(0, selectedDate.getDate() - 1);
-    var productViews = [{ id:"sstotal", label:"SS TOTAL", cuotaProductos:["PORTA OSS","PORTA OPP","VR BASE","VR CAPTURA"], salesIds:["oss","opp","vrbase","vrcaptura"], isSsTotal:true }]
+    var productViews = [{ id:"sstotal", label:"SS TOTAL", cuotaProductos:["PORTA OSS","PORTA OPP","VR BASE","VR CAPTURA"], salesIds:["oss","opp","vrbase","vrcaptura","sstotal_opp_extra"], isSsTotal:true }]
       .concat(CATEGORIES.map(function(cat){ return { id:cat.id, label:cat.label, cuotaProductos:[cat.cuotaProducto], salesIds:[cat.id], isSsTotal:false }; }));
     function quotaFor(store, product){ return product.cuotaProductos.reduce(function(total,key){ return total + (store.cuotas[normA(key)] || 0); },0); }
     function salesFor(target, product, field){ return product.salesIds.reduce(function(total,id){ return total + ((target.productos[id] || {})[field] || 0); },0); }
