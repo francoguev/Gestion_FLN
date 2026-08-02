@@ -10,6 +10,950 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.0/dist/umd/supabase.min.js"></script>
 <script async src="https://tally.so/widgets/embed.js"></script>
+<link rel="stylesheet" href="css/app.css?v=20260802.5">
+</head>
+<body>
+
+<!-- ---------- Pantalla de inicio de sesión ---------- -->
+<div class="login-gate" id="loginGate">
+  <div class="login-card">
+    <img class="login-logo-full" src="https://github.com/francoguev/Gestion_FLN/blob/main/assets/logo%20inicio.png?raw=true" alt="Fortalecernos SAC">
+
+    <form id="loginForm" class="login-form">
+      <div class="f">
+        <label for="loginEmail">Correo</label>
+        <input type="email" id="loginEmail" required autocomplete="username" placeholder="tu.correo@ejemplo.com">
+      </div>
+      <div class="f">
+        <label for="loginPassword">Contraseña</label>
+        <input type="password" id="loginPassword" required autocomplete="current-password" placeholder="••••••••">
+      </div>
+      <button type="submit" class="login-submit-btn" id="loginSubmitBtn">Iniciar sesión</button>
+    </form>
+
+    <div class="login-denied" id="loginDenied">
+      <span id="loginErrorText">Correo o contraseña incorrectos.</span>
+    </div>
+    <p class="login-note">Acceso restringido al equipo de Fortalecernos SAC.</p>
+  </div>
+</div>
+
+
+
+<!-- ---------- Contenido de la app (oculto hasta iniciar sesión) ---------- -->
+<div id="appContent" style="display:none;">
+<div class="app-shell">
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="logo-mark">
+        <img src="https://github.com/francoguev/Gestion_FLN/blob/main/assets/logo%20header%20final%20V3.png?raw=true" alt="Logo Fortalecernos SAC">
+      </div>
+      <div class="brand-text">
+        <div class="brand-title"><span>GESTIÓN</span><span>FORTALECERNOS SAC</span></div>
+      </div>
+    </div>
+    <nav class="sidebar-nav pending" id="sidebarNav">
+      <button class="nav-item active" data-page="novedades">
+        <span class="nav-icon">📣</span> <span class="nav-label">Novedades</span>
+      </button>
+      <button class="nav-item" data-page="powerbi">
+        <span class="nav-icon">📊</span> <span class="nav-label">Power Bi</span>
+      </button>
+      <button class="nav-item" data-page="stock">
+        <span class="nav-icon">📦</span> <span class="nav-label">Stock</span>
+      </button>
+      <button class="nav-item" data-page="calculadora">
+        <span class="nav-icon">🧮</span> <span class="nav-label">Calculadora de comisiones</span>
+      </button>
+      <button class="nav-item" data-page="formulario">
+        <span class="nav-icon">📝</span> <span class="nav-label">Formulario de Ventas</span>
+      </button>
+      <button class="nav-item" data-page="avance">
+        <span class="nav-icon">📈</span> <span class="nav-label">Avance Link</span>
+      </button>
+      <button class="nav-item" data-page="avancedia">
+        <span class="nav-icon">🎯</span> <span class="nav-label">Avance Dia Link</span>
+      </button>
+      <button class="nav-item" data-page="arribos">
+        <span class="nav-icon">👥</span> <span class="nav-label">Arribos</span>
+      </button>
+      <button class="nav-item" data-page="horario">
+        <span class="nav-icon">🗓️</span> <span class="nav-label">Horario</span>
+      </button>
+      <button class="nav-item" data-page="xstore">
+        <span class="nav-icon">🏦</span> <span class="nav-label">Control Xstore</span>
+      </button>
+      <button class="nav-item" data-page="gestionxstore">
+        <span class="nav-icon">💼</span> <span class="nav-label">Gestión Xstore</span>
+      </button>
+      <button class="nav-item" data-page="comprobante">
+        <span class="nav-icon">🧾</span> <span class="nav-label">Comprobante de Pago</span>
+      </button>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-pill">
+        <div class="user-name" id="userNameLabel"></div>
+        <div class="user-role" id="userRoleLabel"></div>
+        <span id="userEmailLabel"></span>
+        <button class="logout-btn" id="logoutBtn">Salir</button>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main-content">
+
+    <section class="page active" id="page-novedades">
+
+      <div class="topbar">
+        <button class="topbar-toggle" aria-label="Mostrar u ocultar menú" title="Mostrar u ocultar menú">☰</button>
+        <div style="flex:1;">
+          <h1>Novedades</h1>
+        </div>
+      </div>
+
+      <div class="wrap" style="margin-top:26px;">
+
+        <div class="table-card" id="novedadesAdminCard" style="display:none; padding:20px 22px;">
+          <h2 style="margin-bottom:4px;" id="novedadFormTitle">Publicar novedad</h2>
+          <p class="hint" style="margin-bottom:16px;">Solo el equipo de Operaciones puede publicar, editar o eliminar novedades. Todos los demás solo las ven.</p>
+          <form id="novedadForm" class="novedad-form">
+            <div class="f">
+              <label for="novedadTitulo">Título (opcional)</label>
+              <input type="text" id="novedadTitulo" placeholder="Ej: Nuevo horario de atención">
+            </div>
+            <div class="f">
+              <label for="novedadImagen">Imagen (opcional)</label>
+              <input type="file" id="novedadImagen" accept="image/*">
+              <span class="hint" id="novedadCurrentImgHint"></span>
+            </div>
+            <div class="f">
+              <label for="novedadTexto">Texto (admite Markdown: **negrita**, _cursiva_, listas, etc.)</label>
+              <textarea id="novedadTexto" rows="6" placeholder="Escribe el comunicado aquí…"></textarea>
+            </div>
+            <label class="novedad-important-check">
+              <input type="checkbox" id="novedadImportante">
+              Marcar como importante (aparece como pop-up a todo el equipo)
+            </label>
+            <label class="novedad-important-check">
+              <input type="checkbox" id="novedadCumple">
+              🎉 Es un saludo de cumpleaños (aparece como pop-up "¡Estamos de fiesta!" a todo el equipo)
+            </label>
+            <div style="display:flex; align-items:center; gap:14px; margin-top:4px;">
+              <button type="submit" class="login-submit-btn" id="novedadSubmitBtn" style="width:auto; padding:11px 22px;">Publicar</button>
+              <button type="button" class="switch-account-btn" id="novedadCancelEditBtn" style="display:none;">Cancelar edición</button>
+              <span class="hint" id="novedadFormMsg"></span>
+            </div>
+          </form>
+        </div>
+
+        <div id="novedadesList" class="novedades-list">
+          <p class="hint">Cargando novedades…</p>
+        </div>
+
+      </div>
+    </section>
+
+    <section class="page" id="page-calculadora">
+
+      <div class="topbar">
+        <button class="topbar-toggle" aria-label="Mostrar u ocultar menú" title="Mostrar u ocultar menú">☰</button>
+        <div style="flex:1;">
+          <h1>Calculadora de comisiones</h1>
+        </div>
+      </div>
+
+      <div class="wrap">
+
+  <section class="panel">
+    <div class="field-card">
+      <label for="sueldoBasico">Sueldo básico</label>
+      <div class="input-row">
+        <span class="prefix">S/</span>
+        <input type="number" id="sueldoBasico" min="0" step="0.01" value="1130" inputmode="decimal">
+      </div>
+    </div>
+    <div class="field-card">
+      <label for="comisionVariable">Comisión variable (monto total)</label>
+      <div class="input-row">
+        <span class="prefix">S/</span>
+        <input type="number" id="comisionVariable" min="0" step="0.01" value="1000" inputmode="decimal">
+      </div>
+    </div>
+    <div class="ganado-ticket">
+      <div class="lbl">Ganado del mes</div>
+      <div class="amt mono" id="ganadoTotal">S/ 0.00</div>
+      <div class="breakdown" id="ganadoBreakdown"></div>
+    </div>
+  </section>
+
+  <div class="disclaimer">
+    <span class="icon">⚠️</span>
+    <p><strong>Descargo de responsabilidad:</strong> el monto comisionable que muestra esta calculadora es
+    <strong>aproximado</strong> y solo tiene fines referenciales. Únicamente se consideran válidas las ventas que
+    estén <strong>correctamente subidas al link</strong> correspondiente y que además <strong>figuren en INAR</strong>.
+    El cálculo final y oficial de comisiones corresponde al área encargada.</p>
+  </div>
+
+  <section class="table-card">
+    <div class="heading">
+      <h2>Estructura del esquema de comisiones</h2>
+      <span class="hint">Completa cuota y venta por producto — el cumplimiento y la comisión se calculan solos.</span>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Productos</th>
+            <th>Cuota</th>
+            <th>Venta</th>
+            <th>Cumplimiento</th>
+            <th>Mix</th>
+            <th>Comisión S/</th>
+            <th>Bono extra S/</th>
+            <th>Condiciones</th>
+            <th>Min</th>
+          </tr>
+        </thead>
+        <tbody id="productsBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="bonus-grid">
+    <div class="bonus-card">
+      <h3>NPS de venta y postventa</h3>
+      <div class="desc">Si el NPS logrado es de 70% a más, se suma S/ 50 al ganado.</div>
+      <div class="bonus-fields">
+        <div class="f">
+          <label for="npsLogrado">NPS logrado (%)</label>
+          <input type="number" id="npsLogrado" min="0" max="100" step="0.1" value="0">
+        </div>
+      </div>
+      <div class="bonus-result" id="npsResult"></div>
+    </div>
+    <div class="bonus-card">
+      <h3>MIS IN (sujeto a cuota)</h3>
+      <div class="desc">Si la venta alcanza la cuota de MIS IN, se suma S/ 50 al ganado.</div>
+      <div class="bonus-fields">
+        <div class="f">
+          <label for="misinCuota">Cuota</label>
+          <input type="number" id="misinCuota" min="0" step="1" value="0">
+        </div>
+        <div class="f">
+          <label for="misinVenta">Venta</label>
+          <input type="number" id="misinVenta" min="0" step="1" value="0">
+        </div>
+      </div>
+      <div class="bonus-result" id="misinResult"></div>
+    </div>
+  </section>
+
+  <section class="summary-card">
+    <div class="rows" id="summaryRows"></div>
+    <button class="reset-btn" id="resetBtn">Reiniciar datos</button>
+  </section>
+
+      </div>
+
+      <footer class="note">
+        Cumplimiento = Venta ÷ Cuota. La comisión de cada producto solo se paga si el cumplimiento es 70% o más, y equivale a
+        Mix × Comisión variable × Cumplimiento (en VR CAPTURA el cumplimiento tiene tope de 100%). Los bonos por unidad
+        adicional (OSS, OPP, VR BASE) se pagan por cada unidad vendida por encima de la cuota. Los datos se guardan
+        automáticamente en este navegador.
+      </footer>
+
+    </section>
+
+    <section class="page" id="page-formulario">
+
+      <div class="topbar">
+        <button class="topbar-toggle" aria-label="Mostrar u ocultar menú" title="Mostrar u ocultar menú">☰</button>
+        <div style="flex:1;">
+          <h1>Formulario de Ventas</h1>
+        </div>
+      </div>
+
+      <div class="form-wrap">
+        <div class="form-frame-box">
+          <iframe data-tally-src="https://tally.so/r/worNlM"
+                  width="100%" height="100%" frameborder="0" marginheight="0" marginwidth="0"
+                  title="Registro de Ventas FLN">
+          </iframe>
+        </div>
+      </div>
+
+    </section>
+
+    <section class="page" id="page-avance">
+
+      <div class="topbar">
+        <button class="topbar-toggle" aria-label="Mostrar u ocultar menú" title="Mostrar u ocultar menú">☰</button>
+        <div style="flex:1;">
+          <h1>Avance Link</h1>
+        </div>
+        <button type="button" id="avanceOrdersBtn" class="avance-orders-btn">Órdenes consideradas</button>
+        <select id="avancePdvSelect" class="stock-filter-select" style="min-width:200px; display:none;">
+          <option value="">PDV…</option>
+        </select>
+        <select id="avanceMonthSelect" class="stock-filter-select" style="min-width:160px;">
+          <option value="">Mes…</option>
+        </select>
+      </div>
+
+      <div class="wrap" style="margin-top:26px;" id="avanceWrap">
+        <div class="avance-hint" id="avanceHint">Cargando avance…</div>
+        <div id="avanceStoreCardHolder"></div>
+        <div id="avanceAsesoresHolder"></div>
+      </div>
+
+    </section>
+
+    <div class="avance-orders-modal" id="avanceOrdersModal" hidden role="dialog" aria-modal="true" aria-labelledby="avanceOrdersTitle">
+      <div class="avance-orders-dialog">
+        <div class="avance-orders-dialog-header">
+          <div>
+            <h2 id="avanceOrdersTitle">Órdenes consideradas</h2>
+            <p id="avanceOrdersDescription">Ventas que se consideran para el conteo del avance seleccionado.</p>
+          </div>
+          <button type="button" class="avance-orders-close" id="avanceOrdersClose" aria-label="Cerrar órdenes consideradas" title="Cerrar">×</button>
+        </div>
+        <div class="avance-orders-toolbar">
+          <label for="avanceOrdersAdvisorFilter">Asesor</label>
+          <select id="avanceOrdersAdvisorFilter" class="stock-filter-select">
+            <option value="">Todos los asesores</option>
+          </select>
+          <button type="button" class="avance-orders-not-counted" id="avanceOrdersNotCounted" aria-pressed="false">No Consideradas</button>
+          <span class="avance-orders-count" id="avanceOrdersCount"></span>
+        </div>
+        <div class="avance-orders-table-scroll">
+          <table class="avance-orders-table">
+            <thead>
+              <tr><th>Fecha de Venta</th><th>Tienda</th><th>Asesor</th><th>Transacción</th><th>Orden</th><th>Plan Vendido</th><th>Modalidad de Venta</th><th>Conteo</th></tr>
+            </thead>
+            <tbody id="avanceOrdersBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <section class="page" id="page-avancedia">
+      <div class="topbar">
+        <button class="topbar-toggle" aria-label="Mostrar u ocultar menú" title="Mostrar u ocultar menú">☰</button>
+        <div style="flex:1;"><h1>Avance Dia Link</h1></div>
+        <div class="avance-dia-pdv-filter" id="avanceDiaPdvFilter">
+          <button type="button" class="stock-filter-select avance-dia-pdv-button" id="avanceDiaPdvButton" aria-expanded="false">PDV · Todos</button>
+          <div class="avance-dia-pdv-menu" id="avanceDiaPdvMenu" hidden></div>
+        </div>
+        <select id="avanceDiaMonthSelect" class="stock-filter-select" style="min-width:160px;"><option value="">Mes…</option></select>
+        <input id="avanceDiaDate" class="stock-filter-select avance-day-date" type="date" aria-label="Fecha de avance">
+      </div>
+      <div class="wrap" style="margin-top:26px;">
+        <div class="avance-hint" id="avanceDiaHint">Cargando avance del día…</div>
+        <div id="avanceDiaHolder"></div>
+      </div>
+    </section>
+
+    <section class="page" id="page-arribos">
+
+      <div class="topbar">
+        <button class="topbar-toggle" aria-label="Mostrar u ocultar menú" title="Mostrar u ocultar menú">☰</button>
+        <div style="flex:1;">
+          <h1>Arribos</h1>
+        </div>
+        <select id="arribosMonthSelect" class="stock-filter-select" style="min-width:160px;">
+          <option value="">Mes…</option>
+        </select>
+      </div>
+
+      <div class="wrap" style="margin-top:26px;" id="arribosWrap">
+        <div class="avance-hint" id="arribosHint">Cargando arribos…</div>
+
+        <div class="table-card" style="padding:20px 22px;">
+          <div class="heading" style="align-items:center; width:100%;">
+            <div>
+              <h2>Arribos por tienda y asesor</h2>
+              <span class="hint" id="arribosSummaryHint"></span>
+            </div>
+            <button type="button" id="arribosExpandBtn" class="arribos-expand-btn" disabled aria-expanded="false">Expandir</button>
+          </div>
+          <div id="arribosStoresHolder"></div>
+        </div>
+
+        <div class="table-card" style="padding:20px 22px; margin-top:20px;">
+          <div class="heading" style="align-items:center; width:100%;">
+            <div>
+              <h2>Ventas no concretadas</h2>
+              <span class="hint">Motivos y comportamiento del mes seleccionado.</span>
+            </div>
+          </div>
+          <div class="stock-filters-row" style="margin:4px 0 4px; padding:0;">
+            <select id="arribosFiltroDia" class="stock-filter-select">
+              <option value="">DÍA · Todos</option>
+            </select>
+            <select id="arribosFiltroTienda" class="stock-filter-select">
+              <option value="">TIENDA · Todas</option>
+            </select>
+            <select id="arribosFiltroAsesor" class="stock-filter-select">
+              <option value="">ASESOR · Todos</option>
+            </select>
+          </div>
+          <div id="arribosResumenCards" class="arribos-summary-cards"></div>
+          <div class="arribos-noconcretada-grid">
+            <div>
+              <h3 class="arribos-subheading">Motivos de venta no concretada</h3>
+              <div id="arribosMotivosHolder"></div>
+            </div>
+            <div>
+              <h3 class="arribos-subheading">Conversión por tienda</h3>
+              <div id="arribosConversionHolder"></div>
+            </div>
+            <div>
+              <h3 class="arribos-subheading">Conversión por asesor</h3>
+              <div id="arribosConversionAsesorHolder"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <section class="page" id="page-horario">
+      <div class="topbar">
+        <button class="topbar-toggle" aria-label="Mostrar u ocultar menú" title="Mostrar u ocultar menú">☰</button>
+        <div style="flex:1;"><h1>Horario</h1></div>
+      </div>
+      <div class="wrap horario-wrap">
+        <section class="table-card horario-card">
+          <div class="heading horario-heading">
+            <div><h2 id="horarioTitle">Horario semanal</h2><span class="hint" id="horarioHint">Selecciona una semana para consultar los turnos.</span></div>
+            <div class="horario-week-controls" aria-label="Navegación semanal">
+              <button type="button" class="horario-week-arrow" id="horarioPrevWeek" aria-label="Ver semana anterior" title="Semana anterior">←</button>
+              <button type="button" class="horario-current-week" id="horarioWeekLabel" title="Volver a la semana actual"></button>
+              <button type="button" class="horario-week-arrow" id="horarioNextWeek" aria-label="Ver semana siguiente" title="Semana siguiente">→</button>
+              <button type="button" class="horario-month-btn" id="horarioMonthSchedule">Vista mes</button>
+              <button type="button" class="horario-capture-btn" id="horarioCaptureSchedule">Copiar captura</button>
+              <button type="button" class="horario-export-btn" id="horarioExportSchedule">Descargar Excel</button>
+            </div>
+          </div>
+          <div class="horario-tools">
+            <div class="horario-pdv-filter" id="horarioPdvFilter">
+              <button type="button" class="stock-filter-select horario-pdv-filter-button" id="horarioPdvFilterButton" aria-expanded="false">PDV · Todos</button>
+              <div class="horario-pdv-filter-menu" id="horarioPdvFilterMenu" hidden></div>
+            </div>
+            <button type="button" class="horario-copy-week-btn" id="horarioCopyPrevious" style="display:none;">Copiar semana anterior</button>
+          </div>
+          <div class="horario-table-scroll" id="horarioScheduleHolder"></div>
+        </section>
+        <section class="table-card horario-editor" id="horarioEditor" hidden>
+          <div class="heading"><div><h2>Configurar turno</h2><span class="hint" id="horarioEditorLabel"></span></div></div>
+          <div class="horario-presets" aria-label="Turnos rápidos">
+            <button type="button" class="horario-preset" data-start="09:00" data-end="18:00">09:00–18:00</button>
+            <button type="button" class="horario-preset" data-start="10:00" data-end="19:00">10:00–19:00</button>
+            <button type="button" class="horario-preset" data-start="11:00" data-end="20:00">11:00–20:00</button>
+            <button type="button" class="horario-preset horario-preset-off" data-off="true">Libre</button>
+          </div>
+          <div class="horario-editor-fields">
+            <label>Ingreso <input type="time" id="horarioStartTime" required></label><label>Salida <input type="time" id="horarioEndTime" required></label>
+            <label>Inicio de refrigerio <input type="time" id="horarioBreakStart"></label><label>Fin de refrigerio <input type="time" id="horarioBreakEnd"></label>
+          </div>
+          <div class="horario-editor-actions">
+            <button type="button" class="reset-btn" id="horarioCopyShift">Copiar horario</button>
+            <button type="button" class="reset-btn" id="horarioPasteShift">Pegar horario</button>
+            <button type="button" class="reset-btn" id="horarioCancelEdit">Cancelar</button>
+            <button type="button" class="reset-btn" id="horarioSaveEdit">Guardar turno</button>
+          </div>
+        </section>
+        <section class="table-card horario-coverage" id="horarioCoverageCard" hidden>
+          <div class="heading horario-heading"><div><h2>Cobertura por PDV</h2><span class="hint">Cantidad de asesores programados por hora. Pasa el cursor sobre una celda para ver los nombres.</span></div><div class="horario-coverage-actions"><select class="stock-filter-select" id="horarioCoverageDay" aria-label="Día de cobertura"></select><button type="button" class="horario-month-btn" id="horarioMonthCoverage">Vista mes</button><button type="button" class="horario-capture-btn" id="horarioCaptureCoverage">Copiar captura</button><button type="button" class="horario-export-btn" id="horarioExportCoverage">Descargar Excel</button></div></div>
+          <div class="horario-table-scroll" id="horarioCoverageHolder"></div>
+        </section>
+
+        <div class="horario-month-modal" id="horarioMonthModal" hidden role="dialog" aria-modal="true" aria-labelledby="horarioMonthTitle">
+          <div class="horario-month-dialog">
+            <div class="horario-copy-dialog-header"><div><h2 id="horarioMonthTitle">Vista mensual</h2><p id="horarioMonthHint">Solo lectura.</p></div><button type="button" class="horario-modal-close" id="horarioMonthClose" aria-label="Cerrar">×</button></div>
+            <div class="horario-month-table-scroll" id="horarioMonthHolder"></div>
+            <div class="horario-copy-modal-actions"><button type="button" class="horario-capture-btn" id="horarioMonthCapture">Copiar captura</button><button type="button" class="horario-export-btn" id="horarioMonthExport">Descargar Excel</button><button type="button" class="reset-btn" id="horarioMonthCloseBottom">Cerrar</button></div>
+          </div>
+        </div>
+
+        <div class="horario-copy-modal" id="horarioCopyModal" hidden role="dialog" aria-modal="true" aria-labelledby="horarioCopyModalTitle">
+          <div class="horario-copy-dialog">
+            <div class="horario-copy-dialog-header">
+              <div><h2 id="horarioCopyModalTitle">Copiar semana anterior</h2><p id="horarioCopyModalHint">Elige los PDV y asesores cuyo horario deseas copiar.</p></div>
+              <button type="button" class="horario-modal-close" id="horarioCopyCancel" aria-label="Cerrar">×</button>
+            </div>
+            <div class="horario-copy-tree" id="horarioCopyTree"></div>
+            <p class="horario-copy-status" id="horarioCopyStatus"></p>
+            <div class="horario-copy-modal-actions"><button type="button" class="reset-btn" id="horarioCopyCancelBottom">Cancelar</button><button type="button" class="horario-copy-week-btn" id="horarioCopyConfirm">Copiar seleccionados</button></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="page" id="page-xstore">
+
+      <div class="topbar">
+        <button class="topbar-toggle" aria-label="Mostrar u ocultar menú" title="Mostrar u ocultar menú">☰</button>
+        <div style="flex:1;">
+          <h1>Control Xstore</h1>
+        </div>
+        <button class="reset-btn" id="xstoreCrearBtn" style="background:var(--orange); border-color:var(--orange); display:none;">Crear Registro</button>
+        <div class="xstore-day-filter" id="xstoreDayFilter" style="display:none;">
+          <button type="button" class="stock-filter-select xstore-day-filter-button" id="xstoreDayButton" aria-expanded="false">Día · Todos</button>
+          <div class="xstore-day-filter-menu" id="xstoreDayMenu" hidden></div>
+        </div>
+        <select id="xstoreMonthSelect" class="stock-filter-select" style="min-width:160px;">
+          <option value="">Mes…</option>
+        </select>
+      </div>
+
+      <div class="wrap" style="margin-top:26px;">
+
+        <section class="table-card">
+          <div class="heading" style="justify-content:space-between; align-items:center; width:100%;">
+            <div>
+              <h2 id="xstoreTitle">Registro y depósito diario</h2>
+              <span class="hint" id="xstoreHint">Cargando datos…</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px; margin-left:auto; flex-wrap:wrap;">
+              <button class="reset-btn" id="xstoreRefreshBtn" style="background:var(--blue); border-color:var(--blue);">Actualizar</button>
+            </div>
+          </div>
+          <div class="table-scroll">
+            <table id="xstoreTable">
+              <thead>
+                <tr id="xstoreTheadRow">
+                  <th>Fecha</th>
+                  <th class="xstore-pdv-col">PDV</th>
+                  <th>Monto Xstore</th>
+                  <th>Estado registro</th>
+                  <th>Depósito</th>
+                  <th>Estado depósito</th>
+                </tr>
+              </thead>
+              <tbody id="xstoreTbody"></tbody>
+            </table>
+          </div>
+        </section>
+
+      </div>
+
+    </section>
+
+    <section class="page" id="page-xstore-crear">
+
+      <div class="topbar">
+        <button class="topbar-toggle" aria-label="Mostrar u ocultar menú" title="Mostrar u ocultar menú">☰</button>
+        <button class="reset-btn" id="xstoreCrearBackBtn" style="background:var(--blue); border-color:var(--blue);">← Volver</button>
+        <div style="flex:1;">
+          <h1>Crear Registro Xstore</h1>
+        </div>
+      </div>
+
+      <div class="form-wrap">
+        <div class="form-frame-box">
+          <iframe data-tally-src="https://tally.so/r/EkreaB"
+                  width="100%" height="100%" frameborder="0" marginheight="0" marginwidth="0"
+                  title="Control Xstore">
+          </iframe>
+        </div>
+      </div>
+
+    </section>
+
+    <section class="page" id="page-gestionxstore">
+      <div class="topbar gx-topbar">
+        <button class="topbar-toggle" aria-label="Mostrar u ocultar menú" title="Mostrar u ocultar menú">☰</button>
+        <div style="flex:1;"><h1>Gestión Xstore</h1></div>
+        <div class="gx-pdv-filter" id="gxPdvFilter" hidden>
+          <button type="button" class="stock-filter-select gx-pdv-filter-button" id="gxPdvButton" aria-expanded="false">PDV · Todos</button>
+          <div class="gx-pdv-filter-menu" id="gxPdvMenu" hidden></div>
+        </div>
+        <select id="gxMonthSelect" class="stock-filter-select" style="min-width:160px;"></select>
+        <button type="button" class="reset-btn gx-export-btn" id="gxExportBtn" hidden>Descargar Excel</button>
+      </div>
+
+      <div class="wrap gx-wrap">
+        <section class="gx-hero">
+          <div><h2>Control de recaudos y depósitos</h2><p id="gxHint">Cargando gestión Xstore…</p></div>
+          <div class="gx-entry-actions" id="gxEntryActions" hidden>
+            <button type="button" class="gx-action-btn" data-gx-open="cash">Registrar caja</button>
+            <button type="button" class="gx-action-btn is-secondary" data-gx-open="deposit">Registrar depósito</button>
+          </div>
+        </section>
+
+        <section class="gx-entry-panel" id="gxCashPanel" hidden>
+          <div class="gx-panel-header"><div><h2>Registrar recaudo de caja</h2><p>La fecha de hoy aparece seleccionada por defecto.</p></div><button type="button" class="gx-close-panel" data-gx-close="cash" aria-label="Cerrar">×</button></div>
+          <form id="gxCashForm" class="gx-form-grid">
+            <label>Fecha de caja<input id="gxCashDate" type="date" required></label>
+            <label>Monto recaudado<input id="gxCashAmount" type="number" min="0" step="0.01" inputmode="decimal" required placeholder="0.00"></label>
+            <label class="gx-file-field">Foto de caja<input id="gxCashFile" type="file" accept="image/jpeg,image/png,image/webp" required></label>
+            <label class="gx-check-field"><input id="gxStoreClosed" type="checkbox"> La tienda no abrió este día</label>
+            <label id="gxStoreClosedReasonWrap" hidden>Motivo (opcional)<input id="gxStoreClosedReason" type="text" maxlength="180" placeholder="Ej. cierre excepcional de tienda"></label>
+            <div class="gx-form-actions"><span id="gxCashFormHint"></span><button class="gx-action-btn" type="submit">Guardar recaudo</button></div>
+          </form>
+        </section>
+
+        <section class="gx-entry-panel" id="gxDepositPanel" hidden>
+          <div class="gx-panel-header"><div><h2>Registrar depósito</h2><p>Selecciona los días de caja que cubre este voucher y asigna el monto a cada uno.</p></div><button type="button" class="gx-close-panel" data-gx-close="deposit" aria-label="Cerrar">×</button></div>
+          <form id="gxDepositForm" class="gx-form-grid">
+            <label>Fecha de depósito<input id="gxDepositDate" type="date" required></label>
+            <label>Monto del voucher<input id="gxDepositAmount" type="number" min="0.01" step="0.01" inputmode="decimal" required placeholder="0.00" readonly></label>
+            <label class="gx-file-field">Captura del depósito<input id="gxDepositFile" type="file" accept="image/jpeg,image/png,image/webp" required></label>
+            <div class="gx-allocation-wrap"><strong>Días de caja cubiertos</strong><div class="gx-allocation-list" id="gxAllocationList"></div></div>
+            <div class="gx-form-actions"><span id="gxDepositFormHint"></span><button class="gx-action-btn" type="submit">Guardar depósito</button></div>
+          </form>
+        </section>
+
+        <section class="gx-entry-panel gx-review-panel" id="gxReviewPanel" hidden>
+          <div class="gx-panel-header"><div><h2 id="gxReviewTitle">Validar caso</h2><p id="gxReviewDetail"></p></div><button type="button" class="gx-close-panel" data-gx-close="review" aria-label="Cerrar">×</button></div>
+          <form id="gxReviewForm" class="gx-form-grid">
+            <input id="gxReviewId" type="hidden">
+            <label>Resolución<select id="gxResolution"><option value="validated">Cuadrado</option><option value="payjoy_validated">Cuadrado · PayJoy</option><option value="difference">Diferencia por revisar</option><option value="observed">Observar y devolver</option></select></label>
+            <label id="gxPayjoyWrap" hidden>Monto PayJoy<input id="gxPayjoyAmount" type="number" min="0" step="0.01" inputmode="decimal" value="0"></label>
+            <label class="gx-note-field">Observación<input id="gxReviewNote" type="text" maxlength="240" placeholder="Comentario para el equipo"></label>
+            <div class="gx-form-actions"><span id="gxReviewFormHint"></span><button class="gx-action-btn" type="submit">Guardar validación</button></div>
+          </form>
+        </section>
+
+        <section class="gx-summary" id="gxSummary"></section>
+        <section class="table-card gx-table-card">
+          <div class="heading"><div><h2>Seguimiento diario</h2><span class="hint">Cada fila representa un cierre esperado por PDV y fecha.</span></div><button class="reset-btn" id="gxRefreshBtn">Actualizar</button></div>
+          <div class="table-scroll"><table id="gxTable"><thead><tr><th>Fecha</th><th>PDV</th><th>Recaudo</th><th>Depositado</th><th>Pendiente</th><th>Estado</th><th>Registro</th><th>Acciones</th></tr></thead><tbody id="gxTbody"></tbody></table></div>
+        </section>
+      </div>
+    </section>
+
+    <section class="page" id="page-comprobante">
+
+      <div class="topbar">
+        <button class="topbar-toggle" aria-label="Mostrar u ocultar menú" title="Mostrar u ocultar menú">☰</button>
+        <div style="flex:1;">
+          <h1>Comprobante de Pago</h1>
+        </div>
+      </div>
+
+      <div class="wrap" style="margin-top:26px;">
+        <p class="hint" style="margin:0 0 16px;">Nota de venta interna para entregar al cliente — no es boleta ni factura electrónica.</p>
+
+        <div class="cxp-app">
+
+          <div class="cxp-form-pane">
+
+            <div class="cxp-fieldset">
+              <div class="cxp-legend">Tu negocio</div>
+              <label class="cxp-label">Nombre / Razón social</label>
+              <input type="text" class="cxp-input" id="cxpBizName" placeholder="Ej. FORTALECERNOS S.A.C.">
+              <div class="cxp-row2">
+                <div><label class="cxp-label">RUC</label><input type="text" class="cxp-input" id="cxpBizRuc" placeholder="20611685689"></div>
+                <div><label class="cxp-label">Teléfono</label><input type="text" class="cxp-input" id="cxpBizPhone" placeholder="970034126"></div>
+              </div>
+              <label class="cxp-label">Dirección</label>
+              <input type="text" class="cxp-input" id="cxpBizAddr" placeholder="Jr. / Av. ...">
+            </div>
+
+            <div class="cxp-fieldset">
+              <div class="cxp-legend">Cliente</div>
+              <label class="cxp-label">Nombre completo</label>
+              <input type="text" class="cxp-input" id="cxpCliName" placeholder="Nombre y apellidos">
+              <div class="cxp-row2">
+                <div><label class="cxp-label">DNI / RUC</label><input type="text" class="cxp-input" id="cxpCliDoc" placeholder="12345678"></div>
+                <div><label class="cxp-label">Teléfono</label><input type="text" class="cxp-input" id="cxpCliPhone" placeholder="9XXXXXXXX"></div>
+              </div>
+              <label class="cxp-label">Dirección (opcional)</label>
+              <input type="text" class="cxp-input" id="cxpCliAddr" placeholder="Dirección del cliente">
+            </div>
+
+            <div class="cxp-fieldset">
+              <div class="cxp-legend">Documento</div>
+              <div class="cxp-row2">
+                <div><label class="cxp-label">N° de nota</label><input type="text" class="cxp-input" id="cxpDocNum" placeholder="00000001"></div>
+                <div><label class="cxp-label">Fecha</label><input type="date" class="cxp-input" id="cxpDocDate"></div>
+              </div>
+              <label class="cxp-label">Modalidad de pago</label>
+              <select class="cxp-input" id="cxpDocModo">
+                <option value="Contado">Contado</option>
+                <option value="Financiado / cuotas">Financiado / cuotas</option>
+              </select>
+            </div>
+
+            <div class="cxp-fieldset">
+              <div class="cxp-legend">Equipos / productos</div>
+              <div id="cxpItemsWrap"></div>
+              <button type="button" class="cxp-add-item" id="cxpAddItem">+ Agregar equipo</button>
+            </div>
+
+            <div class="cxp-fieldset">
+              <div class="cxp-legend">Pago recibido</div>
+              <div class="cxp-row2">
+                <div><label class="cxp-label">Método</label>
+                  <select class="cxp-input" id="cxpPayMethod">
+                    <option>Yape</option><option>Plin</option><option>Transferencia</option>
+                    <option>Efectivo</option><option>Tarjeta</option>
+                  </select>
+                </div>
+                <div><label class="cxp-label">N° de operación</label><input type="text" class="cxp-input" id="cxpPayOp" placeholder="Opcional"></div>
+              </div>
+              <div class="cxp-row2">
+                <div><label class="cxp-label">Monto pagado hoy (S/)</label><input type="number" class="cxp-input" id="cxpPayAmount" placeholder="0.00" step="0.01"></div>
+                <div><label class="cxp-label">Saldo pendiente (S/)</label><input type="number" class="cxp-input" id="cxpPayBalance" placeholder="0.00" step="0.01"></div>
+              </div>
+            </div>
+
+            <div class="cxp-fieldset">
+              <div class="cxp-legend">Cuentas para pago (opcional)</div>
+              <div class="cxp-banks" id="cxpBanksWrap"></div>
+              <button type="button" class="cxp-add-item" id="cxpAddBank">+ Agregar cuenta</button>
+            </div>
+
+            <div class="cxp-actions">
+              <button class="cxp-btn cxp-btn-secondary" id="cxpSaveDefaults">Guardar mis datos</button>
+              <button class="cxp-btn cxp-btn-primary" id="cxpPrintBtn">Imprimir / Guardar PDF</button>
+            </div>
+            <a class="cxp-btn-whatsapp" id="cxpWaBtn" href="#" target="_blank" rel="noopener">Enviar mensaje al cliente por WhatsApp</a>
+            <p class="cxp-hint">"Guardar mis datos" recuerda tu negocio y el próximo número de nota en este navegador. El botón de imprimir abre el diálogo de impresión — ahí eliges "Guardar como PDF" para enviarlo por WhatsApp. Luego usa el botón verde para abrir el chat del cliente con el mensaje ya escrito; solo adjunta el PDF guardado.</p>
+          </div>
+
+          <div class="cxp-preview-pane">
+            <div class="cxp-receipt" id="cxpReceipt">
+              <div class="cxp-receipt-header">
+                <div class="cxp-rlogo" id="cxpPvBizName">TU NEGOCIO</div>
+                <div class="cxp-rtag" id="cxpPvBizSub">RUC · DIRECCIÓN · TELÉFONO</div>
+              </div>
+
+              <div class="cxp-doc-type">
+                NOTA DE VENTA
+                <span class="cxp-num" id="cxpPvDocNum">N° 00000001</span>
+              </div>
+
+              <div class="cxp-kv"><span>Fecha</span><span id="cxpPvDate">—</span></div>
+              <div class="cxp-kv"><span>Modalidad</span><span id="cxpPvModo">Contado</span></div>
+
+              <hr class="cxp-dashed">
+
+              <div class="cxp-section-label">Cliente</div>
+              <div class="cxp-kv"><span>Nombre</span><span id="cxpPvCliName">—</span></div>
+              <div class="cxp-kv"><span>Doc.</span><span id="cxpPvCliDoc">—</span></div>
+              <div class="cxp-kv" id="cxpPvCliPhoneRow"><span>Teléfono</span><span id="cxpPvCliPhone">—</span></div>
+              <div class="cxp-kv" id="cxpPvCliAddrRow" style="display:none"><span>Dirección</span><span id="cxpPvCliAddr">—</span></div>
+
+              <hr class="cxp-dashed">
+
+              <div class="cxp-section-label">Equipos</div>
+              <table class="cxp-items-table">
+                <thead><tr><th>Descripción</th><th class="cxp-num">Cant.</th><th class="cxp-num">Importe</th></tr></thead>
+                <tbody id="cxpPvItems"></tbody>
+              </table>
+
+              <div class="cxp-totals">
+                <div class="cxp-kv cxp-grand"><span>Total</span><span id="cxpPvTotal">S/. 0.00</span></div>
+                <div class="cxp-kv"><span>Pagado (<span id="cxpPvPayMethod">—</span>)</span><span id="cxpPvPaid">S/. 0.00</span></div>
+                <div class="cxp-kv"><span>Saldo pendiente</span><span id="cxpPvBalance">S/. 0.00</span></div>
+                <div class="cxp-kv" id="cxpPvOpRow" style="display:none"><span>N° operación</span><span id="cxpPvOp">—</span></div>
+              </div>
+
+              <div id="cxpPvBanksBlock" style="display:none">
+                <hr class="cxp-dashed">
+                <div class="cxp-section-label">Cuentas para pago</div>
+                <div class="cxp-banklist" id="cxpPvBanks"></div>
+              </div>
+
+              <hr class="cxp-dashed">
+              <p class="cxp-disclaimer">Este documento es una nota de venta interna, referencial y de control. No constituye boleta de venta ni factura electrónica válida ante SUNAT. Conserve este comprobante como constancia de la operación realizada.</p>
+              <div class="cxp-tear"></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </section>
+
+    <section class="page" id="page-stock">
+
+      <div class="topbar">
+        <button class="topbar-toggle" aria-label="Mostrar u ocultar menú" title="Mostrar u ocultar menú">☰</button>
+        <div style="flex:1;">
+          <h1>Stock</h1>
+        </div>
+      </div>
+
+      <div class="wrap" style="margin-top:26px;">
+
+        <section class="table-card">
+          <div class="heading" style="align-items:center; width:100%;">
+            <div>
+              <h2>Equipos</h2>
+              <span class="hint" id="stockUpdatedHint">Cargando datos…</span>
+            </div>
+          </div>
+
+          <div class="stock-summary-wrap">
+            <div class="stock-summary-cols">
+              <div class="stock-panel">
+                <div class="stock-panel-head">
+                  <span class="stock-panel-title">Chips <span id="stockChipTotal"></span></span>
+                  <button type="button" class="stock-panel-toggle" data-target="stockChipBody">Expandir</button>
+                </div>
+                <div class="stock-panel-body is-collapsed" id="stockChipBody"></div>
+              </div>
+              <div class="stock-panel">
+                <div class="stock-panel-head">
+                  <span class="stock-panel-title">Equipos <span id="stockEquipoTotal"></span></span>
+                  <button type="button" class="stock-panel-toggle" data-target="stockEquipoBody">Expandir</button>
+                </div>
+                <div class="stock-panel-body is-collapsed" id="stockEquipoBody"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="stock-filters-row">
+            <select id="stockFilterPunto" class="stock-filter-select">
+              <option value="">PUNTO DE VENTA · Todo</option>
+            </select>
+            <select id="stockFilterMarca" class="stock-filter-select">
+              <option value="">MARCA · Todo</option>
+            </select>
+            <select id="stockFilterTipo" class="stock-filter-select"></select>
+            <button class="reset-btn" id="stockRefreshBtn" style="background:var(--blue); border-color:var(--blue);">Actualizar</button>
+          </div>
+
+          <div class="table-scroll">
+            <table id="stockTable">
+              <thead>
+                <tr>
+                  <th>Punto de venta</th>
+                  <th>Marca</th>
+                  <th>Modelo</th>
+                  <th>SKU</th>
+                  <th>Serie</th>
+                </tr>
+              </thead>
+              <tbody id="stockTbody"></tbody>
+            </table>
+          </div>
+        </section>
+
+
+      </div>
+
+    </section>
+
+    <section class="page" id="page-powerbi">
+
+      <div class="topbar">
+        <button class="topbar-toggle" aria-label="Mostrar u ocultar menú" title="Mostrar u ocultar menú">☰</button>
+        <div style="flex:1;">
+          <h1>Power BI</h1>
+        </div>
+      </div>
+
+      <div class="powerbi-wrap">
+        <div class="powerbi-frame-box">
+          <div class="aspect">
+            <iframe title="FLN"
+                    src="https://app.powerbi.com/view?r=eyJrIjoiOGI2YmMzMjgtZGY5ZS00MDNmLWE5YzYtNWRhNzAxZmU3ZTI5IiwidCI6IjY3MzY3MGUwLTYwZDQtNDFmZC04NTQ5LTI1OWU2Nzk2YzM5MSIsImMiOjR9"
+                    frameborder="0"
+                    allowFullScreen="true">
+            </iframe>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+</div><!-- /.app-shell -->
+</div><!-- /#appContent -->
+
+<div class="app-credit" aria-label="Autor">By Francisco Guevara</div>
+
+<div class="novedad-popup-overlay" id="novedadPopupOverlay" style="display:none;">
+  <div class="novedad-popup-card">
+    <button type="button" class="novedad-popup-close" id="novedadPopupClose" aria-label="Cerrar">&times;</button>
+    <div class="novedad-popup-important-badge" id="novedadPopupBadge">Importante</div>
+    <div class="novedad-popup-img" id="novedadPopupImg" style="display:none;">
+      <img id="novedadPopupImgTag" src="" alt="">
+    </div>
+    <div class="novedad-popup-title" id="novedadPopupTitle"></div>
+    <div class="novedad-popup-content" id="novedadPopupContent"></div>
+  </div>
+</div>
+
+<div class="novedad-lightbox-overlay" id="novedadLightboxOverlay" style="display:none;">
+  <button type="button" class="novedad-lightbox-close" id="novedadLightboxClose" aria-label="Cerrar">&times;</button>
+  <img id="novedadLightboxImg" src="" alt="">
+</div>
+
+
+
+
+
+
+
+
+
+
+<!-- ======================================================================
+     Arribos: análisis de arribos (venta y no venta) por tienda y asesor,
+     con desglose diario y motivos de venta no concretada.
+       - Fuente: hoja de Google publicada como CSV (formulario de ventas).
+       - Vista asesor: solo su tienda (según profiles.pdv).
+       - Vista supervisor/otros: todas las tiendas, con acordeón por tienda.
+     ====================================================================== -->
+
+
+<!-- ======================================================================
+     Control Xstore: control diario de registro de monto recaudado (Xstore)
+     y de depósito, por PDV.
+       - Fuente: hoja de Google publicada como CSV (columnas A-H: FECHA, PDV,
+         REGISTRO, MONTO XSTORE, ESTADO REGISTRO, DEPOSITO, PAYJOY,
+         ESTADO DEPÓSITO).
+       - Se muestran las columnas D a H, salvo que la columna PAYJOY (G) no
+         se pinta como columna propia: cuando su valor es 1 se agrega una
+         etiqueta "PAYJOY" al costado del Estado de depósito.
+       - Asesores: solo ven las fechas de su propio PDV (según profiles.pdv).
+       - Supervisores (o cualquier cargo que no sea Asesor): ven, en una
+         sola vista, todas las tiendas.
+       - Selector de mes arriba; por defecto se muestra el mes vigente.
+     ====================================================================== -->
+
+
+<!-- ======================================================================
+     Comprobante de Pago: genera una nota de venta interna (no es boleta ni
+     factura SUNAT) con los datos del negocio, del cliente, los equipos
+     vendidos y el pago recibido, con una vista previa tipo ticket lista
+     para imprimir/guardar como PDF y compartir por WhatsApp.
+       - Los datos del negocio y el siguiente número de nota se guardan en
+         este navegador (localStorage), por eso cada asesor solo necesita
+         llenarlos la primera vez.
+     ====================================================================== -->
+<script src="js/auth.js"></script>
+<script src="js/novedades.js"></script>
+<script src="js/calculadora.js"></script>
+<script src="js/stock.js"></script>
+<script src="js/avance.js"></script>
+<script src="js/arribos.js"></script>
+<script src="js/horario.js"></script>
+<script src="js/xstore.js"></script>
+<script src="js/gestion-xstore.js?v=20260802.3"></script>
+<script src="js/comprobante.js"></script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pulso · Fortalecernos SAC</title>
+<link rel="icon" type="image/png" href="https://github.com/francoguev/Gestion_FLN/blob/main/assets/logo%20header%20final%20V3.png?raw=true">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.0/dist/umd/supabase.min.js"></script>
+<script async src="https://tally.so/widgets/embed.js"></script>
 <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
