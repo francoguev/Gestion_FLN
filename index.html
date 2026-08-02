@@ -588,9 +588,9 @@
           <form id="gxCashForm" class="gx-form-grid">
             <label>Fecha de caja<input id="gxCashDate" type="date" required></label>
             <label>Monto recaudado<input id="gxCashAmount" type="number" min="0" step="0.01" inputmode="decimal" required placeholder="0.00"></label>
-            <label class="gx-file-field">Foto de caja<input id="gxCashFile" type="file" accept="image/jpeg,image/png,image/webp"></label>
-            <label class="gx-check-field"><input id="gxNoCash" type="checkbox"> No hubo recaudo este día</label>
-            <label id="gxNoCashReasonWrap" hidden>Motivo<input id="gxNoCashReason" type="text" maxlength="180" placeholder="Ej. día sin recaudo"></label>
+            <label class="gx-file-field">Foto de caja<input id="gxCashFile" type="file" accept="image/jpeg,image/png,image/webp" required></label>
+            <label class="gx-check-field"><input id="gxStoreClosed" type="checkbox"> La tienda no abrió este día</label>
+            <label id="gxStoreClosedReasonWrap" hidden>Motivo (opcional)<input id="gxStoreClosedReason" type="text" maxlength="180" placeholder="Ej. cierre excepcional de tienda"></label>
             <div class="gx-form-actions"><span id="gxCashFormHint"></span><button class="gx-action-btn" type="submit">Guardar recaudo</button></div>
           </form>
         </section>
