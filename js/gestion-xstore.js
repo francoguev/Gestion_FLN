@@ -95,6 +95,10 @@
     ["gxCashPanel","gxDepositPanel","gxReviewPanel"].forEach(function(id){ var panel=document.getElementById(id); if(panel) panel.hidden=id!=="gx"+name.charAt(0).toUpperCase()+name.slice(1)+"Panel"; });
     if(name==="cash"){ document.getElementById("gxCashDate").value=today(); syncStoreClosedFields(); setFormHint("gxCashFormHint",""); }
     if(name==="deposit"){ document.getElementById("gxDepositDate").value=today(); setFormHint("gxDepositFormHint",""); populateAllocationList(); }
+    if(name==="review"){
+      var reviewPanel=document.getElementById("gxReviewPanel");
+      if(reviewPanel) reviewPanel.scrollIntoView({behavior:"smooth",block:"start"});
+    }
   }
   function hidePanel(name){ var panel=document.getElementById("gx"+name.charAt(0).toUpperCase()+name.slice(1)+"Panel"); if(panel) panel.hidden=true; }
 
