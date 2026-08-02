@@ -963,6 +963,8 @@
   .gx-hero h2{ margin:0 0 5px; font-family:'Space Grotesk',sans-serif; font-size:24px; }
   .gx-hero p{ margin:0; color:var(--ink-soft); }
   .gx-entry-actions,.gx-form-actions{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  /* El atributo hidden controla los permisos: no debe ser anulado por display:flex. */
+  #gxEntryActions[hidden],#gxExportBtn[hidden]{ display:none!important; }
   .gx-action-btn{ border:0; background:var(--blue); color:#fff; padding:10px 15px; border-radius:10px; font-weight:800; cursor:pointer; transition:transform .18s ease, background .18s ease, box-shadow .18s ease; }
   .gx-action-btn:hover{ background:#0b157f; transform:translateY(-1px); box-shadow:0 8px 16px rgba(14,26,161,.18); }
   .gx-action-btn.is-secondary{ background:#e8ecff; color:var(--blue); }
