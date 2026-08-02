@@ -84,6 +84,9 @@
       <button class="nav-item" data-page="xstore">
         <span class="nav-icon">🏦</span> <span class="nav-label">Control Xstore</span>
       </button>
+      <button class="nav-item" data-page="gestionxstore">
+        <span class="nav-icon">💼</span> <span class="nav-label">Gestión Xstore</span>
+      </button>
       <button class="nav-item" data-page="comprobante">
         <span class="nav-icon">🧾</span> <span class="nav-label">Comprobante de Pago</span>
       </button>
@@ -559,6 +562,69 @@
 
     </section>
 
+    <section class="page" id="page-gestionxstore">
+      <div class="topbar gx-topbar">
+        <button class="topbar-toggle" aria-label="Mostrar u ocultar menú" title="Mostrar u ocultar menú">☰</button>
+        <div style="flex:1;"><h1>Gestión Xstore</h1></div>
+        <div class="gx-pdv-filter" id="gxPdvFilter" hidden>
+          <button type="button" class="stock-filter-select gx-pdv-filter-button" id="gxPdvButton" aria-expanded="false">PDV · Todos</button>
+          <div class="gx-pdv-filter-menu" id="gxPdvMenu" hidden></div>
+        </div>
+        <select id="gxMonthSelect" class="stock-filter-select" style="min-width:160px;"></select>
+        <button type="button" class="reset-btn gx-export-btn" id="gxExportBtn" hidden>Descargar Excel</button>
+      </div>
+
+      <div class="wrap gx-wrap">
+        <section class="gx-hero">
+          <div><h2>Control de recaudos y depósitos</h2><p id="gxHint">Cargando gestión Xstore…</p></div>
+          <div class="gx-entry-actions" id="gxEntryActions" hidden>
+            <button type="button" class="gx-action-btn" data-gx-open="cash">Registrar caja</button>
+            <button type="button" class="gx-action-btn is-secondary" data-gx-open="deposit">Registrar depósito</button>
+          </div>
+        </section>
+
+        <section class="gx-entry-panel" id="gxCashPanel" hidden>
+          <div class="gx-panel-header"><div><h2>Registrar recaudo de caja</h2><p>La fecha de hoy aparece seleccionada por defecto.</p></div><button type="button" class="gx-close-panel" data-gx-close="cash" aria-label="Cerrar">×</button></div>
+          <form id="gxCashForm" class="gx-form-grid">
+            <label>Fecha de caja<input id="gxCashDate" type="date" required></label>
+            <label>Monto recaudado<input id="gxCashAmount" type="number" min="0" step="0.01" inputmode="decimal" required placeholder="0.00"></label>
+            <label class="gx-file-field">Foto de caja<input id="gxCashFile" type="file" accept="image/jpeg,image/png,image/webp"></label>
+            <label class="gx-check-field"><input id="gxNoCash" type="checkbox"> No hubo recaudo este día</label>
+            <label id="gxNoCashReasonWrap" hidden>Motivo<input id="gxNoCashReason" type="text" maxlength="180" placeholder="Ej. día sin recaudo"></label>
+            <div class="gx-form-actions"><span id="gxCashFormHint"></span><button class="gx-action-btn" type="submit">Guardar recaudo</button></div>
+          </form>
+        </section>
+
+        <section class="gx-entry-panel" id="gxDepositPanel" hidden>
+          <div class="gx-panel-header"><div><h2>Registrar depósito</h2><p>Selecciona los días de caja que cubre este voucher y asigna el monto a cada uno.</p></div><button type="button" class="gx-close-panel" data-gx-close="deposit" aria-label="Cerrar">×</button></div>
+          <form id="gxDepositForm" class="gx-form-grid">
+            <label>Fecha de depósito<input id="gxDepositDate" type="date" required></label>
+            <label>Monto del voucher<input id="gxDepositAmount" type="number" min="0.01" step="0.01" inputmode="decimal" required placeholder="0.00" readonly></label>
+            <label class="gx-file-field">Captura del depósito<input id="gxDepositFile" type="file" accept="image/jpeg,image/png,image/webp" required></label>
+            <div class="gx-allocation-wrap"><strong>Días de caja cubiertos</strong><div class="gx-allocation-list" id="gxAllocationList"></div></div>
+            <div class="gx-form-actions"><span id="gxDepositFormHint"></span><button class="gx-action-btn" type="submit">Guardar depósito</button></div>
+          </form>
+        </section>
+
+        <section class="gx-entry-panel gx-review-panel" id="gxReviewPanel" hidden>
+          <div class="gx-panel-header"><div><h2 id="gxReviewTitle">Validar caso</h2><p id="gxReviewDetail"></p></div><button type="button" class="gx-close-panel" data-gx-close="review" aria-label="Cerrar">×</button></div>
+          <form id="gxReviewForm" class="gx-form-grid">
+            <input id="gxReviewId" type="hidden">
+            <label>Resolución<select id="gxResolution"><option value="validated">Cuadrado</option><option value="payjoy_validated">Cuadrado · PayJoy</option><option value="difference">Diferencia por revisar</option><option value="observed">Observar y devolver</option></select></label>
+            <label id="gxPayjoyWrap" hidden>Monto PayJoy<input id="gxPayjoyAmount" type="number" min="0" step="0.01" inputmode="decimal" value="0"></label>
+            <label class="gx-note-field">Observación<input id="gxReviewNote" type="text" maxlength="240" placeholder="Comentario para el equipo"></label>
+            <div class="gx-form-actions"><span id="gxReviewFormHint"></span><button class="gx-action-btn" type="submit">Guardar validación</button></div>
+          </form>
+        </section>
+
+        <section class="gx-summary" id="gxSummary"></section>
+        <section class="table-card gx-table-card">
+          <div class="heading"><div><h2>Seguimiento diario</h2><span class="hint">Cada fila representa un cierre esperado por PDV y fecha.</span></div><button class="reset-btn" id="gxRefreshBtn">Actualizar</button></div>
+          <div class="table-scroll"><table id="gxTable"><thead><tr><th>Fecha</th><th>PDV</th><th>Recaudo</th><th>Depositado</th><th>Pendiente</th><th>Estado</th><th>Registro</th><th>Acciones</th></tr></thead><tbody id="gxTbody"></tbody></table></div>
+        </section>
+      </div>
+    </section>
+
     <section class="page" id="page-comprobante">
 
       <div class="topbar">
@@ -872,6 +938,7 @@
 <script src="js/arribos.js"></script>
 <script src="js/horario.js"></script>
 <script src="js/xstore.js"></script>
+<script src="js/gestion-xstore.js"></script>
 <script src="js/comprobante.js"></script>
 </body>
 </html>
