@@ -1,6 +1,6 @@
 (function(){
   var MONTHS = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
-  var state = { profile:null, role:"", rows:[], deposits:[], pdvs:[], selectedPdvs:[], month:"", loading:false };
+  var state = { profile:null, role:"", rows:[], deposits:[], pdvs:[], selectedPdvs:[], month:"", loading:false, reviewingId:null };
 
   function esc(value){ return String(value == null ? "" : value).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
   function norm(value){ return String(value || "").trim().toLowerCase(); }
@@ -56,6 +56,19 @@
       '<article class="gx-summary-card '+(difference?'is-danger':'is-good')+'"><span>Diferencias por revisar</span><strong>'+difference+'</strong></article>';
   }
 
+  function reviewEditor(row){
+    return '<tr class="gx-inline-review"><td colspan="8"><form class="gx-inline-review-card" data-gx-review-form>'+ 
+      '<input type="hidden" data-gx-review-id value="'+esc(row.closure_id)+'">'+
+      '<div class="gx-inline-review-header"><div><h3>Resolver · '+esc(row.pdv)+' · '+dateEs(row.cash_date)+'</h3><p>Monto reportado: '+money(row.cash_amount)+' · Depósitos: '+money(row.deposit_amount)+' · Pendiente: '+money(row.outstanding_amount)+'</p></div><button type="button" class="gx-close-panel" data-gx-close-inline aria-label="Cerrar">×</button></div>'+ 
+      '<div class="gx-inline-review-fields">'+
+      '<label>Monto de caja correcto<input data-gx-correct-cash type="number" min="0" step="0.01" inputmode="decimal" value="'+Number(row.cash_amount||0).toFixed(2)+'"></label>'+ 
+      '<label>Resolución<select data-gx-resolution><option value="validated">Cuadrado</option><option value="payjoy_validated">Cuadrado · PayJoy</option><option value="difference">Diferencia por revisar</option><option value="observed">Observar y devolver</option></select></label>'+ 
+      '<label data-gx-payjoy-wrap hidden>Monto PayJoy<input data-gx-payjoy type="number" min="0" step="0.01" inputmode="decimal" value="0"></label>'+ 
+      '<label>Observación<input data-gx-review-note type="text" maxlength="240" placeholder="Comentario para el equipo"></label>'+ 
+      '</div><div class="gx-form-actions"><span data-gx-review-hint></span><button class="gx-action-btn" type="submit">Guardar validación</button></div>'+ 
+      '</form></td></tr>';
+  }
+
   function renderTable(){
     var body=document.getElementById("gxTbody"); if(!body) return;
     var rows=selectedRows(); renderSummary(rows);
@@ -69,7 +82,8 @@
         else actions.push('<button class="gx-row-btn" data-gx-resolve="'+row.closure_id+'">Resolver</button>');
       }
       var trace=row.registered_by_email ? 'Caja: '+row.registered_by_email+(row.updated_by_email&&row.updated_by_email!==row.registered_by_email?' · Act.: '+row.updated_by_email:'') : 'Sin declaración';
-      return '<tr><td>'+dateEs(row.cash_date)+'</td><td>'+esc(row.pdv)+'</td><td class="gx-money '+(!row.closure_id?'gx-amount-muted':'')+'">'+(row.closure_id?money(row.cash_amount):'—')+'</td><td class="gx-money">'+(row.closure_id?money(row.deposit_amount):'—')+'</td><td class="gx-money">'+(row.closure_id?money(row.outstanding_amount):'—')+'</td><td><span class="gx-status '+esc(row.status)+'">'+esc(statusLabel(row.status))+'</span></td><td title="'+esc(trace)+'">'+esc(trace)+'</td><td><div class="gx-row-actions">'+actions.join("")+'</div></td></tr>';
+      var tableRow='<tr><td>'+dateEs(row.cash_date)+'</td><td>'+esc(row.pdv)+'</td><td class="gx-money '+(!row.closure_id?'gx-amount-muted':'')+'">'+(row.closure_id?money(row.cash_amount):'—')+'</td><td class="gx-money">'+(row.closure_id?money(row.deposit_amount):'—')+'</td><td class="gx-money">'+(row.closure_id?money(row.outstanding_amount):'—')+'</td><td><span class="gx-status '+esc(row.status)+'">'+esc(statusLabel(row.status))+'</span></td><td title="'+esc(trace)+'">'+esc(trace)+'</td><td><div class="gx-row-actions">'+actions.join("")+'</div></td></tr>';
+      return tableRow+(state.reviewingId===row.closure_id?reviewEditor(row):"");
     }).join("");
   }
 
@@ -92,15 +106,14 @@
   }
 
   function showPanel(name){
-    ["gxCashPanel","gxDepositPanel","gxReviewPanel"].forEach(function(id){ var panel=document.getElementById(id); if(panel) panel.hidden=id!=="gx"+name.charAt(0).toUpperCase()+name.slice(1)+"Panel"; });
+    ["gxCashPanel","gxDepositPanel"].forEach(function(id){ var panel=document.getElementById(id); if(panel) panel.hidden=id!=="gx"+name.charAt(0).toUpperCase()+name.slice(1)+"Panel"; });
     if(name==="cash"){ document.getElementById("gxCashDate").value=today(); syncStoreClosedFields(); setFormHint("gxCashFormHint",""); }
     if(name==="deposit"){ document.getElementById("gxDepositDate").value=today(); setFormHint("gxDepositFormHint",""); populateAllocationList(); }
-    if(name==="review"){
-      var reviewPanel=document.getElementById("gxReviewPanel");
-      if(reviewPanel) reviewPanel.scrollIntoView({behavior:"smooth",block:"start"});
-    }
   }
-  function hidePanel(name){ var panel=document.getElementById("gx"+name.charAt(0).toUpperCase()+name.slice(1)+"Panel"); if(panel) panel.hidden=true; }
+  function hidePanel(name){
+    if(name==="review"){ state.reviewingId=null; renderTable(); return; }
+    var panel=document.getElementById("gx"+name.charAt(0).toUpperCase()+name.slice(1)+"Panel"); if(panel) panel.hidden=true;
+  }
 
   function populateAllocationList(){
     var holder=document.getElementById("gxAllocationList"); if(!holder||!isAdvisor()) return;
@@ -161,17 +174,23 @@
 
   function openReview(id){
     var row=state.rows.find(function(item){ return item.closure_id===id; }); if(!row) return;
-    document.getElementById("gxReviewId").value=id; document.getElementById("gxReviewTitle").textContent="Resolver · "+row.pdv+" · "+dateEs(row.cash_date);
-    document.getElementById("gxReviewDetail").textContent="Caja "+money(row.cash_amount)+" · Depósitos "+money(row.deposit_amount)+" · Pendiente "+money(row.outstanding_amount);
-    document.getElementById("gxPayjoyAmount").value="0"; document.getElementById("gxResolution").value="validated"; document.getElementById("gxReviewNote").value=""; togglePayjoy(); showPanel("review");
+    state.reviewingId=id; renderTable();
+    var editor=document.querySelector("[data-gx-review-form]"); if(editor) editor.scrollIntoView({behavior:"smooth",block:"center"});
   }
-  function togglePayjoy(){ var show=document.getElementById("gxResolution").value==="payjoy_validated"; document.getElementById("gxPayjoyWrap").hidden=!show; }
+  function togglePayjoy(form){ var show=form.querySelector("[data-gx-resolution]").value==="payjoy_validated"; form.querySelector("[data-gx-payjoy-wrap]").hidden=!show; }
   async function submitReview(event){
-    event.preventDefault(); setFormHint("gxReviewFormHint","");
+    event.preventDefault(); var form=event.target, hint=form.querySelector("[data-gx-review-hint]"), closureId=form.querySelector("[data-gx-review-id]").value;
+    if(hint){ hint.textContent=""; hint.style.color=""; }
     try{
-      var result=await window.supabaseClient.rpc("xstore_resolve_closure",{p_closure_id:document.getElementById("gxReviewId").value,p_resolution:document.getElementById("gxResolution").value,p_payjoy_amount:Number(document.getElementById("gxPayjoyAmount").value||0),p_note:document.getElementById("gxReviewNote").value});
+      var row=state.rows.find(function(item){ return item.closure_id===closureId; }), correctedAmount=Number(form.querySelector("[data-gx-correct-cash]").value||0), note=form.querySelector("[data-gx-review-note]").value;
+      if(!row || correctedAmount<0) throw new Error("El monto de caja no es válido.");
+      if(Math.abs(correctedAmount-Number(row.cash_amount||0))>0.004){
+        var correction=await window.supabaseClient.rpc("xstore_correct_cash_amount",{p_closure_id:closureId,p_cash_amount:correctedAmount,p_note:note});
+        if(correction.error) throw correction.error;
+      }
+      var result=await window.supabaseClient.rpc("xstore_resolve_closure",{p_closure_id:closureId,p_resolution:form.querySelector("[data-gx-resolution]").value,p_payjoy_amount:Number(form.querySelector("[data-gx-payjoy]").value||0),p_note:note});
       if(result.error) throw result.error; hidePanel("review"); await loadData();
-    }catch(error){ setFormHint("gxReviewFormHint",error.message||"No se pudo guardar la validación.",true); }
+    }catch(error){ if(hint){ hint.textContent=error.message||"No se pudo guardar la validación."; hint.style.color="#b91c1c"; } }
   }
   async function startReview(id){
     try{ var result=await window.supabaseClient.rpc("xstore_start_review",{p_closure_id:id}); if(result.error) throw result.error; await loadData(); openReview(id); }
@@ -204,12 +223,14 @@
     document.querySelectorAll("[data-gx-open]").forEach(function(btn){ btn.addEventListener("click",function(){showPanel(btn.getAttribute("data-gx-open"));}); });
     document.querySelectorAll("[data-gx-close]").forEach(function(btn){ btn.addEventListener("click",function(){hidePanel(btn.getAttribute("data-gx-close"));}); });
     document.getElementById("gxStoreClosed").addEventListener("change",syncStoreClosedFields);
-    document.getElementById("gxCashForm").addEventListener("submit",submitCash); document.getElementById("gxDepositForm").addEventListener("submit",submitDeposit); document.getElementById("gxReviewForm").addEventListener("submit",submitReview); document.getElementById("gxResolution").addEventListener("change",togglePayjoy);
+    document.getElementById("gxCashForm").addEventListener("submit",submitCash); document.getElementById("gxDepositForm").addEventListener("submit",submitDeposit);
+    document.addEventListener("submit",function(event){ if(event.target.matches("[data-gx-review-form]")) submitReview(event); });
+    document.addEventListener("change",function(event){ var form=event.target.closest("[data-gx-review-form]"); if(form&&event.target.matches("[data-gx-resolution]")) togglePayjoy(form); });
     document.getElementById("gxAllocationList").addEventListener("change",function(event){ var check=event.target.closest("[data-gx-allocation]"); if(check){ var input=document.querySelector('[data-gx-allocation-amount="'+CSS.escape(check.getAttribute("data-gx-allocation"))+'"]'); input.disabled=!check.checked; input.value=check.checked?Number(check.getAttribute("data-gx-max")).toFixed(2):""; refreshDepositTotal(); } });
     document.getElementById("gxAllocationList").addEventListener("input",refreshDepositTotal);
     var pdvButton=document.getElementById("gxPdvButton"), pdvMenu=document.getElementById("gxPdvMenu"); pdvButton.addEventListener("click",function(){ var open=pdvMenu.hidden; pdvMenu.hidden=!open; pdvButton.setAttribute("aria-expanded",String(open)); });
     pdvMenu.addEventListener("change",function(event){ var all=pdvMenu.querySelector("[data-gx-pdv-all]"), checks=Array.prototype.slice.call(pdvMenu.querySelectorAll("[data-gx-pdv]")); if(event.target.matches("[data-gx-pdv-all]")){ checks.forEach(function(c){c.checked=false;}); state.selectedPdvs=[]; } else { if(all) all.checked=false; state.selectedPdvs=checks.filter(function(c){return c.checked;}).map(function(c){return c.getAttribute("data-gx-pdv");}); } renderPdvMenu(); renderTable(); });
     document.addEventListener("click",function(event){ if(!event.target.closest("#gxPdvFilter")){ pdvMenu.hidden=true; pdvButton.setAttribute("aria-expanded","false"); } });
-    document.getElementById("gxTbody").addEventListener("click",function(event){ var evidence=event.target.closest("[data-gx-evidence]"), start=event.target.closest("[data-gx-start-review]"), resolve=event.target.closest("[data-gx-resolve]"); if(evidence) openEvidence(evidence.getAttribute("data-gx-evidence")); if(start) startReview(start.getAttribute("data-gx-start-review")); if(resolve) openReview(resolve.getAttribute("data-gx-resolve")); });
+    document.getElementById("gxTbody").addEventListener("click",function(event){ var evidence=event.target.closest("[data-gx-evidence]"), start=event.target.closest("[data-gx-start-review]"), resolve=event.target.closest("[data-gx-resolve]"), close=event.target.closest("[data-gx-close-inline]"); if(evidence) openEvidence(evidence.getAttribute("data-gx-evidence")); if(start) startReview(start.getAttribute("data-gx-start-review")); if(resolve) openReview(resolve.getAttribute("data-gx-resolve")); if(close) hidePanel("review"); });
   });
 })();
