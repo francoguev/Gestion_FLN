@@ -1,6 +1,8 @@
 -- Pulso · Gestión Xstore: Migración 012 (Permitir Sobrantes en Depósitos Bancarios)
 -- Permite registrar depósitos con un monto mayor al esperado por factor humano y refleja el Sobrante.
 
+drop function if exists public.xstore_submit_deposit(text,date,numeric,text,jsonb);
+
 create or replace function public.xstore_submit_deposit(
   p_pdv text, p_deposit_date date, p_deposit_amount numeric, p_evidence_path text, p_allocations jsonb
 ) returns uuid language plpgsql security definer set search_path = public as $$
