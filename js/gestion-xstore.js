@@ -152,6 +152,54 @@
     return dates.length <= 4 ? dates.join(", ") : dates.slice(0, 4).join(", ") + " y " + (dates.length - 4) + " más";
   }
 
+  var captureLoader = null;
+  function loadHtml2Canvas() {
+    if (window.html2canvas) return Promise.resolve(window.html2canvas);
+    if (captureLoader) return captureLoader;
+    captureLoader = new Promise(function (resolve, reject) {
+      var script = document.createElement("script");
+      script.src = "https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js";
+      script.onload = function () { resolve(window.html2canvas); };
+      script.onerror = function () { reject(new Error("No se pudo cargar el generador de capturas.")); };
+      document.head.appendChild(script);
+    });
+    return captureLoader;
+  }
+
+  async function copyTableCapture(holderId, fileName, button) {
+    var table = document.querySelector("#" + holderId + " table");
+    if (!table) { alert("Primero carga la tabla que deseas capturar."); return; }
+    var original = button.textContent, stage = document.createElement("div"), copy = table.cloneNode(true);
+    button.disabled = true; button.textContent = "Generando…";
+    try {
+      copy.querySelectorAll("th:first-child,td:first-child").forEach(function (cell) {
+        cell.style.position = "static"; cell.style.boxShadow = "none";
+      });
+      copy.style.width = "max-content"; copy.style.minWidth = "0";
+      stage.style.cssText = "position:fixed;left:-100000px;top:0;z-index:-1;background:#fff;padding:18px;width:max-content;max-width:none;";
+      stage.appendChild(copy); document.body.appendChild(stage);
+      var h2c = await loadHtml2Canvas();
+      var canvas = await h2c(copy, { backgroundColor: "#ffffff", scale: 2, useCORS: true, logging: false, width: copy.scrollWidth, height: copy.scrollHeight });
+      var blob = await new Promise(function (resolve) { canvas.toBlob(resolve, "image/png"); });
+      if (!blob) throw new Error("No se pudo crear la imagen.");
+      if (navigator.clipboard && window.ClipboardItem) {
+        await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+        button.textContent = "¡Copiada!";
+      } else {
+        var link = document.createElement("a"); link.href = URL.createObjectURL(blob);
+        link.download = fileName + ".png"; document.body.appendChild(link); link.click(); link.remove();
+        setTimeout(function () { URL.revokeObjectURL(link.href); }, 0);
+        button.textContent = "Imagen descargada";
+      }
+    } catch (error) {
+      console.error(error);
+      alert("No se pudo copiar la captura. Se descargará o intenta en un navegador compatible.");
+    } finally {
+      if (stage.parentNode) stage.remove();
+      setTimeout(function () { button.disabled = false; button.textContent = original; }, 1400);
+    }
+  }
+
   function renderPdvSummary(rows) {
     var holder = el("gxPdvSummary");
     if (!holder) return;
@@ -164,7 +212,22 @@
       return '<tr><td><strong>' + esc(pdv) + "</strong></td><td>" + group.length + " día(s)</td><td>" + esc(money(pending)) + "</td><td>" + (missing.length ? '<span class="gx-status missing_cash">' + missing.length + " sin caja</span>" : '<span class="gx-status validated">Al día</span>') + "</td><td>" + esc(daysText(pendingRows.length ? pendingRows : missing)) + "</td></tr>";
     }).join("");
     holder.hidden = false;
-    holder.innerHTML = '<div class="gx-pdv-summary-head"><div><h2>Resumen por PDV</h2><p>Montos y fechas que requieren seguimiento.</p></div></div><div class="table-scroll"><table class="gx-pdv-summary-table"><thead><tr><th>PDV</th><th>Período mostrado</th><th>Saldo por gestionar</th><th>Alerta</th><th>Días comprendidos</th></tr></thead><tbody>' + (html || '<tr><td colspan="5">No hay datos en el período.</td></tr>') + "</tbody></table></div>";
+    holder.innerHTML = '<div class="gx-pdv-summary-head"><div><h2>Resumen por PDV</h2><p>Montos y fechas que requieren seguimiento.</p></div><button type="button" class="reset-btn gx-capture-btn" id="gxPdvSummaryCaptureBtn">Copiar captura</button></div><div class="table-scroll"><table class="gx-pdv-summary-table"><thead><tr><th>PDV</th><th>Período mostrado</th><th>Saldo por gestionar</th><th>Alerta</th><th>Días comprendidos</th></tr></thead><tbody>' + (html || '<tr><td colspan="5">No hay datos en el período.</td></tr>') + "</tbody></table></div>";
+    
+    var captureBtn = el("gxPdvSummaryCaptureBtn");
+    if (captureBtn) {
+      captureBtn.addEventListener("click", function () {
+        copyTableCapture("gxPdvSummary", "resumen-por-pdv-xstore", captureBtn);
+      });
+    }
+  }
+
+  function syncTopScroll() {
+    var table = el("gxTable");
+    var topInner = el("gxTableTopScrollInner");
+    if (table && topInner) {
+      topInner.style.width = table.scrollWidth + "px";
+    }
   }
 
   function depositEvidencePaths(row) {
@@ -223,11 +286,11 @@
 
     body.innerHTML = rows.map(function (row) {
       var actions = [], vouchers = depositEvidencePaths(row);
-      if (row.evidence_path) actions.push('<button type="button" class="gx-row-btn" data-gx-evidence="' + esc(row.evidence_path) + '">Caja</button>');
+      if (row.evidence_path) actions.push('<button type="button" class="gx-row-btn" data-gx-evidence="' + esc(row.evidence_path) + '">Foto de caja</button>');
       if (vouchers.length === 1) {
-        actions.push('<button type="button" class="gx-row-btn" data-gx-evidence="' + esc(vouchers[0].path) + '">Voucher</button>');
+        actions.push('<button type="button" class="gx-row-btn" data-gx-evidence="' + esc(vouchers[0].path) + '">Foto de voucher</button>');
       } else if (vouchers.length > 1) {
-        actions.push('<button type="button" class="gx-row-btn" data-gx-multi-vouchers="' + row.closure_id + '">Vouchers (' + vouchers.length + ')</button>');
+        actions.push('<button type="button" class="gx-row-btn" data-gx-multi-vouchers="' + row.closure_id + '">Fotos de voucher (' + vouchers.length + ')</button>');
       }
 
       /* Regla de Edición: Siempre permite "Editar recaudo" por día mientras no esté validado de forma final. */
@@ -253,10 +316,16 @@
         actions.push('<button type="button" class="gx-row-btn is-danger" data-gx-delete="' + row.closure_id + '">Eliminar</button>');
       }
 
-      /* Nombres del Usuario en Registro en lugar de correo puro */
+      /* Nombres del Usuario en Registro estructurados con espacio holgado */
       var regName = row.registered_by_name || row.registered_by_email || "";
       var updName = row.updated_by_name || row.updated_by_email || "";
-      var trace = regName ? "Caja: " + regName + (updName && updName !== regName ? " · Act.: " + updName : "") : "Sin declaración";
+      var traceHtml = '<span style="color:#94a3b8; font-style:italic;">Sin declaración</span>';
+      if (regName) {
+        traceHtml = '<div class="gx-user-info">' +
+          '<div class="gx-user-item"><span class="gx-user-tag">Caja</span><span class="gx-user-name">' + esc(regName) + '</span></div>' +
+          (updName && updName !== regName ? '<div class="gx-user-item"><span class="gx-user-tag is-act">Act.</span><span class="gx-user-name">' + esc(updName) + '</span></div>' : '') +
+          '</div>';
+      }
 
       var pjPending = Number(row.payjoy_pending_amount || row.payjoy_amount || 0);
       var realCash = row.closure_id ? Math.max(0, Number(row.cash_amount || 0) - pjPending) : 0;
@@ -275,6 +344,15 @@
 
       var pjHtml = pjPending > 0 ? money(pjPending) + ' <span class="gx-payjoy-badge">PayJoy</span>' : (row.closure_id ? "S/ 0.00" : "—");
 
+      /* Menú Desplegable "Acciones ▾" */
+      var actionsHtml = "—";
+      if (actions.length > 0) {
+        actionsHtml = '<div class="gx-dropdown">' +
+          '<button type="button" class="gx-dropdown-toggle" onclick="gxToggleActionMenu(event, this)">Acciones ▾</button>' +
+          '<div class="gx-dropdown-menu">' + actions.join("") + '</div>' +
+          '</div>';
+      }
+
       var line = "<tr>" +
         "<td>" + dateEs(row.cash_date) + "</td>" +
         "<td>" + esc(row.pdv) + "</td>" +
@@ -284,14 +362,15 @@
         '<td class="gx-money">' + (row.closure_id ? money(row.deposit_amount) : "—") + "</td>" +
         '<td class="gx-money">' + bankStatusHtml + "</td>" +
         '<td><span class="gx-status ' + esc(row.status) + '">' + esc(statusLabel(row.status)) + '</span></td>' +
-        '<td title="' + esc(trace) + '">' + esc(trace) + "</td>" +
-        '<td><div class="gx-row-actions">' + actions.join("") + "</div></td>" +
+        '<td class="gx-user-cell">' + traceHtml + "</td>" +
+        '<td class="gx-actions-cell">' + actionsHtml + "</td>" +
         "</tr>";
 
       return line +
         (state.reviewingId && row.closure_id && state.reviewingId === row.closure_id ? reviewRow(row) : "") +
         (state.editingId && row.closure_id && state.editingId === row.closure_id ? editRow(row) : "");
     }).join("");
+    syncTopScroll();
   }
 
   async function loadData() {
@@ -559,6 +638,23 @@
     }
   }
 
+  window.gxToggleActionMenu = function(event, btn) {
+    event.stopPropagation();
+    var dropdown = btn.closest('.gx-dropdown');
+    if (!dropdown) return;
+    var isOpen = dropdown.classList.contains('is-open');
+    document.querySelectorAll('.gx-dropdown.is-open').forEach(function(d) { d.classList.remove('is-open'); });
+    if (!isOpen) {
+      dropdown.classList.add('is-open');
+    }
+  };
+
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.gx-dropdown')) {
+      document.querySelectorAll('.gx-dropdown.is-open').forEach(function(d) { d.classList.remove('is-open'); });
+    }
+  });
+
   el("gxTbody").addEventListener("click", function (event) {
     var evidence = event.target.closest("[data-gx-evidence]"), resolve = event.target.closest("[data-gx-resolve]"), close = event.target.closest("[data-gx-close-inline]"), closeEditButton = event.target.closest("[data-gx-close-edit]"), editCash = event.target.closest("[data-gx-edit-cash]"), deleteBtn = event.target.closest("[data-gx-delete]"), multiVouchers = event.target.closest("[data-gx-multi-vouchers]");
     if (evidence) openEvidence(evidence.getAttribute("data-gx-evidence"));
@@ -569,5 +665,30 @@
     if (close) closeReview();
     if (closeEditButton) closeEdit();
   });
+
+  var topScroll = el("gxTableTopScroll");
+  var tableScroll = el("gxTableScroll");
+  if (topScroll && tableScroll) {
+    var isSyncingTop = false;
+    var isSyncingTable = false;
+
+    topScroll.addEventListener("scroll", function () {
+      if (!isSyncingTable) {
+        isSyncingTop = true;
+        tableScroll.scrollLeft = topScroll.scrollLeft;
+      }
+      isSyncingTable = false;
+    });
+
+    tableScroll.addEventListener("scroll", function () {
+      if (!isSyncingTop) {
+        isSyncingTable = true;
+        topScroll.scrollLeft = tableScroll.scrollLeft;
+      }
+      isSyncingTop = false;
+    });
+
+    window.addEventListener("resize", syncTopScroll);
+  }
 });
 }());

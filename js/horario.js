@@ -249,23 +249,13 @@
     document.getElementById("horarioEndTime").value=shift&&!shift.is_day_off?timeValue(shift.end_time):"";
     document.getElementById("horarioBreakStart").value=shift&&!shift.is_day_off?timeValue(shift.break_start):"";
     document.getElementById("horarioBreakEnd").value=shift&&!shift.is_day_off?timeValue(shift.break_end):"";
-    var isFree=!shift || shift.is_day_off;
-    var copyButton=document.getElementById("horarioCopyShift"), pasteButton=document.getElementById("horarioPasteShift");
-    copyButton.disabled=false;
-    copyButton.title=isFree?"Configura las horas y copia el nuevo horario.":"Copiar este horario";
-    pasteButton.style.display=isFree?"":"none";
-    pasteButton.disabled=!state.copiedShift;
-    pasteButton.title=state.copiedShift?"Pegar el horario copiado y guardarlo.":"Primero copia un horario configurado.";
-    editor.scrollIntoView({behavior:"smooth",block:"nearest"});
+    if(sourceButton) sourceButton.scrollIntoView({behavior:"smooth",block:"nearest"});
   }
-  function closeEditor(){
-    var editor=document.getElementById("horarioEditor");
-    moveEditorHome(); state.selected=null; editor.hidden=true;
-  }
+  function closeEditor(){ state.selected=null; var editor=document.getElementById("horarioEditor"); if(editor) editor.hidden=true; }
   function copyEditorShift(){
-    var start=document.getElementById("horarioStartTime").value, end=document.getElementById("horarioEndTime").value;
-    if(!start || !end || end<=start){ alert("Primero indica un horario válido para copiar."); return; }
-    state.copiedShift={start:start,end:end,breakStart:document.getElementById("horarioBreakStart").value || null,breakEnd:document.getElementById("horarioBreakEnd").value || null};
+    if(!state.selected){ alert("Selecciona un día en la tabla para copiar."); return; }
+    var shift=findShift(state.selected.email,state.selected.date);
+    state.copiedShift={start:shift&&shift.start_time?timeValue(shift.start_time):document.getElementById("horarioStartTime").value,end:shift&&shift.end_time?timeValue(shift.end_time):document.getElementById("horarioEndTime").value,breakStart:shift&&shift.break_start?timeValue(shift.break_start):document.getElementById("horarioBreakStart").value,breakEnd:shift&&shift.break_end?timeValue(shift.break_end):document.getElementById("horarioBreakEnd").value};
     document.getElementById("horarioPasteShift").disabled=false;
     document.getElementById("horarioPasteShift").title="Pegar el horario copiado y guardarlo.";
     alert("Horario copiado. Puedes pegarlo en todos los días que estén Libres.");
@@ -289,12 +279,15 @@
     var pdv=currentPdv(); if(!pdv){ alert("Primero selecciona un PDV para copiar su semana anterior."); return; }
     if(!confirm("¿Copiar la semana anterior para "+pdv+"? Los días existentes se actualizarán.")) return;
     var previous=mondayOf(addDays(state.weekStart,-7));
-    var response=await window.supabaseClient.from("horario_turnos").select("advisor_email,pdv,shift_date,start_time,end_time,break_start,break_end,is_day_off").eq("pdv",pdv).gte("shift_date",dateKey(previous)).lte("shift_date",dateKey(addDays(previous,6)));
+    var response=await window.supabaseClient.from("horario_turnos").select("advisor_email,pdv,shift_date,start_time,end_time,break_start,break_end,is_day_off,shift_type").eq("pdv",pdv).gte("shift_date",dateKey(previous)).lte("shift_date",dateKey(addDays(previous,6)));
     if(response.error) throw response.error;
     var payload=(response.data||[]).map(function(s){ var shifted=addDays(new Date(s.shift_date+"T12:00:00"),7); s.shift_date=dateKey(shifted); s.updated_by=state.profile.email; s.updated_at=new Date().toISOString(); return s; });
     if(!payload.length){ alert("No hay turnos en la semana anterior para copiar."); return; }
     var saved=await window.supabaseClient.from("horario_turnos").upsert(payload,{onConflict:"advisor_email,shift_date"}); if(saved.error) throw saved.error;
     await refresh();
+  }
+  async function copyPrevious(){
+    await openCopyDialog();
   }
   function formatCopyWeek(first){
     var last=addDays(first,6);
@@ -320,10 +313,13 @@
     tree.querySelectorAll("input[data-copy-pdv]").forEach(function(parent){ parent.addEventListener("change",function(){ tree.querySelectorAll('input[data-copy-advisor][data-pdv-index="'+parent.dataset.pdvIndex+'"]').forEach(function(child){ child.checked=parent.checked; }); }); });
     tree.querySelectorAll("input[data-copy-advisor]").forEach(function(child){ child.addEventListener("change",function(){ var siblings=tree.querySelectorAll('input[data-copy-advisor][data-pdv-index="'+child.dataset.pdvIndex+'"]'); var parent=tree.querySelector('input[data-copy-pdv][data-pdv-index="'+child.dataset.pdvIndex+'"]'); var count=Array.from(siblings).filter(function(item){return item.checked;}).length; parent.checked=count===siblings.length; parent.indeterminate=count>0&&count<siblings.length; }); });
   }
-  async function copyPrevious(){
-    var modal=document.getElementById("horarioCopyModal"), status=document.getElementById("horarioCopyStatus"), previous=mondayOf(addDays(state.weekStart,-7));
-    modal.hidden=false; status.textContent="Cargando horarios de la semana anterior…";
-    document.getElementById("horarioCopyModalHint").textContent="Desde "+formatCopyWeek(previous)+". Selecciona un PDV completo o solo algunos asesores.";
+  async function openCopyDialog(){
+    var previous=mondayOf(addDays(state.weekStart,-7));
+    var modal=document.getElementById("horarioCopyModal"), status=document.getElementById("horarioCopyStatus");
+    document.getElementById("horarioCopyWeekText").textContent=formatCopyWeek(previous);
+    document.getElementById("horarioCopyTargetText").textContent=formatCopyWeek(state.weekStart);
+    document.getElementById("horarioCopyTree").innerHTML='<div class="horario-empty">Cargando turnos de la semana anterior…</div>';
+    status.textContent=""; modal.hidden=false;
     var response=await window.supabaseClient.from("horario_turnos").select("advisor_email,pdv,shift_date,start_time,end_time,break_start,break_end,is_day_off").gte("shift_date",dateKey(previous)).lte("shift_date",dateKey(addDays(previous,6)));
     if(response.error) throw response.error;
     state.copySourceShifts=response.data || [];

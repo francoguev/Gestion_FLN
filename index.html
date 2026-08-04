@@ -299,6 +299,7 @@
         <select id="avanceMonthSelect" class="stock-filter-select" style="min-width:160px;">
           <option value="">Mes…</option>
         </select>
+        <button type="button" id="avanceRefreshBtn" class="reset-btn">Actualizar</button>
       </div>
 
       <div class="wrap" style="margin-top:26px;" id="avanceWrap">
@@ -422,15 +423,17 @@
       <div class="topbar">
         <button class="topbar-toggle" aria-label="Mostrar u ocultar menú" title="Mostrar u ocultar menú">☰</button>
         <div style="flex:1;"><h1>Horario</h1></div>
+        <div class="horario-week-controls" aria-label="Navegación semanal">
+          <button type="button" class="horario-week-arrow" id="horarioPrevWeek" aria-label="Ver semana anterior" title="Semana anterior">←</button>
+          <button type="button" class="horario-current-week" id="horarioWeekLabel" title="Volver a la semana actual"></button>
+          <button type="button" class="horario-week-arrow" id="horarioNextWeek" aria-label="Ver semana siguiente" title="Semana siguiente">→</button>
+        </div>
       </div>
       <div class="wrap horario-wrap">
         <section class="table-card horario-card">
           <div class="heading horario-heading">
             <div><h2 id="horarioTitle">Horario semanal</h2><span class="hint" id="horarioHint">Selecciona una semana para consultar los turnos.</span></div>
-            <div class="horario-week-controls" aria-label="Navegación semanal">
-              <button type="button" class="horario-week-arrow" id="horarioPrevWeek" aria-label="Ver semana anterior" title="Semana anterior">←</button>
-              <button type="button" class="horario-current-week" id="horarioWeekLabel" title="Volver a la semana actual"></button>
-              <button type="button" class="horario-week-arrow" id="horarioNextWeek" aria-label="Ver semana siguiente" title="Semana siguiente">→</button>
+            <div class="horario-heading-actions" style="display:flex; gap:8px; align-items:center;">
               <button type="button" class="horario-month-btn" id="horarioMonthSchedule">Vista mes</button>
               <button type="button" class="horario-capture-btn" id="horarioCaptureSchedule">Copiar captura</button>
               <button type="button" class="horario-export-btn" id="horarioExportSchedule">Descargar Excel</button>
@@ -633,7 +636,8 @@
         <section class="gx-pdv-summary-card" id="gxPdvSummary" hidden></section>
         <section class="table-card gx-table-card">
           <div class="heading"><div><h2>Seguimiento diario</h2><span class="hint">Cada fila representa un cierre esperado por PDV y fecha.</span></div><button class="reset-btn" id="gxRefreshBtn">Actualizar</button></div>
-          <div class="table-scroll"><table id="gxTable"><thead><tr><th>Fecha</th><th>PDV</th><th>Recaudo Sistema</th><th>PayJoy Por Cobrar</th><th>Efectivo a Depositar</th><th>Depositado</th><th>Pendiente Banco</th><th>Estado</th><th>Registro</th><th>Acciones</th></tr></thead><tbody id="gxTbody"></tbody></table></div>
+          <div class="gx-table-top-scroll" id="gxTableTopScroll"><div class="gx-table-top-scroll-inner" id="gxTableTopScrollInner"></div></div>
+          <div class="table-scroll" id="gxTableScroll"><table id="gxTable"><thead><tr><th>Fecha</th><th>PDV</th><th>Recaudo Sistema</th><th>PayJoy Por Cobrar</th><th>Efectivo a Depositar</th><th>Depositado</th><th>Pendiente Banco</th><th>Estado</th><th>Registro</th><th>Acciones</th></tr></thead><tbody id="gxTbody"></tbody></table></div>
         </section>
       </div>
     </section>
@@ -790,6 +794,14 @@
         <div style="flex:1;">
           <h1>Stock</h1>
         </div>
+        <select id="stockFilterPunto" class="stock-filter-select" style="min-width:180px;">
+          <option value="">PUNTO DE VENTA · Todo</option>
+        </select>
+        <select id="stockFilterMarca" class="stock-filter-select" style="min-width:150px;">
+          <option value="">MARCA · Todo</option>
+        </select>
+        <select id="stockFilterTipo" class="stock-filter-select" style="min-width:140px;"></select>
+        <button class="reset-btn" id="stockRefreshBtn">Actualizar</button>
       </div>
 
       <div class="wrap" style="margin-top:26px;">
@@ -819,17 +831,6 @@
                 <div class="stock-panel-body is-collapsed" id="stockEquipoBody"></div>
               </div>
             </div>
-          </div>
-
-          <div class="stock-filters-row">
-            <select id="stockFilterPunto" class="stock-filter-select">
-              <option value="">PUNTO DE VENTA · Todo</option>
-            </select>
-            <select id="stockFilterMarca" class="stock-filter-select">
-              <option value="">MARCA · Todo</option>
-            </select>
-            <select id="stockFilterTipo" class="stock-filter-select"></select>
-            <button class="reset-btn" id="stockRefreshBtn" style="background:var(--blue); border-color:var(--blue);">Actualizar</button>
           </div>
 
           <div class="table-scroll">

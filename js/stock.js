@@ -185,6 +185,30 @@
     return (s || "").toString().replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
   }
 
+  function brandBadge(marca) {
+    var m = (marca || "").toUpperCase().trim();
+    var cls = "stock-brand-tag";
+    if (m.indexOf("SAMSUNG") !== -1) cls += " is-samsung";
+    else if (m.indexOf("HONOR") !== -1) cls += " is-honor";
+    else if (m.indexOf("APPLE") !== -1 || m.indexOf("IPHONE") !== -1) cls += " is-apple";
+    else if (m.indexOf("XIAOMI") !== -1 || m.indexOf("REDMI") !== -1) cls += " is-xiaomi";
+    else if (m.indexOf("MOTOROLA") !== -1 || m.indexOf("MOTO") !== -1) cls += " is-motorola";
+    else if (m.indexOf("ZTE") !== -1) cls += " is-zte";
+    else cls += " is-default";
+    return '<span class="' + cls + '">' + escapeHtml(m || "GENERAL") + '</span>';
+  }
+
+  function formatModel(modelo) {
+    var mod = escapeHtml(modelo || "");
+    if (mod.indexOf("5G") !== -1) {
+      mod = mod.replace(/5G/g, '<span class="stock-tech-tag is-5g">5G</span>');
+    }
+    if (mod.indexOf("4G") !== -1) {
+      mod = mod.replace(/4G/g, '<span class="stock-tech-tag is-4g">4G</span>');
+    }
+    return mod;
+  }
+
   function renderStockTable(){
     renderStockSummary();
     var tbody = document.getElementById("stockTbody");
@@ -207,15 +231,15 @@
 
     var html = "";
     if(filtered.length === 0){
-      html = '<tr><td colspan="5" style="text-align:center; color:var(--ink-soft);">No se encontraron resultados con esos filtros.</td></tr>';
+      html = '<tr><td colspan="5" style="text-align:center; color:var(--ink-soft); padding:32px;">No se encontraron resultados con esos filtros.</td></tr>';
     }else{
       filtered.forEach(function(it){
         html += '<tr>' +
-          '<td>' + escapeHtml(it.punto) + '</td>' +
-          '<td>' + escapeHtml(it.marca) + '</td>' +
-          '<td>' + escapeHtml(it.modelo) + '</td>' +
-          '<td class="mono">' + escapeHtml(it.sku) + '</td>' +
-          '<td class="mono">' + escapeHtml(it.serie) + '</td>' +
+          '<td><span class="stock-pdv-cell"><span class="stock-pdv-dot"></span>' + escapeHtml(it.punto) + '</span></td>' +
+          '<td>' + brandBadge(it.marca) + '</td>' +
+          '<td class="stock-model-cell">' + formatModel(it.modelo) + '</td>' +
+          '<td class="mono"><span class="stock-code-chip">' + escapeHtml(it.sku || "-") + '</span></td>' +
+          '<td class="mono"><span class="stock-code-chip is-serie">' + escapeHtml(it.serie || "-") + '</span></td>' +
           '</tr>';
       });
     }

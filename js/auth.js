@@ -100,12 +100,12 @@ var SUPABASE_ANON_KEY = "sb_publishable_ieKMBlB07Pz0ii7s1XFe8w_HOvQYAty";
     document.querySelectorAll(".page").forEach(function(section){ section.classList.remove("active"); });
     page.classList.add("active");
     try{ sessionStorage.setItem("pulso-active-page", target); }catch(e){}
-    if(target === "stock" && typeof loadStock === "function") loadStock();
-    if(target === "avance" && typeof loadAvance === "function") loadAvance();
+    if(target === "stock" && typeof window.loadStock === "function") window.loadStock();
+    if(target === "avance" && typeof window.loadAvance === "function") window.loadAvance();
     if(target === "avancedia" && typeof window.loadAvanceDia === "function") window.loadAvanceDia();
     if(target === "arribos" && typeof window.loadArribos === "function") window.loadArribos();
     if(target === "horario" && typeof window.loadHorario === "function") window.loadHorario();
-    if(target === "xstore" && typeof loadXstore === "function") loadXstore();
+    if(target === "xstore" && typeof window.loadXstore === "function") window.loadXstore();
     if(target === "gestionxstore" && typeof window.loadGestionXstore === "function") window.loadGestionXstore();
     if(target === "novedades" && typeof window.loadNovedadesPage === "function") window.loadNovedadesPage();
   }

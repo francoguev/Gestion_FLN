@@ -1167,5 +1167,13 @@
         });
       }
     });
+    var refreshBtn = document.getElementById("avanceRefreshBtn");
+    if(refreshBtn){
+      refreshBtn.addEventListener("click", function(){
+        _raw = null;
+        _rawLoadedAt = 0;
+        window.loadAvance();
+      });
+    }
   });
 })();
