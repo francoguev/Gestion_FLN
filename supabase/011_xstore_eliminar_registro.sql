@@ -1,6 +1,8 @@
 -- Pulso · Gestión Xstore: Migración 011 (Eliminar registro de caja por Operaciones)
 -- Permite a Operaciones eliminar un recaudo no conciliado y sus asignaciones de depósito asociadas.
 
+drop function if exists public.xstore_delete_closure(uuid);
+
 create or replace function public.xstore_delete_closure(p_closure_id uuid)
 returns void language plpgsql security definer set search_path = public as $$
 declare
