@@ -143,6 +143,7 @@
   }
   function renderSchedule(){
     var holder=document.getElementById("horarioScheduleHolder"); if(!holder) return;
+    moveEditorHome();
     var pdvs=selectedPdvs();
     var people=state.roster.filter(function(p){ return !pdvs.length || pdvs.indexOf(p.pdv)!==-1; });
     if(!people.length){ holder.innerHTML='<div class="horario-empty">No hay asesores asignados al PDV seleccionado.</div>'; return; }
@@ -226,17 +227,23 @@
   function closeMonthView(){document.getElementById("horarioMonthModal").hidden=true;}
   function moveEditorHome(){
     var editor=document.getElementById("horarioEditor");
-    var editorRow=editor && editor.closest("tr.horario-editor-row");
-    if(editorRow){
-      document.querySelector("#page-horario .horario-wrap").appendChild(editor);
+    if(!editor) return;
+    var editorRow=editor.closest("tr.horario-editor-row");
+    var homeContainer=document.querySelector("#page-horario .horario-wrap");
+    if(editorRow && homeContainer){
+      homeContainer.appendChild(editor);
       editorRow.remove();
+    }else if(homeContainer && editor.parentNode !== homeContainer){
+      homeContainer.appendChild(editor);
     }
+    editor.hidden=true;
   }
   function openEditor(email,key,sourceButton){
     var person=state.roster.find(function(p){return clean(p.email).toLowerCase()===clean(email).toLowerCase();}); if(!person) return;
     state.selected={email:email,date:key,pdv:person.pdv}; var shift=findShift(email,key);
-    var editor=document.getElementById("horarioEditor");
     moveEditorHome();
+    var editor=document.getElementById("horarioEditor");
+    if(!editor) return;
     editor.hidden=false;
     var row=document.createElement("tr"), cell=document.createElement("td");
     row.className="horario-editor-row";
@@ -251,7 +258,7 @@
     document.getElementById("horarioBreakEnd").value=shift&&!shift.is_day_off?timeValue(shift.break_end):"";
     if(sourceButton) sourceButton.scrollIntoView({behavior:"smooth",block:"nearest"});
   }
-  function closeEditor(){ state.selected=null; var editor=document.getElementById("horarioEditor"); if(editor) editor.hidden=true; }
+  function closeEditor(){ state.selected=null; moveEditorHome(); }
   function copyEditorShift(){
     if(!state.selected){ alert("Selecciona un día en la tabla para copiar."); return; }
     var shift=findShift(state.selected.email,state.selected.date);
