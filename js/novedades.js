@@ -228,7 +228,16 @@
       badgeEl.textContent = item.is_birthday ? "🎉 Estamos de fiesta" : "Importante";
       badgeEl.classList.toggle("novedad-birthday-badge", !!item.is_birthday);
     }
-    document.getElementById("novedadPopupTitle").textContent = item.title || "Novedad importante";
+    var titleEl = document.getElementById("novedadPopupTitle");
+    if(titleEl){
+      if(item.title && item.title !== "Novedad importante"){
+        titleEl.textContent = item.title;
+        titleEl.style.display = "";
+      }else{
+        titleEl.textContent = "";
+        titleEl.style.display = "none";
+      }
+    }
     document.getElementById("novedadPopupContent").innerHTML = renderMarkdown(item.content_md);
     overlay.style.display = "flex";
     overlay.setAttribute("data-current-id", item.id);

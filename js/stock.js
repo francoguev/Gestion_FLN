@@ -199,14 +199,19 @@
   }
 
   function formatModel(modelo) {
-    var mod = escapeHtml(modelo || "");
-    if (mod.indexOf("5G") !== -1) {
-      mod = mod.replace(/5G/g, '<span class="stock-tech-tag is-5g">5G</span>');
+    var raw = escapeHtml(modelo || "").trim();
+    if (!raw) return "";
+
+    if (/\b5G\s*$/i.test(raw)) {
+      return raw.replace(/\b5G\s*$/i, '<span class="stock-tech-tag is-5g">5G</span>');
     }
-    if (mod.indexOf("4G") !== -1) {
-      mod = mod.replace(/4G/g, '<span class="stock-tech-tag is-4g">4G</span>');
+    if (/\b4G\s*$/i.test(raw)) {
+      return raw.replace(/\b4G\s*$/i, '<span class="stock-tech-tag is-4g">4G</span>');
     }
-    return mod;
+
+    raw = raw.replace(/(?<!\d)\b5G\b/gi, '<span class="stock-tech-tag is-5g">5G</span>');
+    raw = raw.replace(/(?<!\d)\b4G\b/gi, '<span class="stock-tech-tag is-4g">4G</span>');
+    return raw;
   }
 
   function renderStockTable(){

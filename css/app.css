@@ -994,7 +994,7 @@
   .gx-pdv-filter-menu label:hover{ background:#f3f5f9; }
   .gx-pdv-filter-menu input{ margin-right:7px; accent-color:var(--blue); }
   .gx-pdv-filter-menu .gx-pdv-all{ color:var(--blue); font-weight:800; border-bottom:1px solid var(--line); margin-bottom:4px; }
-  .gx-summary{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin:0 0 18px; }
+  .gx-summary{ display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:12px; margin:0 0 18px; }
   .gx-summary-card{ background:#fff; border:1px solid var(--line); border-radius:13px; padding:16px; }
   .gx-summary-card span{ display:block; color:var(--ink-soft); font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.05em; }
   .gx-summary-card strong{ display:block; margin-top:8px; font-size:24px; font-variant-numeric:tabular-nums; }
@@ -1644,7 +1644,7 @@
   .gx-table-top-scroll::-webkit-scrollbar-thumb{background:#94a3b8;border-radius:5px}
   .gx-table-top-scroll::-webkit-scrollbar-thumb:hover{background:#64748b}
   .gx-table-top-scroll-inner{height:1px}
-  .gx-pdv-summary-table{width:100%;min-width:780px;border-collapse:collapse}
+  .gx-pdv-summary-table{width:100%;min-width:960px;border-collapse:collapse}
   .gx-pdv-summary-table th,.gx-pdv-summary-table td{padding:13px 16px;border-bottom:1px solid #eef2f7;text-align:left;vertical-align:middle}
   .gx-pdv-summary-table th{background:#f8fafc;color:#64748b;font-size:12px;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
   .gx-pdv-summary-table td{font-size:13px;color:#334155}.gx-pdv-summary-table tr:last-child td{border-bottom:0}
@@ -1791,16 +1791,16 @@
   }
 
   .gx-payjoy-badge {
-    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%) !important;
-    border: 1px solid #fcd34d !important;
-    color: #92400e !important;
-    box-shadow: 0 2px 6px rgba(245, 158, 11, 0.15) !important;
+    background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
+    border: 1px solid #86efac !important;
+    color: #15803d !important;
+    box-shadow: 0 2px 6px rgba(22, 163, 74, 0.15) !important;
     transition: all 0.2s ease !important;
   }
 
   .gx-payjoy-badge:hover {
     transform: scale(1.04);
-    box-shadow: 0 4px 10px rgba(245, 158, 11, 0.25) !important;
+    box-shadow: 0 4px 10px rgba(22, 163, 74, 0.25) !important;
   }
 
   .gx-calc-box {
@@ -2781,4 +2781,247 @@
   button[class*="capture"]:active {
     transform: translateY(0) scale(0.97) !important;
     box-shadow: 0 2px 8px rgba(124, 58, 237, 0.25) !important;
+  }
+
+  /* ==========================================================================
+     SISTEMA DE DISEÑO GENERAL (DISEÑO GENERAL UNIFICADO DE LA PLATAFORMA)
+     ========================================================================== */
+
+  /* 1. FILTROS SUPERIORES EN LA FRANJA AZUL (.topbar) */
+  .topbar select,
+  .topbar input[type="date"],
+  .topbar input[type="text"],
+  .topbar .stock-filter-select,
+  .topbar .avance-dia-pdv-button,
+  .topbar .gx-pdv-filter-button,
+  .topbar .horario-pdv-filter-button,
+  .topbar .xstore-day-filter-button {
+    height: 40px !important;
+    min-height: 40px !important;
+    max-height: 40px !important;
+    box-sizing: border-box !important;
+    line-height: 38px !important;
+    font-family: 'Space Grotesk', 'Inter', sans-serif !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    border-radius: 9px !important;
+    padding: 0 34px 0 14px !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    background-color: rgba(255, 255, 255, 0.16) !important;
+    backdrop-filter: blur(8px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.38) !important;
+    color: #ffffff !important;
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="7" viewBox="0 0 12 7"><path d="M1 1l5 5 5-5" stroke="%23ffffff" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>') !important;
+    background-repeat: no-repeat !important;
+    background-position: right 12px center !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12) !important;
+    transition: all 0.18s ease !important;
+    cursor: pointer !important;
+  }
+
+  .topbar select option {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    font-weight: 600 !important;
+  }
+
+  .topbar select:hover,
+  .topbar input[type="date"]:hover,
+  .topbar input[type="text"]:hover,
+  .topbar .stock-filter-select:hover,
+  .topbar .avance-dia-pdv-button:hover,
+  .topbar .gx-pdv-filter-button:hover,
+  .topbar .horario-pdv-filter-button:hover,
+  .topbar .xstore-day-filter-button:hover {
+    background-color: rgba(255, 255, 255, 0.28) !important;
+    border-color: rgba(255, 255, 255, 0.65) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18) !important;
+  }
+
+  /* 2. BOTONES "DESCARGAR EXCEL" */
+  /* a) En la Franja Azul (.topbar) */
+  .topbar .gx-export-btn,
+  .topbar .export-excel-btn,
+  .topbar button[id*="Export"],
+  .topbar button[id*="export"] {
+    height: 40px !important;
+    min-height: 40px !important;
+    max-height: 40px !important;
+    box-sizing: border-box !important;
+    line-height: 38px !important;
+    padding: 0 18px !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    border-radius: 9px !important;
+    background: linear-gradient(135deg, #16a34a 0%, #15803d 100%) !important;
+    border: 1px solid #15803d !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(22, 163, 74, 0.28) !important;
+    transition: all 0.18s ease !important;
+    cursor: pointer !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    white-space: nowrap !important;
+  }
+
+  /* b) Dentro de Tablas / Tarjetas */
+  .horario-export-btn,
+  .table-card .heading .horario-export-btn,
+  .avance-day-card-btn.is-excel,
+  [data-avance-day-action="excel"],
+  .table-card button[id*="Export"],
+  .table-card button[id*="export"] {
+    height: 34px !important;
+    min-height: 34px !important;
+    max-height: 34px !important;
+    box-sizing: border-box !important;
+    line-height: 32px !important;
+    padding: 0 14px !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    border-radius: 8px !important;
+    background: linear-gradient(135deg, #16a34a 0%, #15803d 100%) !important;
+    border: 1px solid #15803d !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(22, 163, 74, 0.28) !important;
+    transition: all 0.18s ease !important;
+    cursor: pointer !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    white-space: nowrap !important;
+  }
+
+  .topbar .gx-export-btn:hover,
+  .horario-export-btn:hover,
+  .avance-day-card-btn.is-excel:hover,
+  [data-avance-day-action="excel"]:hover,
+  button[id*="Export"]:hover,
+  button[id*="export"]:hover {
+    background: linear-gradient(135deg, #15803d 0%, #166534 100%) !important;
+    border-color: #166534 !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 6px 16px rgba(22, 163, 74, 0.40) !important;
+  }
+
+  /* 3. BOTONES "EXPANDIR" Y ACCIONES SECUNDARIAS (AZUL SUAVE) */
+  #arribosExpandBtn,
+  .arribos-expand-btn,
+  .horario-month-btn,
+  .btn-secondary-soft,
+  .avance-day-card-btn[data-avance-day-action="expand"] {
+    background: #f8faff !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #1e3a8a !important;
+    font-weight: 700 !important;
+    font-size: 13px !important;
+    padding: 0 14px !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    max-height: 34px !important;
+    line-height: 32px !important;
+    border-radius: 8px !important;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+    transition: all 0.18s ease !important;
+    cursor: pointer !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  #arribosExpandBtn:hover,
+  .arribos-expand-btn:hover,
+  .horario-month-btn:hover,
+  .btn-secondary-soft:hover,
+  .avance-day-card-btn[data-avance-day-action="expand"]:hover {
+    background: #eef2ff !important;
+    border-color: #93c5fd !important;
+    color: #1d4ed8 !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 3px 8px rgba(37, 99, 235, 0.12) !important;
+  }
+
+  /* Flechas desplegables compactas dentro de filas de tabla en Avance Día Link */
+  td .avance-day-expand,
+  .avance-day-expand[data-day-toggle] {
+    width: 24px !important;
+    min-width: 24px !important;
+    max-width: 24px !important;
+    height: 24px !important;
+    min-height: 24px !important;
+    max-height: 24px !important;
+    line-height: 22px !important;
+    padding: 0 !important;
+    margin-right: 10px !important;
+    border-radius: 6px !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    background: #f1f5f9 !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #1e3a8a !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+  }
+
+  td .avance-day-expand:hover,
+  .avance-day-expand[data-day-toggle]:hover {
+    background: #e2e8f0 !important;
+    border-color: #94a3b8 !important;
+    color: #1d4ed8 !important;
+  }
+
+  /* 4. BOTONES "ACTUALIZAR" (BLANCO LIMPIO) */
+  .reset-btn,
+  #stockRefreshBtn,
+  #avanceRefreshBtn,
+  #avanceDiaRefreshBtn,
+  #xstoreRefreshBtn,
+  #gxRefreshBtn {
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #1e293b !important;
+    font-family: 'Space Grotesk', 'Inter', sans-serif !important;
+    font-weight: 700 !important;
+    font-size: 13px !important;
+    padding: 0 14px !important;
+    border-radius: 9px !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+    transition: all 0.18s ease !important;
+    cursor: pointer !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  .topbar .reset-btn,
+  .topbar #stockRefreshBtn,
+  .topbar #avanceRefreshBtn,
+  .topbar #avanceDiaRefreshBtn,
+  .topbar #xstoreRefreshBtn,
+  .topbar #gxRefreshBtn {
+    height: 40px !important;
+    min-height: 40px !important;
+    max-height: 40px !important;
+    line-height: 38px !important;
+  }
+
+  .reset-btn:hover,
+  #stockRefreshBtn:hover,
+  #avanceRefreshBtn:hover,
+  #avanceDiaRefreshBtn:hover,
+  #xstoreRefreshBtn:hover,
+  #gxRefreshBtn:hover {
+    background: #f8fafc !important;
+    border-color: #94a3b8 !important;
+    color: #0f172a !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08) !important;
   }

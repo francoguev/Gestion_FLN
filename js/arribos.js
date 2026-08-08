@@ -503,5 +503,65 @@
     if(diaFiltro) diaFiltro.addEventListener("change", reRenderNoConcretada);
     if(tiendaFiltro) tiendaFiltro.addEventListener("change", reRenderNoConcretada);
     if(asesorFiltro) asesorFiltro.addEventListener("change", reRenderNoConcretada);
+
+    var captureStoresBtn = document.getElementById("arribosCaptureStoresBtn");
+    if(captureStoresBtn){
+      captureStoresBtn.addEventListener("click", function(){
+        copyArribosCapture("arribosStoresCard", "arribos-tienda-asesor", captureStoresBtn);
+      });
+    }
+    var captureNoConcretadasBtn = document.getElementById("arribosCaptureNoConcretadasBtn");
+    if(captureNoConcretadasBtn){
+      captureNoConcretadasBtn.addEventListener("click", function(){
+        copyArribosCapture("arribosNoConcretadasCard", "arribos-ventas-no-concretadas", captureNoConcretadasBtn);
+      });
+    }
   });
+
+  var captureLoader = null;
+  function loadHtml2Canvas() {
+    if (window.html2canvas) return Promise.resolve(window.html2canvas);
+    if (captureLoader) return captureLoader;
+    captureLoader = new Promise(function (resolve, reject) {
+      var script = document.createElement("script");
+      script.src = "https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js";
+      script.onload = function () { resolve(window.html2canvas); };
+      script.onerror = function () { reject(new Error("No se pudo cargar el generador de capturas.")); };
+      document.head.appendChild(script);
+    });
+    return captureLoader;
+  }
+
+  async function copyArribosCapture(targetId, fileName, button) {
+    var container = document.getElementById(targetId);
+    if (!container) return;
+    var original = button.textContent;
+    button.disabled = true; button.textContent = "Generando…";
+    var stage = document.createElement("div");
+    var copy = container.cloneNode(true);
+    try {
+      copy.querySelectorAll("button").forEach(function(b){ b.remove(); });
+      stage.style.cssText = "position:fixed;left:-100000px;top:0;z-index:-1;background:#fff;padding:18px;width:max-content;max-width:none;";
+      stage.appendChild(copy); document.body.appendChild(stage);
+      var h2c = await loadHtml2Canvas();
+      var canvas = await h2c(copy, { backgroundColor: "#ffffff", scale: 2, useCORS: true, logging: false });
+      var blob = await new Promise(function (resolve) { canvas.toBlob(resolve, "image/png"); });
+      if (!blob) throw new Error("No se pudo crear la imagen.");
+      if (navigator.clipboard && window.ClipboardItem) {
+        await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+        button.textContent = "¡Copiada!";
+      } else {
+        var link = document.createElement("a"); link.href = URL.createObjectURL(blob);
+        link.download = fileName + ".png"; document.body.appendChild(link); link.click(); link.remove();
+        setTimeout(function () { URL.revokeObjectURL(link.href); }, 0);
+        button.textContent = "Imagen descargada";
+      }
+    } catch (err) {
+      console.error(err);
+      alert("No se pudo copiar la captura.");
+    } finally {
+      if (stage.parentNode) stage.remove();
+      setTimeout(function () { button.disabled = false; button.textContent = original; }, 1400);
+    }
+  }
 })();

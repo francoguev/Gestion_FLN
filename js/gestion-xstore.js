@@ -4,7 +4,7 @@
 
   var MONTHS = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
   var state = {
-    profile: null, role: "", month: "", day: "", rows: [], deposits: [], pdvs: [], selectedPdvs: [],
+    profile: null, role: "", month: "", day: "", statusFilter: "", rows: [], deposits: [], pdvs: [], selectedPdvs: [],
     payjoyItems: [], reviewingId: null, editingId: null, editingKind: "", loading: false
   };
 
@@ -32,6 +32,11 @@
       rows = rows.filter(function (r) {
         var dayNum = String(r.cash_date || "").slice(8, 10);
         return dayNum === state.day;
+      });
+    }
+    if (state.statusFilter) {
+      rows = rows.filter(function (r) {
+        return r.status === state.statusFilter;
       });
     }
     return rows;
@@ -134,16 +139,25 @@
     holder.hidden = false;
 
     var missing = rows.filter(function (r) { return r.status === "missing_cash"; }).length;
-    var pending = rows.reduce(function (total, r) { return total + (r.status === "pending_deposit" || r.status === "deposit_review" || r.status === "observed" ? Number(r.outstanding_amount || 0) : 0); }, 0);
-    var payjoyTotal = rows.reduce(function (total, r) { return total + Number(r.payjoy_pending_amount || r.payjoy_amount || 0); }, 0);
+    var totalCashCollected = rows.reduce(function (total, r) {
+      return total + (r.closure_id ? Number(r.cash_amount || 0) : 0);
+    }, 0);
+    var pending = rows.reduce(function (total, r) {
+      return total + (r.status === "pending_deposit" || r.status === "deposit_review" || r.status === "observed" ? Number(r.outstanding_amount || 0) : 0);
+    }, 0);
+    var payjoyTotal = rows.reduce(function (total, r) {
+      return total + Number(r.payjoy_pending_amount || r.payjoy_amount || 0);
+    }, 0);
     var review = rows.filter(function (r) { return r.status === "deposit_review"; }).length;
     var diff = rows.filter(function (r) { return r.status === "difference"; }).length;
 
-    holder.innerHTML = '<article class="gx-summary-card is-danger"><span>Sin registro de caja</span><strong>' + missing + "</strong></article>" +
-      '<article class="gx-summary-card is-alert"><span>Pendiente de depósito</span><strong>' + esc(money(pending)) + "</strong></article>" +
-      '<article class="gx-summary-card" style="border-left:4px solid #f59e0b;"><span>Por cobrar PayJoy</span><strong style="color:#d97706;">' + esc(money(payjoyTotal)) + "</strong></article>" +
-      '<article class="gx-summary-card"><span>Depósitos en revisión</span><strong>' + review + "</strong></article>" +
-      '<article class="gx-summary-card ' + (diff ? "is-danger" : "is-good") + '"><span>Diferencias por revisar</span><strong>' + diff + "</strong></article>";
+    holder.innerHTML =
+      '<article class="gx-summary-card is-danger" style="border-left:4px solid #dc2626;"><span>Sin registro de Recaudo</span><strong style="color:#dc2626;">' + missing + "</strong></article>" +
+      '<article class="gx-summary-card" style="border-left:4px solid #2563eb;"><span>Recaudado</span><strong style="color:#1d4ed8;">' + esc(money(totalCashCollected)) + "</strong></article>" +
+      '<article class="gx-summary-card is-alert" style="border-left:4px solid #f59e0b;"><span>Pendiente de depósito</span><strong style="color:#d97706;">' + esc(money(pending)) + "</strong></article>" +
+      '<article class="gx-summary-card" style="border-left:4px solid #16a34a;"><span>PayJoy</span><strong style="color:#15803d;">' + esc(money(payjoyTotal)) + "</strong></article>" +
+      '<article class="gx-summary-card" style="border-left:4px solid #3b82f6;"><span>Depósitos en revisión</span><strong style="color:#1d4ed8;">' + review + "</strong></article>" +
+      '<article class="gx-summary-card ' + (diff ? "is-danger" : "is-good") + '" style="border-left:4px solid ' + (diff ? '#dc2626' : '#16a34a') + ';"><span>Diferencias por revisar</span><strong>' + diff + "</strong></article>";
   }
 
   function daysText(rows) {
@@ -207,12 +221,39 @@
     var groups = {};
     rows.forEach(function (r) { (groups[r.pdv] || (groups[r.pdv] = [])).push(r); });
     var html = Object.keys(groups).sort(function (a, b) { return a.localeCompare(b, "es"); }).map(function (pdv) {
-      var group = groups[pdv], missing = group.filter(function (r) { return r.status === "missing_cash"; }), pendingRows = group.filter(function (r) { return ["pending_deposit", "deposit_review", "observed", "difference"].indexOf(r.status) >= 0; });
-      var pending = pendingRows.reduce(function (n, r) { return n + Number(r.outstanding_amount || 0); }, 0);
-      return '<tr><td><strong>' + esc(pdv) + "</strong></td><td>" + group.length + " día(s)</td><td>" + esc(money(pending)) + "</td><td>" + (missing.length ? '<span class="gx-status missing_cash">' + missing.length + " sin caja</span>" : '<span class="gx-status validated">Al día</span>') + "</td><td>" + esc(daysText(pendingRows.length ? pendingRows : missing)) + "</td></tr>";
+      var group = groups[pdv];
+      var totalCashCollected = group.reduce(function (n, r) {
+        return n + (r.closure_id ? Number(r.cash_amount || 0) : 0);
+      }, 0);
+      var pendingDepositRows = group.filter(function (r) {
+        return r.status === "pending_deposit" || r.status === "missing_cash" || (r.closure_id && Number(r.outstanding_amount || 0) > 0);
+      });
+      var pendingAmount = group.reduce(function (n, r) { return n + Number(r.outstanding_amount || 0); }, 0);
+
+      var statusCounts = {};
+      group.forEach(function (r) {
+        var st = r.status || "missing_cash";
+        statusCounts[st] = (statusCounts[st] || 0) + 1;
+      });
+
+      var statusBadgeList = Object.keys(statusCounts).map(function (st) {
+        var label = statusLabel(st);
+        var count = statusCounts[st];
+        return '<span class="gx-status ' + esc(st) + '">' + esc(label) + ' (' + count + ')</span>';
+      }).join(" ");
+
+      return '<tr>' +
+        '<td><strong>' + esc(pdv) + '</strong></td>' +
+        '<td>' + group.length + ' día(s)</td>' +
+        '<td>' + esc(money(totalCashCollected)) + '</td>' +
+        '<td>' + esc(money(pendingAmount)) + '</td>' +
+        '<td>' + esc(daysText(pendingDepositRows)) + '</td>' +
+        '<td>' + (statusBadgeList || '—') + '</td>' +
+        '</tr>';
     }).join("");
+
     holder.hidden = false;
-    holder.innerHTML = '<div class="gx-pdv-summary-head"><div><h2>Resumen por PDV</h2><p>Montos y fechas que requieren seguimiento.</p></div><button type="button" class="reset-btn gx-capture-btn" id="gxPdvSummaryCaptureBtn">Copiar captura</button></div><div class="table-scroll"><table class="gx-pdv-summary-table"><thead><tr><th>PDV</th><th>Período mostrado</th><th>Saldo por gestionar</th><th>Alerta</th><th>Días comprendidos</th></tr></thead><tbody>' + (html || '<tr><td colspan="5">No hay datos en el período.</td></tr>') + "</tbody></table></div>";
+    holder.innerHTML = '<div class="gx-pdv-summary-head"><div><h2>Resumen por PDV</h2><p>Montos y fechas que requieren seguimiento.</p></div><button type="button" class="reset-btn gx-capture-btn" id="gxPdvSummaryCaptureBtn">Copiar captura</button></div><div class="table-scroll"><table class="gx-pdv-summary-table"><thead><tr><th>PDV</th><th>Período mostrado</th><th>RECAUDOS</th><th>PENDIENTE DEPOSITO</th><th>Días comprendidos</th><th>ESTADO FINAL</th></tr></thead><tbody>' + (html || '<tr><td colspan="6">No hay datos en el período.</td></tr>') + "</tbody></table></div>";
     
     var captureBtn = el("gxPdvSummaryCaptureBtn");
     if (captureBtn) {
@@ -383,7 +424,16 @@
       ]);
       if (results[0].error) throw results[0].error;
       if (results[1].error) throw results[1].error;
-      state.rows = results[0].data || []; state.deposits = results[1].data || [];
+      state.rows = (results[0].data || []).map(function (row) {
+        if (row.closure_id && (Number(row.cash_amount || 0) === 0 || row.store_closed)) {
+          if (row.status === "pending_deposit") {
+            row.status = "deposit_review";
+          }
+          row.outstanding_amount = 0;
+        }
+        return row;
+      });
+      state.deposits = results[1].data || [];
       state.pdvs = Array.from(new Set(state.rows.map(function (r) { return r.pdv; }))).sort(function (a, b) { return a.localeCompare(b, "es"); });
       renderPdvFilter(); populatePdvInputs(); renderTable(); populateAllocationList();
       setHint(state.rows.length + " cierre(s) esperado(s) · " + monthLabel(state.month));
@@ -416,7 +466,7 @@
     recalculatePayjoyTotals();
   }
 
-  function eligibleForDeposit(row, pdv) { return row.closure_id && row.pdv === pdv && !row.store_closed && !row.review_started_at && !finalStatus(row.status) && Number(row.outstanding_amount || 0) >= 0; }
+  function eligibleForDeposit(row, pdv) { return row.closure_id && row.pdv === pdv && !row.store_closed && !row.review_started_at && !finalStatus(row.status) && Number(row.cash_amount || 0) > 0 && Number(row.outstanding_amount || 0) > 0; }
   function populateAllocationList() {
     var holder = el("gxAllocationList"), pdv = currentPdv("deposit"); if (!holder) return;
     var candidates = state.rows.filter(function (r) { return eligibleForDeposit(r, pdv); });
@@ -562,6 +612,8 @@
 
     month.addEventListener("change", function () { state.month = month.value; state.day = ""; populateDays(); loadData(); });
     if (day) { day.addEventListener("change", function () { state.day = day.value; renderTable(); }); }
+    var statusSel = el("gxStatusSelect");
+    if (statusSel) { statusSel.addEventListener("change", function () { state.statusFilter = statusSel.value; renderTable(); }); }
 
     refresh.addEventListener("click", loadData);
     if (el("gxExportBtn")) el("gxExportBtn").addEventListener("click", exportExcel);

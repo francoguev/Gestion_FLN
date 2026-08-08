@@ -370,22 +370,28 @@
       <div class="wrap" style="margin-top:26px;" id="arribosWrap">
         <div class="avance-hint" id="arribosHint">Cargando arribos…</div>
 
-        <div class="table-card" style="padding:20px 22px;">
-          <div class="heading" style="align-items:center; width:100%;">
+        <div class="table-card" style="padding:20px 22px;" id="arribosStoresCard">
+          <div class="heading" style="display:flex; justify-content:space-between; align-items:center; width:100%;">
             <div>
               <h2>Arribos por tienda y asesor</h2>
               <span class="hint" id="arribosSummaryHint"></span>
             </div>
-            <button type="button" id="arribosExpandBtn" class="arribos-expand-btn" disabled aria-expanded="false">Expandir</button>
+            <div style="display:flex; gap:8px; align-items:center; margin-left:auto;">
+              <button type="button" id="arribosExpandBtn" class="arribos-expand-btn" disabled aria-expanded="false">Expandir</button>
+              <button type="button" id="arribosCaptureStoresBtn" class="horario-capture-btn">Copiar captura</button>
+            </div>
           </div>
           <div id="arribosStoresHolder"></div>
         </div>
 
-        <div class="table-card" style="padding:20px 22px; margin-top:20px;">
-          <div class="heading" style="align-items:center; width:100%;">
+        <div class="table-card" style="padding:20px 22px; margin-top:20px;" id="arribosNoConcretadasCard">
+          <div class="heading" style="display:flex; justify-content:space-between; align-items:center; width:100%;">
             <div>
               <h2>Ventas no concretadas</h2>
               <span class="hint">Motivos y comportamiento del mes seleccionado.</span>
+            </div>
+            <div style="margin-left:auto;">
+              <button type="button" id="arribosCaptureNoConcretadasBtn" class="horario-capture-btn">Copiar captura</button>
             </div>
           </div>
           <div class="stock-filters-row" style="margin:4px 0 4px; padding:0;">
@@ -569,6 +575,17 @@
       <div class="topbar gx-topbar">
         <button class="topbar-toggle" aria-label="Mostrar u ocultar menú" title="Mostrar u ocultar menú">☰</button>
         <div style="flex:1;"><h1>Gestión Xstore</h1></div>
+        <select id="gxStatusSelect" class="stock-filter-select" style="min-width:180px;">
+          <option value="">Estado · Todos</option>
+          <option value="missing_cash">Sin registro de caja</option>
+          <option value="pending_deposit">Pendiente de depósito</option>
+          <option value="deposit_review">Depósito en revisión</option>
+          <option value="validated">Cuadrado</option>
+          <option value="payjoy_validated">Cuadrado · PayJoy</option>
+          <option value="difference">Diferencia por revisar</option>
+          <option value="observed">Observado</option>
+          <option value="store_closed">Tienda no abrió</option>
+        </select>
         <div class="gx-pdv-filter" id="gxPdvFilter" hidden>
           <button type="button" class="stock-filter-select gx-pdv-filter-button" id="gxPdvButton" aria-expanded="false">PDV · Todos</button>
           <div class="gx-pdv-filter-menu" id="gxPdvMenu" hidden></div>
