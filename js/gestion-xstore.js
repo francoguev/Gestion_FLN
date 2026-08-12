@@ -44,7 +44,7 @@
 
   function canRegister() { return !!(state.profile && state.profile.email); }
   function statusLabel(s) { return ({ missing_cash: "Sin registro de caja", pending_deposit: "Pendiente de depósito", deposit_review: "Depósito en revisión", validated: "Cuadrado", payjoy_validated: "Cuadrado · PayJoy", difference: "Diferencia por revisar", observed: "Observado", store_closed: "Tienda no abrió" })[s] || s; }
-  function finalStatus(s) { return ["validated", "payjoy_validated", "difference", "store_closed"].indexOf(s) >= 0; }
+  function finalStatus(s) { return ["validated", "payjoy_validated", "store_closed"].indexOf(s) >= 0; }
 
   function populateMonths() {
     var select = el("gxMonthSelect"), now = new Date(), keys = [], i;
@@ -340,11 +340,10 @@
       }
 
       /* Regla de Conciliación para Operaciones:
-         Solo se muestra si hay un depósito subido (deposit_review, observed, difference) O si el recaudo es cero / tienda no abrió. */
+         Solo se muestra si hay un depósito subido en revisión (deposit_review, observed) O si el recaudo es cero / tienda no abrió. */
       var canConciliate = isOperations() && row.closure_id && !finalStatus(row.status) && (
         row.status === "deposit_review" ||
         row.status === "observed" ||
-        row.status === "difference" ||
         Number(row.cash_amount || 0) === 0 ||
         row.store_closed
       );
