@@ -475,6 +475,21 @@
     container.innerHTML = html;
   }
 
+  function populateModalPdvOptions() {
+    var pdvSel = el('bitacoraModalPdvSelect');
+    if (!pdvSel) return;
+    var pdvs = [
+      "TE ICA", "TE ICA 2", "TE CHINCHA", "TE CHINCHA 2", "TE PISCO", "TE PISCO 2",
+      "TE PUQUIO", "TE MARCONA", "TE NAZCA", "TE HUANCAYO", "TE HUANCAYO 2",
+      "TE CHANCHAMAYO", "TE TARMA", "TE JAUJA", "TE HUANUCO", "TE TINGO MARIA",
+      "TE SANTA ANITA", "TE AYACUCHO", "TE HUANTA", "TE ANDAHUAYLAS", "TE ABANCAY", "OFICINA"
+    ];
+    pdvSel.innerHTML = '<option value="">Selecciona un PDV...</option>' +
+      pdvs.map(function (p) {
+        return '<option value="' + escapeHtml(p) + '">' + escapeHtml(p) + '</option>';
+      }).join('');
+  }
+
   async function openCreateModal() {
     var modal = el('bitacoraModal');
     if (!modal) return;
@@ -486,6 +501,27 @@
 
     var customBox = el('bitacoraCustomCatWrapper');
     if (customBox) customBox.style.display = 'none';
+
+    var pdvWrapper = el('bitacoraModalPdvWrapper');
+    var isSup = isSupervisorOrHigher();
+    var hasNoProfilePdv = !window.currentUserProfile || !window.currentUserProfile.pdv;
+
+    if (pdvWrapper) {
+      if (isSup || hasNoProfilePdv) {
+        pdvWrapper.style.display = 'block';
+        populateModalPdvOptions();
+        var aplicaCb = el('bitacoraModalAplicaTodosCb');
+        var pdvSelect = el('bitacoraModalPdvSelect');
+        if (aplicaCb) aplicaCb.checked = false;
+        if (pdvSelect) {
+          pdvSelect.disabled = false;
+          pdvSelect.style.opacity = '1';
+          pdvSelect.value = '';
+        }
+      } else {
+        pdvWrapper.style.display = 'none';
+      }
+    }
 
     try { await fetchCategories(); } catch (e) {}
     renderCategoryCheckboxes();
@@ -535,15 +571,52 @@
         return;
       }
 
+      var pdvWrapper = el('bitacoraModalPdvWrapper');
+      var appliesToAll = false;
+      var selectedPdv = '';
+
+      var aplicaCb = el('bitacoraModalAplicaTodosCb');
+      var pdvSelect = el('bitacoraModalPdvSelect');
+
+      if (aplicaCb && aplicaCb.checked) {
+        appliesToAll = true;
+        selectedPdv = 'TODOS LOS PDV';
+      } else if (pdvWrapper && pdvWrapper.style.display !== 'none') {
+        selectedPdv = pdvSelect ? pdvSelect.value : '';
+        if (!selectedPdv) {
+          alert('Por favor selecciona el PDV de la alerta o marca "Aplica a todos los PDV".');
+          if (submitBtn) submitBtn.disabled = false;
+          return;
+        }
+      } else {
+        selectedPdv = (window.currentUserProfile && window.currentUserProfile.pdv) || 'Sin PDV';
+      }
+
       var activeEmail = getActiveUserEmail();
       var res = await window.supabaseClient.rpc('bitacora_create_alerta', {
         p_categorias: selectedCats,
         p_detalle: detalle,
         p_imagen_url: state.selectedImageBase64,
-        p_user_email: activeEmail
+        p_user_email: activeEmail,
+        p_pdv: selectedPdv,
+        p_aplica_todos_pdv: appliesToAll
       });
 
-      if (res.error) throw res.error;
+      if (res.error) {
+        console.warn('RPC create error, intentando inserción directa:', res.error);
+        var insertObj = {
+          email: activeEmail,
+          user_name: (window.currentUserProfile && window.currentUserProfile.fullName) || activeEmail,
+          pdv: selectedPdv,
+          cargo: (window.currentUserProfile && window.currentUserProfile.cargo) || 'asesor',
+          categorias: selectedCats,
+          detalle: detalle,
+          imagen_url: state.selectedImageBase64,
+          aplica_todos_pdv: appliesToAll
+        };
+        var directRes = await window.supabaseClient.from('bitacora_alertas').insert([insertObj]);
+        if (directRes.error) throw directRes.error;
+      }
 
       closeCreateModal();
       await fetchCategories();
@@ -660,8 +733,19 @@
     var form = el('bitacoraForm');
     if (form) form.onsubmit = handleCreateAlert;
 
-    var imgInput = el('bitacoraImageInput');
-    if (imgInput) imgInput.onchange = handleImageFileSelect;
+    var modalAplicaCb = el('bitacoraModalAplicaTodosCb');
+    var modalPdvSel = el('bitacoraModalPdvSelect');
+    if (modalAplicaCb && modalPdvSel) {
+      modalAplicaCb.onchange = function () {
+        if (modalAplicaCb.checked) {
+          modalPdvSel.disabled = true;
+          modalPdvSel.style.opacity = '0.5';
+        } else {
+          modalPdvSel.disabled = false;
+          modalPdvSel.style.opacity = '1';
+        }
+      };
+    }
 
     var tabResumenBtn = el('bitacoraTabResumenBtn');
     if (tabResumenBtn) {
