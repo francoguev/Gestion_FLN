@@ -14,71 +14,106 @@ var SUPABASE_ANON_KEY = "sb_publishable_ieKMBlB07Pz0ii7s1XFe8w_HOvQYAty";
   var supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   window.supabaseClient = supabaseClient;
 
+  function formatUserRoleLabel(cargo, pdv) {
+    var c = (cargo || "").toUpperCase();
+    var p = (pdv || "").toUpperCase();
+    if (c && p) return c + " · " + p;
+    if (c) return c;
+    if (p) return p;
+    return "";
+  }
+
   function showApp(email){
     document.getElementById("loginGate").style.display = "none";
     document.getElementById("appContent").style.display = "block";
     var label = document.getElementById("userEmailLabel");
     if(label) label.textContent = email;
+    try { localStorage.setItem("pulso_user_email", email); }catch(e){}
     loadProfile(email);
   }
 
   async function loadProfile(email){
-    var nameLabel = document.getElementById("userNameLabel");
-    var roleLabel = document.getElementById("userRoleLabel");
+    var nameLabel = document.getElementById("userNameLabel") || document.getElementById("profileUserName");
+    var roleLabel = document.getElementById("userRoleLabel") || document.getElementById("profileUserRole");
+    var emailLabel = document.getElementById("userEmailLabel");
+    if (emailLabel) emailLabel.textContent = email;
+
     try{
-      var res = await supabaseClient
+      var res = await window.supabaseClient
         .from("profiles")
-        .select("full_name, cargo, vistas, pdv")
-        .eq("email", email)
-        .maybeSingle();
-      if(res.error){ console.error("Error cargando profiles:", res.error); }
-      if(res.data && res.data.full_name){
-        if(nameLabel) nameLabel.textContent = res.data.full_name;
-        if(roleLabel) roleLabel.textContent = res.data.cargo || "";
+        .select("full_name, cargo, vistas, pdv, es_administrador, activo")
+        .ilike("email", email);
+      var pData = (res && res.data && res.data.length > 0) ? res.data[0] : null;
+      if(pData){
+        if(pData.activo === false){
+          alert("Tu cuenta ha sido inhabilitada por la administración.");
+          await window.supabaseClient.auth.signOut();
+          window.location.reload();
+          return;
+        }
+        if(nameLabel) nameLabel.textContent = pData.full_name || email;
+        if(roleLabel) roleLabel.textContent = formatUserRoleLabel(pData.cargo, pData.pdv);
       }else{
-        // aún no está en la tabla profiles: solo se muestra el correo
-        if(nameLabel) nameLabel.textContent = "";
+        if(nameLabel) nameLabel.textContent = email;
         if(roleLabel) roleLabel.textContent = "";
       }
       window.currentUserProfile = {
         email: email,
-        fullName: (res.data && res.data.full_name) || "",
-        pdv: (res.data && res.data.pdv) || "",
-        cargo: (res.data && res.data.cargo) || ""
+        fullName: (pData && pData.full_name) || email,
+        pdv: (pData && pData.pdv) || "",
+        cargo: (pData && pData.cargo) || "",
+        es_administrador: (pData && pData.es_administrador === true),
+        activo: (pData && pData.activo !== false)
       };
-      var vistasRaw = (res.data && res.data.vistas) ? res.data.vistas : "calculadora";
+
+      var isAdm = window.currentUserProfile.es_administrador || (window.currentUserProfile.cargo && window.currentUserProfile.cargo.toLowerCase() === "administrador");
+      var vistasRaw = (pData && pData.vistas) ? pData.vistas : "";
       var allowed = vistasRaw.split(",").map(function(v){ return v.trim(); }).filter(Boolean);
+      if(isAdm && allowed.indexOf("usuarios") === -1){
+        allowed.push("usuarios");
+      }
+      if(allowed.indexOf("bitacora") === -1){
+        allowed.push("bitacora");
+      }
+
       applyViewPermissions(allowed);
       restoreLastPage(allowed);
       if(allowed.indexOf("novedades") !== -1){
         if(typeof window.loadNovedadesPage === "function") window.loadNovedadesPage();
         if(typeof window.checkImportantNovedadPopup === "function") window.checkImportantNovedadPopup();
       }
+
+      var currentActivePage = null;
+      try{ currentActivePage = sessionStorage.getItem("pulso-active-page"); }catch(e){}
+      if((currentActivePage === "bitacora" || allowed.indexOf("bitacora") !== -1) && typeof window.loadBitacoraPage === "function"){
+        window.loadBitacoraPage();
+      }
     }catch(e){
       console.error("Excepción cargando profiles:", e);
-      if(nameLabel) nameLabel.textContent = "";
+      if(nameLabel) nameLabel.textContent = email;
       if(roleLabel) roleLabel.textContent = "";
-      window.currentUserProfile = { email: email, fullName:"", pdv:"" };
-      // si algo falla, por seguridad solo se deja ver la calculadora
-      applyViewPermissions(["calculadora"]);
-      if(typeof window.loadNovedadesPage === "function") window.loadNovedadesPage();
-      if(typeof window.checkImportantNovedadPopup === "function") window.checkImportantNovedadPopup();
+      window.currentUserProfile = { email: email, fullName: email, pdv: "", es_administrador: false };
+      applyViewPermissions(["bitacora"]);
     }
   }
 
   function applyViewPermissions(allowed){
+    allowed = allowed || [];
+    if(allowed.indexOf("bitacora") === -1){
+      allowed.push("bitacora");
+    }
     var navItems = document.querySelectorAll(".nav-item");
     var firstAllowedItem = null;
     navItems.forEach(function(item){
       var page = item.getAttribute("data-page");
-      var isAllowed = allowed.indexOf(page) !== -1;
+      var isAllowed = (page === "bitacora") || (allowed.indexOf(page) !== -1);
       item.style.display = isAllowed ? "" : "none";
       if(isAllowed && !firstAllowedItem) firstAllowedItem = item;
     });
 
     var activeItem = document.querySelector(".nav-item.active");
     var activePageName = activeItem && activeItem.getAttribute("data-page");
-    var activeAllowed = activeItem && allowed.indexOf(activePageName) !== -1;
+    var activeAllowed = activeItem && (activePageName === "bitacora" || allowed.indexOf(activePageName) !== -1);
     if(!activeAllowed && firstAllowedItem){
       navItems.forEach(function(i){ i.classList.remove("active"); });
       firstAllowedItem.classList.add("active");
@@ -94,7 +129,8 @@ var SUPABASE_ANON_KEY = "sb_publishable_ieKMBlB07Pz0ii7s1XFe8w_HOvQYAty";
   function openAppPage(target){
     var item = document.querySelector('.nav-item[data-page="' + target + '"]');
     var page = document.getElementById("page-" + target);
-    if(!item || !page || item.style.display === "none") return;
+    if(!item || !page) return;
+    if(target !== "bitacora" && item.style.display === "none") return;
     document.querySelectorAll(".nav-item").forEach(function(navItem){ navItem.classList.remove("active"); });
     item.classList.add("active");
     document.querySelectorAll(".page").forEach(function(section){ section.classList.remove("active"); });
@@ -108,6 +144,8 @@ var SUPABASE_ANON_KEY = "sb_publishable_ieKMBlB07Pz0ii7s1XFe8w_HOvQYAty";
     if(target === "xstore" && typeof window.loadXstore === "function") window.loadXstore();
     if(target === "gestionxstore" && typeof window.loadGestionXstore === "function") window.loadGestionXstore();
     if(target === "novedades" && typeof window.loadNovedadesPage === "function") window.loadNovedadesPage();
+    if(target === "bitacora" && typeof window.loadBitacoraPage === "function") window.loadBitacoraPage();
+    if(target === "usuarios" && typeof window.loadUsuarios === "function") window.loadUsuarios();
   }
 
   function restoreLastPage(allowed){
@@ -194,4 +232,6 @@ var SUPABASE_ANON_KEY = "sb_publishable_ieKMBlB07Pz0ii7s1XFe8w_HOvQYAty";
       });
     }
   });
+  window.showApp = showApp;
+  window.openAppPage = openAppPage;
 })();

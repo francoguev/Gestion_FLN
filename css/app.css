@@ -151,18 +151,23 @@
     color:#fff;
     display:flex;
     flex-direction:column;
-    padding:22px 16px;
+    padding:20px 16px;
     position:sticky;
     top:0;
     height:100vh;
+    max-height:100vh;
+    box-sizing:border-box;
+    overflow:hidden;
+    z-index:90;
   }
   .sidebar-brand{
+    flex:0 0 auto;
     display:flex;
     align-items:center;
     gap:12px;
-    padding:4px 6px 22px;
+    padding:4px 6px 16px;
     border-bottom:1px solid rgba(255,255,255,0.14);
-    margin-bottom:18px;
+    margin-bottom:14px;
   }
   .topbar-toggle{
     background:rgba(255,255,255,0.14);
@@ -182,7 +187,13 @@
   .sidebar-brand .brand-title{font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:13px; line-height:1.35; white-space:nowrap;}
   .sidebar-brand .brand-title span{display:block;}
   .sidebar-brand .logo-mark{width:40px; height:40px; flex:0 0 auto;}
-  .sidebar-nav{display:flex; flex-direction:column; gap:6px; flex:1;}
+  .sidebar-nav{
+    display:flex; flex-direction:column; gap:6px;
+    flex:1 1 0%; min-height:0; overflow-y:auto; overflow-x:hidden;
+    margin-bottom:12px; padding-right:2px;
+    scrollbar-width:none; -ms-overflow-style:none;
+  }
+  .sidebar-nav::-webkit-scrollbar{ display:none; width:0; height:0; }
   .sidebar-nav.pending .nav-item{ visibility:hidden; }
   .nav-item{
     display:flex; align-items:center; gap:10px;
@@ -200,6 +211,7 @@
   .nav-item:hover{background:rgba(255,255,255,0.08); color:#fff;}
   .nav-item.active{background:rgba(255,255,255,0.16); color:#fff; box-shadow:inset 3px 0 0 var(--orange);}
   .sidebar-footer{
+    flex:0 0 auto; margin-top:auto;
     border-top:1px solid rgba(255,255,255,0.14);
     padding-top:14px;
     display:flex; flex-direction:column; gap:10px;
@@ -3017,11 +3029,320 @@
   #stockRefreshBtn:hover,
   #avanceRefreshBtn:hover,
   #avanceDiaRefreshBtn:hover,
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    font-weight: 600 !important;
+  }
+
+  .topbar select:hover,
+  .topbar input[type="date"]:hover,
+  .topbar input[type="text"]:hover,
+  .topbar .stock-filter-select:hover,
+  .topbar .avance-dia-pdv-button:hover,
+  .topbar .gx-pdv-filter-button:hover,
+  .topbar .horario-pdv-filter-button:hover,
+  .topbar .xstore-day-filter-button:hover {
+    background-color: rgba(255, 255, 255, 0.28) !important;
+    border-color: rgba(255, 255, 255, 0.65) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18) !important;
+  }
+
+  /* 2. BOTONES "DESCARGAR EXCEL" */
+  /* a) En la Franja Azul (.topbar) */
+  .topbar .gx-export-btn,
+  .topbar .export-excel-btn,
+  .topbar button[id*="Export"],
+  .topbar button[id*="export"] {
+    height: 40px !important;
+    min-height: 40px !important;
+    max-height: 40px !important;
+    box-sizing: border-box !important;
+    line-height: 38px !important;
+    padding: 0 18px !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    border-radius: 9px !important;
+    background: linear-gradient(135deg, #16a34a 0%, #15803d 100%) !important;
+    border: 1px solid #15803d !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(22, 163, 74, 0.28) !important;
+    transition: all 0.18s ease !important;
+    cursor: pointer !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    white-space: nowrap !important;
+  }
+
+  /* b) Dentro de Tablas / Tarjetas */
+  .horario-export-btn,
+  .table-card .heading .horario-export-btn,
+  .avance-day-card-btn.is-excel,
+  [data-avance-day-action="excel"],
+  .table-card button[id*="Export"],
+  .table-card button[id*="export"] {
+    height: 34px !important;
+    min-height: 34px !important;
+    max-height: 34px !important;
+    box-sizing: border-box !important;
+    line-height: 32px !important;
+    padding: 0 14px !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    border-radius: 8px !important;
+    background: linear-gradient(135deg, #16a34a 0%, #15803d 100%) !important;
+    border: 1px solid #15803d !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(22, 163, 74, 0.28) !important;
+    transition: all 0.18s ease !important;
+    cursor: pointer !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    white-space: nowrap !important;
+  }
+
+  .topbar .gx-export-btn:hover,
+  .horario-export-btn:hover,
+  .avance-day-card-btn.is-excel:hover,
+  [data-avance-day-action="excel"]:hover,
+  button[id*="Export"]:hover,
+  button[id*="export"]:hover {
+    background: linear-gradient(135deg, #15803d 0%, #166534 100%) !important;
+    border-color: #166534 !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 6px 16px rgba(22, 163, 74, 0.40) !important;
+  }
+
+  /* 3. BOTONES "EXPANDIR" Y ACCIONES SECUNDARIAS (AZUL SUAVE) */
+  #arribosExpandBtn,
+  .arribos-expand-btn,
+  .horario-month-btn,
+  .btn-secondary-soft,
+  .avance-day-card-btn[data-avance-day-action="expand"] {
+    background: #f8faff !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #1e3a8a !important;
+    font-weight: 700 !important;
+    font-size: 13px !important;
+    padding: 0 14px !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    max-height: 34px !important;
+    line-height: 32px !important;
+    border-radius: 8px !important;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+    transition: all 0.18s ease !important;
+    cursor: pointer !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  #arribosExpandBtn:hover,
+  .arribos-expand-btn:hover,
+  .horario-month-btn:hover,
+  .btn-secondary-soft:hover,
+  .avance-day-card-btn[data-avance-day-action="expand"]:hover {
+    background: #eef2ff !important;
+    border-color: #93c5fd !important;
+    color: #1d4ed8 !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 3px 8px rgba(37, 99, 235, 0.12) !important;
+  }
+
+  /* Flechas desplegables compactas dentro de filas de tabla en Avance Día Link */
+  td .avance-day-expand,
+  .avance-day-expand[data-day-toggle] {
+    width: 24px !important;
+    min-width: 24px !important;
+    max-width: 24px !important;
+    height: 24px !important;
+    min-height: 24px !important;
+    max-height: 24px !important;
+    line-height: 22px !important;
+    padding: 0 !important;
+    margin-right: 10px !important;
+    border-radius: 6px !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    background: #f1f5f9 !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #1e3a8a !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+  }
+
+  td .avance-day-expand:hover,
+  .avance-day-expand[data-day-toggle]:hover {
+    background: #e2e8f0 !important;
+    border-color: #94a3b8 !important;
+    color: #1d4ed8 !important;
+  }
+
+  /* 4. BOTONES "ACTUALIZAR" (BLANCO LIMPIO) */
+  .reset-btn,
+  #stockRefreshBtn,
+  #avanceRefreshBtn,
+  #avanceDiaRefreshBtn,
+  #xstoreRefreshBtn,
+  #gxRefreshBtn {
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #1e293b !important;
+    font-family: 'Space Grotesk', 'Inter', sans-serif !important;
+    font-weight: 700 !important;
+    font-size: 13px !important;
+    padding: 0 14px !important;
+    border-radius: 9px !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+    transition: all 0.18s ease !important;
+    cursor: pointer !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  .topbar .reset-btn,
+  .topbar #stockRefreshBtn,
+  .topbar #avanceRefreshBtn,
+  .topbar #avanceDiaRefreshBtn,
+  .topbar #xstoreRefreshBtn,
+  .topbar #gxRefreshBtn {
+    height: 40px !important;
+    min-height: 40px !important;
+    max-height: 40px !important;
+    line-height: 38px !important;
+  }
+
+  .reset-btn:hover,
+  #stockRefreshBtn:hover,
+  #avanceRefreshBtn:hover,
+  #avanceDiaRefreshBtn:hover,
   #xstoreRefreshBtn:hover,
   #gxRefreshBtn:hover {
     background: #f8fafc !important;
     border-color: #94a3b8 !important;
     color: #0f172a !important;
     transform: translateY(-1px) !important;
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08) !important;
   }
+
+/* ======================================================================
+   SIDEBAR SCROLL & FIXATION (REGLAS DE MÁXIMA PRIORIDAD)
+   ====================================================================== */
+.app-shell .sidebar {
+  width: 250px;
+  flex: 0 0 auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  position: sticky !important;
+  position: -webkit-sticky !important;
+  top: 0 !important;
+  height: 100vh !important;
+  max-height: 100vh !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+  z-index: 90 !important;
+  padding: 20px 14px !important;
+}
+
+.app-shell .sidebar.collapsed {
+  width: 76px !important;
+  padding: 20px 8px !important;
+}
+
+.app-shell .sidebar-brand {
+  flex: 0 0 auto !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 4px 6px 16px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14) !important;
+  margin-bottom: 14px !important;
+}
+
+.app-shell .sidebar-nav {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 6px !important;
+  flex: 1 1 0% !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  margin-bottom: 12px !important;
+  padding-right: 2px !important;
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE / Edge */
+}
+
+.app-shell .sidebar-nav::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.app-shell .sidebar-footer {
+  flex: 0 0 auto !important;
+  margin-top: auto !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.14) !important;
+  padding-top: 14px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+}
+
+/* ==========================================================================
+   MÓDULO BITÁCORA DE ALERTAS - ESTILOS ELEGANTES Y TIMELINE
+   ========================================================================== */
+.bitacora-subtab-btn {
+  background: #f1f5f9 !important;
+  color: #334155 !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 8px !important;
+  padding: 8px 16px !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+.bitacora-subtab-btn:hover {
+  background: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+.bitacora-subtab-btn.active {
+  background: #0e1aa1 !important;
+  color: #ffffff !important;
+  border-color: #0e1aa1 !important;
+  box-shadow: 0 2px 4px rgba(14, 26, 161, 0.25) !important;
+}
+
+.bitacora-timeline-wrapper {
+  position: relative;
+  padding: 10px 0 20px 0;
+}
+.bitacora-timeline-wrapper::before {
+  content: '';
+  position: absolute;
+  top: 10px;
+  bottom: 20px;
+  left: 130px;
+  width: 3px;
+  background: #0f172a;
+  z-index: 1;
+}
+.bitacora-node.node-pen {
+  background: #eab308 !important;
+}
+.bitacora-node.node-val {
+  background: #2563eb !important;
+}
+.bitacora-node.node-sol {
+  background: #16a34a !important;
+}

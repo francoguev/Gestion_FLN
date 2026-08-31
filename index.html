@@ -10,7 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.0/dist/umd/supabase.min.js"></script>
 <script async src="https://tally.so/widgets/embed.js"></script>
-<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/app.css?v=bitacora-fix-v5">
 </head>
 <body>
 
@@ -89,6 +89,12 @@
       </button>
       <button class="nav-item" data-page="comprobante">
         <span class="nav-icon">🧾</span> <span class="nav-label">Comprobante de Pago</span>
+      </button>
+      <button class="nav-item" data-page="bitacora">
+        <span class="nav-icon">📜</span> <span class="nav-label">Bitácora</span>
+      </button>
+      <button class="nav-item" data-page="usuarios" id="navUsersItem" style="display:none;">
+        <span class="nav-icon">🔑</span> <span class="nav-label">Usuarios</span>
       </button>
     </nav>
     <div class="sidebar-footer">
@@ -894,12 +900,199 @@
 
     </section>
 
+    <!-- ---------- Pestaña: Usuarios (Solo Administradores) ---------- -->
+    <section class="page" id="page-usuarios">
+
+      <div class="topbar">
+        <button class="topbar-toggle" aria-label="Mostrar u ocultar menú" title="Mostrar u ocultar menú">☰</button>
+        <div style="flex:1;">
+          <h1>Administración de Usuarios</h1>
+        </div>
+        <select id="usersRoleFilter" class="stock-filter-select">
+          <option value="">Cargo · Todos</option>
+          <option value="asesor">Asesor</option>
+          <option value="supervisor">Supervisor</option>
+          <option value="operaciones">Operaciones</option>
+          <option value="gerente">Gerente</option>
+        </select>
+        <select id="usersPdvFilter" class="stock-filter-select">
+          <option value="">PDV · Todos</option>
+        </select>
+        <button type="button" class="reset-btn gx-export-btn" id="usersCreateBtn" style="height:40px; padding:0 18px; font-weight:700;">+ Crear Usuario</button>
+      </div>
+
+      <div class="wrap" style="margin-top:26px;">
+        <div class="table-card" style="padding:20px 22px;">
+          <div class="heading" style="display:flex; justify-content:space-between; align-items:center; width:100%; flex-wrap:wrap; gap:12px;">
+            <div>
+              <h2>Directorio de Trabajadores</h2>
+              <span class="hint" id="usersSummaryHint">Cargando lista de usuarios…</span>
+            </div>
+            <div style="display:flex; gap:10px; align-items:center; margin-left:auto;">
+              <input type="text" id="usersSearchInput" placeholder="Buscar por nombre o correo..." style="height:34px; padding:0 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; min-width:220px;">
+              <button type="button" class="reset-btn" id="usersRefreshBtn">Actualizar</button>
+            </div>
+          </div>
+          <div class="table-scroll" style="margin-top:14px;">
+            <table id="usersTable">
+              <thead>
+                <tr>
+                  <th>Usuario / Correo</th>
+                  <th>Cargo</th>
+                  <th>PDV Asignado</th>
+                  <th>Módulos Asignados</th>
+                  <th>Contraseña</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="usersTbody">
+                <tr><td colspan="7" style="text-align:center; padding:24px; color:#64748b;">Cargando usuarios...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- SECTION: BITÁCORA -->
+    <section class="page" id="page-bitacora">
+
+      <div class="topbar">
+        <button class="topbar-toggle" aria-label="Mostrar u ocultar menú" title="Mostrar u ocultar menú">☰</button>
+        <div style="flex:1;">
+          <h1>Bitácora de Alertas</h1>
+        </div>
+        <button type="button" class="reset-btn gx-export-btn" id="bitacoraNewBtn" onclick="window.gxOpenBitacoraCreateModal()" style="height:38px; padding:0 16px; font-weight:700; display:inline-flex; align-items:center; gap:6px;">
+          <span>+</span> Nueva Alerta
+        </button>
+      </div>
+
+      <div class="wrap" style="margin-top:26px;">
+        <div class="table-card" style="padding:20px 22px;">
+
+          <!-- Subtítulo e Instrucciones -->
+          <div style="margin-bottom:16px;">
+            <p class="hint" style="font-size:13px; color:#64748b; margin:0;">Registro, trazabilidad y seguimiento en tiempo real de incidencias por tienda.</p>
+          </div>
+
+          <!-- Barra de Pestañas & Filtros -->
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:20px; padding-bottom:14px; border-bottom:1px solid #f1f5f9;">
+            <div id="bitacoraSubtabsWrapper" style="display:none; gap:8px;">
+              <button type="button" class="bitacora-subtab-btn" id="bitacoraTabResumenBtn" style="display:none;">📊 Resumen Ejecutivo</button>
+            </div>
+
+            <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-left:auto;">
+              <div id="bitacoraPdvFilterWrapper" style="display:none; align-items:center; gap:6px;">
+                <span style="font-size:11.5px; font-weight:700; color:#475569; text-transform:uppercase;">PDV:</span>
+                <select id="bitacoraPdvFilter" class="stock-filter-select" style="height:36px; padding:0 10px;">
+                  <option value="">Todos los PDVs</option>
+                </select>
+              </div>
+
+              <div style="display:flex; align-items:center; gap:6px;">
+                <span style="font-size:11.5px; font-weight:700; color:#475569; text-transform:uppercase;">Categoría:</span>
+                <select id="bitacoraCatFilter" class="stock-filter-select" style="height:36px; padding:0 10px;">
+                  <option value="">Todas las categorías</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Vista 1: Línea de Tiempo Descendente -->
+          <div id="bitacoraTimelineContainer"></div>
+
+          <!-- Vista 2: Resumen Ejecutivo (Día / Mes) -->
+          <div id="bitacoraResumenContainer" style="display:none;"></div>
+
+        </div>
+      </div>
+
+    </section>
+
   </main>
 
 </div><!-- /.app-shell -->
 </div><!-- /#appContent -->
 
 <div class="app-credit" aria-label="Autor">By Francisco Guevara</div>
+
+<div class="novedad-popup-overlay" id="usersModal" style="display:none;">
+  <div class="novedad-popup-card" style="max-width:580px; padding:24px; max-height:90vh; overflow-y:auto;">
+    <button type="button" class="novedad-popup-close" id="usersModalClose" aria-label="Cerrar">&times;</button>
+    <h2 style="margin:0 0 16px; font-size:18px; color:var(--ink);" id="usersModalTitle">Crear Usuario</h2>
+    <form id="usersForm">
+      <div style="display:grid; gap:14px;">
+        <label style="display:grid; gap:6px; font-size:12px; font-weight:700; color:#475569; text-transform:uppercase;">
+          Correo Electrónico
+          <input type="email" id="userFormEmail" required placeholder="correo@ejemplo.com" style="height:38px; padding:0 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px;">
+        </label>
+        <label style="display:grid; gap:6px; font-size:12px; font-weight:700; color:#475569; text-transform:uppercase;">
+          Nombre Completo
+          <input type="text" id="userFormFullName" required placeholder="Nombres y Apellidos" style="height:38px; padding:0 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px;">
+        </label>
+        <label style="display:grid; gap:6px; font-size:12px; font-weight:700; color:#475569; text-transform:uppercase;">
+          Contraseña
+          <div style="position:relative; display:flex; align-items:center;">
+            <input type="password" id="userFormPassword" placeholder="••••••••" style="height:38px; padding:0 40px 0 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px; width:100%; box-sizing:border-box;">
+            <button type="button" id="userFormTogglePass" style="position:absolute; right:8px; background:none; border:none; cursor:pointer; padding:4px; display:inline-flex; align-items:center;" title="Ver/Ocultar contraseña">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+            </button>
+          </div>
+        </label>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <label style="display:grid; gap:6px; font-size:12px; font-weight:700; color:#475569; text-transform:uppercase;">
+            Cargo
+            <select id="userFormCargo" required style="height:38px; padding:0 10px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px;">
+              <option value="asesor">Asesor</option>
+              <option value="supervisor">Supervisor</option>
+            </select>
+          </label>
+          <label style="display:grid; gap:6px; font-size:12px; font-weight:700; color:#475569; text-transform:uppercase;">
+            PDV / Tienda
+            <select id="userFormPdv" style="height:38px; padding:0 10px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px;">
+              <option value="">Sin asignar</option>
+            </select>
+          </label>
+        </div>
+
+        <!-- Grilla de Permisos de Módulos (Vistas) -->
+        <div style="border:1px solid #e2e8f0; border-radius:10px; padding:12px 14px; background:#f8fafc; margin-top:4px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <span style="font-size:11.5px; font-weight:700; color:#475569; text-transform:uppercase; letter-spacing:0.04em;">Módulos Asignados (Vistas Habilitadas)</span>
+            <button type="button" id="userFormSelectAllVistas" style="background:none; border:none; color:var(--blue-deep); font-size:11.5px; font-weight:700; cursor:pointer; text-decoration:underline;">Marcar todos</button>
+          </div>
+          <div id="userFormVistasContainer" style="display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:13px; color:#1e293b;">
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" value="novedades" class="user-vista-cb"> Novedades</label>
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" value="powerbi" class="user-vista-cb"> Power BI</label>
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" value="stock" class="user-vista-cb"> Stock</label>
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" value="calculadora" class="user-vista-cb"> Calculadora</label>
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" value="formulario" class="user-vista-cb"> Form. Ventas</label>
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" value="avance" class="user-vista-cb"> Avance Link</label>
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" value="avancedia" class="user-vista-cb"> Avance Día</label>
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" value="arribos" class="user-vista-cb"> Arribos</label>
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" value="horario" class="user-vista-cb"> Horario</label>
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" value="xstore" class="user-vista-cb"> Control Xstore</label>
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" value="gestionxstore" class="user-vista-cb"> Gestión Xstore</label>
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" value="comprobante" class="user-vista-cb"> Comprobante</label>
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" value="bitacora" class="user-vista-cb"> Bitácora</label>
+          </div>
+        </div>
+
+        <label style="display:flex; align-items:center; gap:10px; font-size:13px; font-weight:600; color:#1e293b; cursor:pointer; margin-top:2px;">
+          <input type="checkbox" id="userFormActivo" checked style="width:16px; height:16px;">
+          Cuenta Habilitada (Usuario Activo)
+        </label>
+      </div>
+
+      <div style="margin-top:20px; display:flex; justify-content:flex-end; gap:10px;">
+        <button type="button" class="reset-btn" id="usersModalCancel">Cancelar</button>
+        <button type="submit" class="reset-btn gx-export-btn" id="usersModalSave" style="height:38px; padding:0 18px; font-weight:700;">Guardar Usuario</button>
+      </div>
+    </form>
+  </div>
+</div>
 
 <div class="novedad-popup-overlay" id="novedadPopupOverlay" style="display:none;">
   <div class="novedad-popup-card">
@@ -916,6 +1109,68 @@
 <div class="novedad-lightbox-overlay" id="novedadLightboxOverlay" style="display:none;">
   <button type="button" class="novedad-lightbox-close" id="novedadLightboxClose" aria-label="Cerrar">&times;</button>
   <img id="novedadLightboxImg" src="" alt="">
+</div>
+
+<!-- MODAL: CREAR ALERTA BITÁCORA -->
+<div class="novedad-popup-overlay" id="bitacoraModal" style="display:none;">
+  <div class="novedad-popup-card" style="max-width:540px; padding:24px; max-height:90vh; overflow-y:auto;">
+    <button type="button" class="novedad-popup-close" id="bitacoraModalClose" aria-label="Cerrar">&times;</button>
+    <h2 style="margin:0 0 4px 0; font-size:18px; font-weight:700; color:#0f172a;">📜 Registrar Alerta en Bitácora</h2>
+    <p style="margin:0 0 16px 0; font-size:13px; color:#64748b;">Selecciona las categorías e ingresa el detalle de la incidencia.</p>
+
+    <form id="bitacoraForm" style="display:grid; gap:14px;">
+      <div>
+        <label style="font-size:12px; font-weight:700; color:#475569; text-transform:uppercase; display:block; margin-bottom:6px;">Categorías (Selecciona una o más)</label>
+        <div id="bitacoraModalCatContainer" style="display:grid; grid-template-columns:1fr 1fr; gap:6px; max-height:160px; overflow-y:auto; padding:8px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px;"></div>
+      </div>
+
+      <div id="bitacoraCustomCatWrapper" style="display:none; background:#eff6ff; padding:10px 12px; border:1px solid #bfdbfe; border-radius:8px;">
+        <label style="font-size:11.5px; font-weight:700; color:#1e40af; text-transform:uppercase; display:block; margin-bottom:4px;">Nombre de la nueva categoría:</label>
+        <input type="text" id="bitacoraCustomCatInput" placeholder="Ej: LOGÍSTICA, SISTEMA YAPE, etc." style="height:34px; padding:0 10px; border:1px solid #93c5fd; border-radius:6px; font-size:13px; width:100%; box-sizing:border-box;">
+      </div>
+
+      <div>
+        <label style="font-size:12px; font-weight:700; color:#475569; text-transform:uppercase; display:block; margin-bottom:6px;">Detalle de la Alerta / Incidencia *</label>
+        <textarea id="bitacoraDetalleInput" required placeholder="Describe lo que sucede en tienda..." style="width:100%; height:90px; padding:10px; border:1px solid #cbd5e1; border-radius:8px; font-size:13.5px; font-family:inherit; box-sizing:border-box; resize:vertical;"></textarea>
+      </div>
+
+      <div>
+        <label style="font-size:12px; font-weight:700; color:#475569; text-transform:uppercase; display:block; margin-bottom:6px;">Evidencia Fotográfica (Opcional)</label>
+        <input type="file" id="bitacoraImageInput" accept="image/*" style="font-size:13px; color:#475569;">
+        <img id="bitacoraModalImgPreview" src="" style="display:none; max-width:140px; max-height:100px; border-radius:8px; margin-top:8px; border:1px solid #cbd5e1; object-fit:cover;">
+      </div>
+
+      <div style="margin-top:10px; display:flex; justify-content:flex-end; gap:10px;">
+        <button type="submit" class="reset-btn gx-export-btn" id="bitacoraSubmitBtn" style="height:38px; padding:0 20px; font-weight:700;">Guardar Alerta</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL: MARCAR ALERTA SOLUCIONADA -->
+<div class="novedad-popup-overlay" id="bitacoraResolveModal" style="display:none;">
+  <div class="novedad-popup-card" style="max-width:460px; padding:24px;">
+    <button type="button" class="novedad-popup-close" id="bitacoraResolveModalClose" aria-label="Cerrar">&times;</button>
+    <h2 style="margin:0 0 4px 0; font-size:18px; font-weight:700; color:#166534;">🟢 Marcar Alerta como Solucionada</h2>
+    <p style="margin:0 0 14px 0; font-size:13px; color:#64748b;">Ingresa notas sobre la solución para generar el evento automático de cierre.</p>
+
+    <form id="bitacoraResolveForm" style="display:grid; gap:12px;">
+      <div>
+        <label style="font-size:12px; font-weight:700; color:#475569; text-transform:uppercase; display:block; margin-bottom:4px;">Notas de Solución / Cierre (Opcional)</label>
+        <textarea id="bitacoraResolveNoteInput" placeholder="Ej: Se restableció la conexión a las 4:15 PM..." style="width:100%; height:75px; padding:8px 10px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; font-family:inherit; box-sizing:border-box; resize:vertical;"></textarea>
+      </div>
+
+      <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:6px;">
+        <button type="submit" class="reset-btn" style="background:#16a34a; color:#fff; height:38px; padding:0 18px; font-weight:700;">Confirmar Solución</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL: VISOR DE IMAGEN BITÁCORA -->
+<div class="novedad-lightbox-overlay" id="bitacoraImageModal" style="display:none;">
+  <button type="button" class="novedad-lightbox-close" id="bitacoraImageModalClose" aria-label="Cerrar">&times;</button>
+  <img id="bitacoraZoomedImage" src="" alt="Evidencia">
 </div>
 
 
@@ -961,7 +1216,7 @@
          este navegador (localStorage), por eso cada asesor solo necesita
          llenarlos la primera vez.
      ====================================================================== -->
-<script src="js/auth.js"></script>
+<script src="js/auth.js?v=remove-redundant-timeline-btn-v18"></script>
 <script src="js/novedades.js"></script>
 <script src="js/calculadora.js"></script>
 <script src="js/stock.js"></script>
@@ -971,5 +1226,7 @@
 <script src="js/xstore.js"></script>
 <script src="js/gestion-xstore.js?v=local-xstore-1"></script>
 <script src="js/comprobante.js"></script>
+<script src="js/usuarios.js?v=exact-vistas-keys-1"></script>
+<script src="js/bitacora.js?v=remove-redundant-timeline-btn-v18"></script>
 </body>
 </html>
