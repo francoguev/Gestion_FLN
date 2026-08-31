@@ -109,7 +109,7 @@
     renderActiveView();
   }
 
-  function setupRoleUI() {
+  async function setupRoleUI() {
     var isSup = isSupervisorOrHigher();
 
     var subtabsWrapper = el('bitacoraSubtabsWrapper');
@@ -127,20 +127,45 @@
       pdvFilterWrapper.style.display = isSup ? 'flex' : 'none';
     }
 
-    populatePdvFilterOptions();
+    await populatePdvFilterOptions();
   }
 
-  function populatePdvFilterOptions() {
+  async function fetchOfficialPdvs() {
+    try {
+      if (window.supabaseClient) {
+        var res = await window.supabaseClient.from('profiles').select('pdv');
+        if (res && res.data && res.data.length > 0) {
+          var pdvSet = {};
+          res.data.forEach(function (r) {
+            if (r.pdv && r.pdv.trim()) pdvSet[r.pdv.trim()] = true;
+          });
+          (state.alerts || []).forEach(function (a) {
+            if (a.pdv && a.pdv.trim() && a.pdv !== 'TODOS LOS PDV') pdvSet[a.pdv.trim()] = true;
+          });
+          var list = Object.keys(pdvSet).sort();
+          if (list.length > 0) {
+            state.pdvs = list;
+            return list;
+          }
+        }
+      }
+    } catch (e) {}
+
+    var fallback = [
+      "TE AYACUCHO", "TE HUANTA", "TE ICA", "TE ICA 3", "TE ICA II",
+      "TE ICA MODELO", "TE NAZCA", "TE PARCONA", "TE PISCO",
+      "TE SATELITE BARRIO CHINO", "TE SATELITE CAÑETE", "TE SATELITE CHALA",
+      "TE SATELITE PALPA", "TE SATELITE PUEBLO JOVEN"
+    ];
+    state.pdvs = fallback;
+    return fallback;
+  }
+
+  async function populatePdvFilterOptions() {
     var pdvSel = el('bitacoraPdvFilter');
     if (!pdvSel) return;
     var currentVal = pdvSel.value;
-
-    var pdvs = [
-      "TE ICA", "TE ICA 2", "TE CHINCHA", "TE CHINCHA 2", "TE PISCO", "TE PISCO 2",
-      "TE PUQUIO", "TE MARCONA", "TE NAZCA", "TE HUANCAYO", "TE HUANCAYO 2",
-      "TE CHANCHAMAYO", "TE TARMA", "TE JAUJA", "TE HUANUCO", "TE TINGO MARIA",
-      "TE SANTA ANITA", "TE AYACUCHO", "TE HUANTA", "TE ANDAHUAYLAS", "TE ABANCAY", "OFICINA"
-    ];
+    var pdvs = await fetchOfficialPdvs();
 
     pdvSel.innerHTML = '<option value="">Todos los PDVs</option>' +
       pdvs.map(function (p) {
@@ -475,19 +500,16 @@
     container.innerHTML = html;
   }
 
-  function populateModalPdvOptions() {
+  async function populateModalPdvOptions() {
     var pdvSel = el('bitacoraModalPdvSelect');
     if (!pdvSel) return;
-    var pdvs = [
-      "TE ICA", "TE ICA 2", "TE CHINCHA", "TE CHINCHA 2", "TE PISCO", "TE PISCO 2",
-      "TE PUQUIO", "TE MARCONA", "TE NAZCA", "TE HUANCAYO", "TE HUANCAYO 2",
-      "TE CHANCHAMAYO", "TE TARMA", "TE JAUJA", "TE HUANUCO", "TE TINGO MARIA",
-      "TE SANTA ANITA", "TE AYACUCHO", "TE HUANTA", "TE ANDAHUAYLAS", "TE ABANCAY", "OFICINA"
-    ];
+    var currentVal = pdvSel.value;
+    var pdvs = await fetchOfficialPdvs();
     pdvSel.innerHTML = '<option value="">Selecciona un PDV...</option>' +
       pdvs.map(function (p) {
         return '<option value="' + escapeHtml(p) + '">' + escapeHtml(p) + '</option>';
       }).join('');
+    pdvSel.value = currentVal;
   }
 
   async function openCreateModal() {
@@ -509,7 +531,7 @@
     if (pdvWrapper) {
       if (isSup || hasNoProfilePdv) {
         pdvWrapper.style.display = 'block';
-        populateModalPdvOptions();
+        await populateModalPdvOptions();
         var aplicaCb = el('bitacoraModalAplicaTodosCb');
         var pdvSelect = el('bitacoraModalPdvSelect');
         if (aplicaCb) aplicaCb.checked = false;
