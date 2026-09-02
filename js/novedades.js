@@ -89,13 +89,29 @@
     }catch(e){ return ""; }
   }
 
+  function formatForDatetimeInput(iso){
+    if(!iso) return "";
+    try{
+      var d = new Date(iso);
+      if(isNaN(d.getTime())) return "";
+      var pad = function(n){ return n < 10 ? '0' + n : n; };
+      return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+    }catch(e){ return ""; }
+  }
+
   function novedadCardHtml(item){
+    if(item.vence_at && new Date(item.vence_at) <= new Date()){
+      return "";
+    }
     var imgHtml = item.image_url
       ? '<div class="novedad-img"><img src="' + escapeHtmlN(item.image_url) + '" alt=""></div>'
       : "";
     var badge = item.is_birthday
       ? '<span class="novedad-important-badge novedad-birthday-badge">🎉 Estamos de fiesta</span>'
       : (item.important ? '<span class="novedad-important-badge">Importante</span>' : "");
+    if(item.vence_at){
+      badge += '<span class="novedad-important-badge" style="background:#fff7ed; color:#c2410c; border:1px solid #ffedd5; margin-left:6px;">⏱️ Expira: ' + formatFecha(item.vence_at) + '</span>';
+    }
     var titleHtml = item.title ? '<div class="novedad-title">' + escapeHtmlN(item.title) + '</div>' : "";
     var metaBits = [formatFecha(item.created_at)];
     if(item.created_by) metaBits.push(escapeHtmlN(item.created_by));
@@ -125,6 +141,10 @@
       var res = await window.supabaseClient.from(NOVEDADES_TABLE).select("*").order("created_at",{ascending:false});
       if(res.error){ list.innerHTML = '<p class="hint">No se pudieron cargar las novedades.</p>'; return; }
       var items = res.data || [];
+      var nowObj = new Date();
+      items = items.filter(function(item){
+        return !item.vence_at || new Date(item.vence_at) > nowObj;
+      });
       novedadesCache = items;
       if(!items.length){
         list.innerHTML = '<p class="hint">Todavía no hay novedades publicadas.</p>';
@@ -175,6 +195,8 @@
     document.getElementById("novedadTexto").value = item.content_md || "";
     document.getElementById("novedadImportante").checked = !!item.important && !item.is_birthday;
     document.getElementById("novedadCumple").checked = !!item.is_birthday;
+    var venceInp = document.getElementById("novedadVenceAt");
+    if(venceInp) venceInp.value = item.vence_at ? formatForDatetimeInput(item.vence_at) : "";
     document.getElementById("novedadImagen").value = "";
     var imgHint = document.getElementById("novedadCurrentImgHint");
     imgHint.textContent = item.image_url
@@ -193,6 +215,8 @@
     editingItemImageUrl = "";
     var form = document.getElementById("novedadForm");
     if(form) form.reset();
+    var venceInp = document.getElementById("novedadVenceAt");
+    if(venceInp) venceInp.value = "";
     document.getElementById("novedadCurrentImgHint").textContent = "";
     document.getElementById("novedadFormTitle").textContent = "Publicar novedad";
     document.getElementById("novedadSubmitBtn").textContent = "Publicar";
@@ -258,6 +282,7 @@
         .select("*").eq("important", true).order("created_at",{ascending:false}).limit(1);
       if(res.error || !res.data || !res.data.length) return;
       var item = res.data[0];
+      if(item.vence_at && new Date(item.vence_at) <= new Date()) return;
       var dismissed = getDismissedSet();
       if(dismissed.indexOf(item.id) === -1){
         showNovedadPopup(item);
@@ -273,7 +298,7 @@
         var row = payload.new;
         var activePage = document.getElementById("page-novedades");
         if(activePage && activePage.classList.contains("active")) loadNovedades();
-        if(row && row.important) showNovedadPopup(row);
+        if(row && row.important && (!row.vence_at || new Date(row.vence_at) > new Date())) showNovedadPopup(row);
       })
       .on("postgres_changes", { event:"DELETE", schema:"public", table:NOVEDADES_TABLE }, function(){
         var activePage = document.getElementById("page-novedades");
@@ -291,10 +316,15 @@
       return;
     }
     try{
-      var res = await window.supabaseClient.from("profiles").select("cargo").eq("email", profile.email).maybeSingle();
-      var cargo = (res.data && res.data.cargo) || "";
-      isOperaciones = cargo.trim().toLowerCase() === "operaciones";
-    }catch(e){ isOperaciones = false; }
+      var res = await window.supabaseClient.from("profiles").select("cargo, es_administrador").ilike("email", profile.email).maybeSingle();
+      var cargo = (res.data && res.data.cargo) || (profile.cargo || "");
+      var isAdm = (res.data && res.data.es_administrador) === true || profile.es_administrador === true;
+      var c = cargo.trim().toLowerCase();
+      isOperaciones = isAdm || c === "operaciones" || c === "administrador";
+    }catch(e){
+      var c = (profile.cargo || "").trim().toLowerCase();
+      isOperaciones = profile.es_administrador === true || c === "operaciones" || c === "administrador";
+    }
     if(adminCard) adminCard.style.display = isOperaciones ? "" : "none";
   }
 
@@ -345,6 +375,24 @@
       });
     }
 
+    var quickMidnightBtn = document.getElementById("novedadQuickMidnightBtn");
+    var clearTimerBtn = document.getElementById("novedadClearTimerBtn");
+    var venceInp = document.getElementById("novedadVenceAt");
+
+    if(quickMidnightBtn && venceInp){
+      quickMidnightBtn.addEventListener("click", function(){
+        var midnight = new Date();
+        midnight.setHours(23, 59, 0, 0);
+        venceInp.value = formatForDatetimeInput(midnight);
+      });
+    }
+
+    if(clearTimerBtn && venceInp){
+      clearTimerBtn.addEventListener("click", function(){
+        venceInp.value = "";
+      });
+    }
+
     var form = document.getElementById("novedadForm");
     if(form){
       form.addEventListener("submit", async function(e){
@@ -377,13 +425,24 @@
             var pub = window.supabaseClient.storage.from(NOVEDADES_BUCKET).getPublicUrl(path);
             imageUrl = pub.data && pub.data.publicUrl ? pub.data.publicUrl : "";
           }
+
+          var venceAtVal = venceInp ? venceInp.value : "";
+          var venceAtIso = null;
+          if(venceAtVal){
+            var dObj = new Date(venceAtVal);
+            if(!isNaN(dObj.getTime())){
+              venceAtIso = dObj.toISOString();
+            }
+          }
+
           var profile = window.currentUserProfile || {};
           var payload = {
             title: titulo || null,
             content_md: texto,
             image_url: imageUrl || null,
             important: importante,
-            is_birthday: cumpleChecked
+            is_birthday: cumpleChecked,
+            vence_at: venceAtIso
           };
           if(isEditing){
             var updRes = await window.supabaseClient.from(NOVEDADES_TABLE).update(payload).eq("id", editingId);
@@ -395,6 +454,7 @@
             var insertRes = await window.supabaseClient.from(NOVEDADES_TABLE).insert(payload);
             if(insertRes.error) throw insertRes.error;
             form.reset();
+            if(venceInp) venceInp.value = "";
             msg.textContent = "¡Publicado!";
           }
           loadNovedades();

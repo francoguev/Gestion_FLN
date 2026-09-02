@@ -145,8 +145,16 @@
               <input type="checkbox" id="novedadCumple">
               🎉 Es un saludo de cumpleaños (aparece como pop-up "¡Estamos de fiesta!" a todo el equipo)
             </label>
-            <div style="display:flex; align-items:center; gap:14px; margin-top:4px;">
+            <div style="display:flex; align-items:center; flex-wrap:wrap; gap:12px; margin-top:10px; padding-top:10px; border-top:1px solid #e2e8f0;">
               <button type="submit" class="login-submit-btn" id="novedadSubmitBtn" style="width:auto; padding:11px 22px;">Publicar</button>
+              
+              <div style="display:inline-flex; align-items:center; gap:8px; background:#f8fafc; padding:6px 12px; border:1px solid #cbd5e1; border-radius:8px;">
+                <span style="font-size:12px; font-weight:700; color:#475569; display:flex; align-items:center; gap:4px;">⏱️ Timer (expira en):</span>
+                <input type="datetime-local" id="novedadVenceAt" style="height:34px; padding:0 8px; border:1px solid #94a3b8; border-radius:6px; font-size:12.5px; color:#334155; font-family:inherit;">
+                <button type="button" id="novedadQuickMidnightBtn" style="font-size:11px; font-weight:600; padding:6px 10px; background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; border-radius:6px; cursor:pointer;" title="Expira hoy a las 11:59 PM">🌙 Medianoche de hoy</button>
+                <button type="button" id="novedadClearTimerBtn" style="font-size:11px; font-weight:600; padding:6px 10px; background:#f1f5f9; color:#64748b; border:1px solid #cbd5e1; border-radius:6px; cursor:pointer;" title="Sin vencimiento">Sin expiración</button>
+              </div>
+
               <button type="button" class="switch-account-btn" id="novedadCancelEditBtn" style="display:none;">Cancelar edición</button>
               <span class="hint" id="novedadFormMsg"></span>
             </div>
@@ -1228,8 +1236,8 @@
          este navegador (localStorage), por eso cada asesor solo necesita
          llenarlos la primera vez.
      ====================================================================== -->
-<script src="js/auth.js?v=dynamic-official-pdvs-v20"></script>
-<script src="js/novedades.js"></script>
+<script src="js/auth.js?v=auth-login-diagnostic-v22"></script>
+<script src="js/novedades.js?v=timer-novedades-v21"></script>
 <script src="js/calculadora.js"></script>
 <script src="js/stock.js"></script>
 <script src="js/avance.js"></script>

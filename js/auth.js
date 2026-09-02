@@ -9,7 +9,7 @@
   // Project Settings → API → Project URL / anon public key
   // ======================================================================
 var SUPABASE_URL = "https://zarpfzsvkqfuhvjglmaa.supabase.co";
-var SUPABASE_ANON_KEY = "sb_publishable_ieKMBlB07Pz0ii7s1XFe8w_HOvQYAty";
+var SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphcnBmenN2a3FmdWh2amdsbWFhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ1OTA4NTgsImV4cCI6MjEwMDE2Njg1OH0.Lb51XFTMeRmxOoUv3pisv8eBvdo-S9C2SOMP4zwRPQs";
 
   var supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   window.supabaseClient = supabaseClient;
@@ -191,12 +191,23 @@ var SUPABASE_ANON_KEY = "sb_publishable_ieKMBlB07Pz0ii7s1XFe8w_HOvQYAty";
         try{
           var result = await supabaseClient.auth.signInWithPassword({ email: email, password: password });
           if(result.error){
-            showLoginError("Correo o contraseña incorrectos.");
+            console.error("Error en login:", result.error);
+            var errStr = (result.error.message || "").toLowerCase();
+            var status = result.error.status || 0;
+
+            if(errStr.includes("fetch") || errStr.includes("network") || errStr.includes("failed to fetch") || status === 0){
+              showLoginError("Error de conexión a internet o DNS. Verifica tu red e intenta nuevamente.");
+            }else if(errStr.includes("invalid login credentials") || status === 400){
+              showLoginError("Correo o contraseña incorrectos.");
+            }else{
+              showLoginError(result.error.message || "Error al iniciar sesión. Intenta de nuevo.");
+            }
           }else{
             showApp(result.data.user.email);
           }
         }catch(err){
-          showLoginError("No se pudo conectar. Intenta nuevamente.");
+          console.error("Excepción en login:", err);
+          showLoginError("No se pudo conectar con el servidor. Verifica tu conexión a internet.");
         }
         btn.disabled = false;
         btn.textContent = "Iniciar sesión";
