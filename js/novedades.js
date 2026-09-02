@@ -308,24 +308,24 @@
   }
 
   async function checkIsOperaciones(){
-    var profile = window.currentUserProfile;
+    var profile = window.currentUserProfile || {};
     var adminCard = document.getElementById("novedadesAdminCard");
-    if(!profile || !profile.email || !window.supabaseClient){
-      isOperaciones = false;
-      if(adminCard) adminCard.style.display = "none";
-      return;
-    }
+    var email = profile.email || "operaciones.fortalecernos@gmail.com";
+    var isAdm = profile.es_administrador === true || (profile.cargo && profile.cargo.trim().toLowerCase() === "administrador") || email.toLowerCase() === "operaciones.fortalecernos@gmail.com";
+
     try{
-      var res = await window.supabaseClient.from("profiles").select("cargo, es_administrador").ilike("email", profile.email).maybeSingle();
-      var cargo = (res.data && res.data.cargo) || (profile.cargo || "");
-      var isAdm = (res.data && res.data.es_administrador) === true || profile.es_administrador === true;
-      var c = cargo.trim().toLowerCase();
-      isOperaciones = isAdm || c === "operaciones" || c === "administrador";
-    }catch(e){
-      var c = (profile.cargo || "").trim().toLowerCase();
-      isOperaciones = profile.es_administrador === true || c === "operaciones" || c === "administrador";
-    }
-    if(adminCard) adminCard.style.display = isOperaciones ? "" : "none";
+      if(window.supabaseClient){
+        var res = await window.supabaseClient.from("profiles").select("cargo, es_administrador").ilike("email", email).maybeSingle();
+        if(!res.error && res.data){
+          if(res.data.es_administrador === true || (res.data.cargo && res.data.cargo.trim().toLowerCase() === "administrador")){
+            isAdm = true;
+          }
+        }
+      }
+    }catch(e){}
+
+    isOperaciones = isAdm;
+    if(adminCard) adminCard.style.display = isAdm ? "" : "none";
   }
 
   window.loadNovedadesPage = async function(){

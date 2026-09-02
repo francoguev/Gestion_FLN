@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.0/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.0/dist/umd/supabase.min.js" onerror="this.onerror=null;this.src='https://unpkg.com/@supabase/supabase-js@2.57.0/dist/umd/supabase.min.js';"></script>
 <script async src="https://tally.so/widgets/embed.js"></script>
 <link rel="stylesheet" href="css/app.css?v=bitacora-fix-v5">
 </head>
@@ -35,6 +35,7 @@
       <span id="loginErrorText">Correo o contraseña incorrectos.</span>
     </div>
     <p class="login-note">Acceso restringido al equipo de Fortalecernos SAC.</p>
+    <div class="app-credit" aria-label="Autor" style="margin-top:14px; text-align:center; color:#94a3b8; font-size:11px; font-weight:500;">By Francisco Guevara</div>
   </div>
 </div>
 
@@ -81,8 +82,8 @@
       <button class="nav-item" data-page="horario">
         <span class="nav-icon">🗓️</span> <span class="nav-label">Horario</span>
       </button>
-      <button class="nav-item" data-page="xstore">
-        <span class="nav-icon">🏦</span> <span class="nav-label">Control Xstore</span>
+      <button class="nav-item" data-page="horarioslideres">
+        <span class="nav-icon">👔</span> <span class="nav-label">Horarios Líderes</span>
       </button>
       <button class="nav-item" data-page="gestionxstore">
         <span class="nav-icon">💼</span> <span class="nav-label">Gestión Xstore</span>
@@ -514,76 +515,80 @@
       </div>
     </section>
 
-    <section class="page" id="page-xstore">
-
+    <section class="page" id="page-horarioslideres">
       <div class="topbar">
         <button class="topbar-toggle" aria-label="Mostrar u ocultar menú" title="Mostrar u ocultar menú">☰</button>
         <div style="flex:1;">
-          <h1>Control Xstore</h1>
+          <h1>Horarios Líderes</h1>
         </div>
-        <button class="reset-btn" id="xstoreCrearBtn" style="background:var(--orange); border-color:var(--orange); display:none;">Crear Registro</button>
-        <div class="xstore-day-filter" id="xstoreDayFilter" style="display:none;">
-          <button type="button" class="stock-filter-select xstore-day-filter-button" id="xstoreDayButton" aria-expanded="false">Día · Todos</button>
-          <div class="xstore-day-filter-menu" id="xstoreDayMenu" hidden></div>
+        <div class="horario-week-controls" aria-label="Navegación semanal">
+          <button type="button" class="horario-week-arrow" id="hlPrevWeek" aria-label="Ver semana anterior" title="Semana anterior">←</button>
+          <button type="button" class="horario-current-week" id="hlWeekLabel" title="Volver a la semana actual"></button>
+          <button type="button" class="horario-week-arrow" id="hlNextWeek" aria-label="Ver semana siguiente" title="Semana siguiente">→</button>
         </div>
-        <select id="xstoreMonthSelect" class="stock-filter-select" style="min-width:160px;">
-          <option value="">Mes…</option>
-        </select>
       </div>
-
-      <div class="wrap" style="margin-top:26px;">
-
-        <section class="table-card">
-          <div class="heading" style="justify-content:space-between; align-items:center; width:100%;">
+      <div class="wrap horario-wrap" style="margin-top:26px;">
+        <section class="table-card horario-card">
+          <div class="heading horario-heading">
             <div>
-              <h2 id="xstoreTitle">Registro y depósito diario</h2>
-              <span class="hint" id="xstoreHint">Cargando datos…</span>
+              <h2 id="hlTitle">Horario semanal de líderes</h2>
+              <span class="hint" id="hlHint">Programación de turnos y tiendas visitadas por supervisores y líderes.</span>
             </div>
-            <div style="display:flex; align-items:center; gap:10px; margin-left:auto; flex-wrap:wrap;">
-              <button class="reset-btn" id="xstoreRefreshBtn" style="background:var(--blue); border-color:var(--blue);">Actualizar</button>
+            <div class="horario-heading-actions" style="display:flex; gap:8px; align-items:center;">
+              <button type="button" class="horario-capture-btn" id="hlCaptureSchedule">Copiar captura</button>
+              <button type="button" class="horario-export-btn" id="hlExportSchedule">Descargar Excel</button>
             </div>
           </div>
-          <div class="table-scroll">
-            <table id="xstoreTable">
-              <thead>
-                <tr id="xstoreTheadRow">
-                  <th>Fecha</th>
-                  <th class="xstore-pdv-col">PDV</th>
-                  <th>Monto Xstore</th>
-                  <th>Estado registro</th>
-                  <th>Depósito</th>
-                  <th>Estado depósito</th>
-                </tr>
-              </thead>
-              <tbody id="xstoreTbody"></tbody>
-            </table>
-          </div>
+          <div class="horario-table-scroll" id="hlScheduleHolder"></div>
         </section>
 
-      </div>
+        <section class="table-card horario-editor" id="hlEditor" hidden style="margin-top:20px; padding:22px 24px; border-radius:14px; border:1px solid #cbd5e1; box-shadow:0 10px 25px rgba(15,23,42,0.08);">
+          <div class="heading" style="margin-bottom:16px; padding-bottom:12px; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+            <div>
+              <h2 style="font-size:17.5px; font-weight:700; color:#0f172a; margin:0 0 3px 0; font-family:'Space Grotesk','Inter',sans-serif;">Programación de Visitas y Tiendas del Día</h2>
+              <span class="hint" id="hlEditorLabel" style="font-size:12.5px; color:#64748b; font-weight:500;"></span>
+            </div>
+            <div id="hlTotalDailyBadge" style="background:#e0e7ff; color:#3730a3; border:1px solid #c7d2fe; padding:6px 14px; border-radius:99px; font-size:13px; font-weight:700;">
+              Total del día: 0 hrs
+            </div>
+          </div>
 
+          <!-- Acciones Rápidas / Presets -->
+          <div class="horario-presets" aria-label="Turnos rápidos" style="margin-bottom:18px; display:flex; flex-wrap:wrap; gap:8px;">
+            <button type="button" class="hl-preset horario-preset-off" data-off="true">Libre / Descanso</button>
+          </div>
+
+          <!-- Lista Dinámica de Visitas a Tiendas -->
+          <div style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:12px; padding:16px; margin-bottom:20px;">
+            <div style="font-weight:700; font-size:12px; color:#334155; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:12px; display:flex; align-items:center; justify-content:space-between;">
+              <span style="display:flex; align-items:center; gap:6px;">📍 Tiendas / Puntos de Venta a Visitar</span>
+              <span style="font-size:11.5px; color:#64748b; font-weight:600; text-transform:none;">Indica qué tienda visitará y su rango de horario</span>
+            </div>
+
+            <div id="hlVisitsContainer" style="display:grid; gap:10px;">
+              <!-- Se puebla dinámicamente -->
+            </div>
+
+            <div style="margin-top:14px; display:flex; align-items:center; justify-content:space-between;">
+              <button type="button" id="hlAddVisitBtn" class="hl-add-visit-btn">
+                <span>+ Agregar otra tienda / visita</span>
+              </button>
+              <span class="hint" id="hlVisitLimitHint" style="font-size:12px; color:#64748b;">(Agrega las visitas necesarias por día)</span>
+            </div>
+          </div>
+
+          <!-- Botones de Acción -->
+          <div class="horario-editor-actions" style="display:flex; justify-content:flex-end; align-items:center; gap:10px; flex-wrap:wrap;">
+            <button type="button" class="reset-btn" id="hlCopyShift" style="border-radius:9px; height:38px; font-weight:600;">Copiar día entero</button>
+            <button type="button" class="reset-btn" id="hlPasteShift" disabled style="border-radius:9px; height:38px; font-weight:600;">Pegar día entero</button>
+            <button type="button" class="reset-btn" id="hlCancelEdit" style="border-radius:9px; height:38px; font-weight:600;">Cancelar</button>
+            <button type="button" class="reset-btn gx-export-btn" id="hlSaveEdit" style="border-radius:9px; height:38px; padding:0 22px; font-weight:700;">Guardar horario del día</button>
+          </div>
+        </section>
+      </div>
     </section>
 
-    <section class="page" id="page-xstore-crear">
 
-      <div class="topbar">
-        <button class="topbar-toggle" aria-label="Mostrar u ocultar menú" title="Mostrar u ocultar menú">☰</button>
-        <button class="reset-btn" id="xstoreCrearBackBtn" style="background:var(--blue); border-color:var(--blue);">← Volver</button>
-        <div style="flex:1;">
-          <h1>Crear Registro Xstore</h1>
-        </div>
-      </div>
-
-      <div class="form-wrap">
-        <div class="form-frame-box">
-          <iframe data-tally-src="https://tally.so/r/EkreaB"
-                  width="100%" height="100%" frameborder="0" marginheight="0" marginwidth="0"
-                  title="Control Xstore">
-          </iframe>
-        </div>
-      </div>
-
-    </section>
 
     <section class="page" id="page-gestionxstore">
       <div class="topbar gx-topbar">
@@ -619,12 +624,12 @@
         </section>
 
         <section class="gx-entry-panel" id="gxCashPanel" hidden>
-          <div class="gx-panel-header"><div><h2>Registrar recaudo de caja</h2><p>La fecha de hoy aparece seleccionada por defecto.</p></div><button type="button" class="gx-close-panel" data-gx-close="cash" aria-label="Cerrar">×</button></div>
+          <div class="gx-panel-header"><div><h2 id="gxCashPanelTitle">Registrar recaudo de caja</h2><p id="gxCashPanelSub">La fecha de hoy aparece seleccionada por defecto.</p></div><button type="button" class="gx-close-panel" data-gx-close="cash" aria-label="Cerrar">×</button></div>
           <form id="gxCashForm" class="gx-form-grid">
             <label class="gx-pdv-input-wrap" id="gxCashPdvWrap">PDV<select id="gxCashPdv"></select></label>
             <label>Fecha de caja<input id="gxCashDate" type="date" required></label>
             <label>Monto recaudado (Sistema Xstore)<input id="gxCashAmount" type="number" min="0" step="0.01" inputmode="decimal" required placeholder="0.00"></label>
-            <label class="gx-file-field">Foto de caja<input id="gxCashFile" type="file" accept="image/jpeg,image/png,image/webp" required></label>
+            <label class="gx-file-field">Foto de caja<input id="gxCashFile" type="file" accept="image/jpeg,image/png,image/webp" required><span id="gxCashFileHint" style="font-size:11.5px; color:#475569; display:block; margin-top:3px; font-weight:500;"></span></label>
             <label class="gx-check-field"><input id="gxStoreClosed" type="checkbox"> La tienda no abrió este día</label>
             <label id="gxStoreClosedReasonWrap" hidden>Motivo (opcional)<input id="gxStoreClosedReason" type="text" maxlength="180" placeholder="Ej. cierre excepcional de tienda"></label>
 
@@ -1024,8 +1029,6 @@
 </div><!-- /.app-shell -->
 </div><!-- /#appContent -->
 
-<div class="app-credit" aria-label="Autor">By Francisco Guevara</div>
-
 <div class="novedad-popup-overlay" id="usersModal" style="display:none;">
   <div class="novedad-popup-card" style="max-width:580px; padding:24px; max-height:90vh; overflow-y:auto;">
     <button type="button" class="novedad-popup-close" id="usersModalClose" aria-label="Cerrar">&times;</button>
@@ -1055,6 +1058,9 @@
             <select id="userFormCargo" required style="height:38px; padding:0 10px; border:1px solid #cbd5e1; border-radius:8px; font-size:14px;">
               <option value="asesor">Asesor</option>
               <option value="supervisor">Supervisor</option>
+              <option value="gestor">Gestor</option>
+              <option value="operaciones">Operaciones</option>
+              <option value="gerente">Gerente</option>
             </select>
           </label>
           <label style="display:grid; gap:6px; font-size:12px; font-weight:700; color:#475569; text-transform:uppercase;">
@@ -1081,7 +1087,7 @@
             <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" value="avancedia" class="user-vista-cb"> Avance Día</label>
             <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" value="arribos" class="user-vista-cb"> Arribos</label>
             <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" value="horario" class="user-vista-cb"> Horario</label>
-            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" value="xstore" class="user-vista-cb"> Control Xstore</label>
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" value="horarioslideres" class="user-vista-cb"> Horarios Líderes</label>
             <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" value="gestionxstore" class="user-vista-cb"> Gestión Xstore</label>
             <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" value="comprobante" class="user-vista-cb"> Comprobante</label>
             <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" value="bitacora" class="user-vista-cb"> Bitácora</label>
@@ -1211,31 +1217,6 @@
      ====================================================================== -->
 
 
-<!-- ======================================================================
-     Control Xstore: control diario de registro de monto recaudado (Xstore)
-     y de depósito, por PDV.
-       - Fuente: hoja de Google publicada como CSV (columnas A-H: FECHA, PDV,
-         REGISTRO, MONTO XSTORE, ESTADO REGISTRO, DEPOSITO, PAYJOY,
-         ESTADO DEPÓSITO).
-       - Se muestran las columnas D a H, salvo que la columna PAYJOY (G) no
-         se pinta como columna propia: cuando su valor es 1 se agrega una
-         etiqueta "PAYJOY" al costado del Estado de depósito.
-       - Asesores: solo ven las fechas de su propio PDV (según profiles.pdv).
-       - Supervisores (o cualquier cargo que no sea Asesor): ven, en una
-         sola vista, todas las tiendas.
-       - Selector de mes arriba; por defecto se muestra el mes vigente.
-     ====================================================================== -->
-
-
-<!-- ======================================================================
-     Comprobante de Pago: genera una nota de venta interna (no es boleta ni
-     factura SUNAT) con los datos del negocio, del cliente, los equipos
-     vendidos y el pago recibido, con una vista previa tipo ticket lista
-     para imprimir/guardar como PDF y compartir por WhatsApp.
-       - Los datos del negocio y el siguiente número de nota se guardan en
-         este navegador (localStorage), por eso cada asesor solo necesita
-         llenarlos la primera vez.
-     ====================================================================== -->
 <script src="js/auth.js?v=auth-login-diagnostic-v22"></script>
 <script src="js/novedades.js?v=timer-novedades-v21"></script>
 <script src="js/calculadora.js"></script>
@@ -1243,8 +1224,8 @@
 <script src="js/avance.js"></script>
 <script src="js/arribos.js"></script>
 <script src="js/horario.js"></script>
-<script src="js/xstore.js"></script>
-<script src="js/gestion-xstore.js?v=local-xstore-1"></script>
+<script src="js/horarios-lideres.js?v=lideres-v3"></script>
+<script src="js/gestion-xstore.js?v=full-recaudo-edit-v3"></script>
 <script src="js/comprobante.js"></script>
 <script src="js/usuarios.js?v=exact-vistas-keys-1"></script>
 <script src="js/bitacora.js?v=dynamic-official-pdvs-v20"></script>

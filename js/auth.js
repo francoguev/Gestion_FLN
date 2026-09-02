@@ -11,7 +11,9 @@
 var SUPABASE_URL = "https://zarpfzsvkqfuhvjglmaa.supabase.co";
 var SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphcnBmenN2a3FmdWh2amdsbWFhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ1OTA4NTgsImV4cCI6MjEwMDE2Njg1OH0.Lb51XFTMeRmxOoUv3pisv8eBvdo-S9C2SOMP4zwRPQs";
 
-  var supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  var supabaseClient = (window.supabase && typeof window.supabase.createClient === "function") 
+    ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) 
+    : null;
   window.supabaseClient = supabaseClient;
 
   function formatUserRoleLabel(cargo, pdv) {
@@ -24,8 +26,10 @@ var SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm
   }
 
   function showApp(email){
-    document.getElementById("loginGate").style.display = "none";
-    document.getElementById("appContent").style.display = "block";
+    var loginView = document.getElementById("loginView") || document.getElementById("loginGate");
+    var appView = document.getElementById("appContainer") || document.getElementById("appContent");
+    if(loginView) loginView.style.display = "none";
+    if(appView) appView.style.display = "block";
     var label = document.getElementById("userEmailLabel");
     if(label) label.textContent = email;
     try { localStorage.setItem("pulso_user_email", email); }catch(e){}
@@ -141,7 +145,7 @@ var SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm
     if(target === "avancedia" && typeof window.loadAvanceDia === "function") window.loadAvanceDia();
     if(target === "arribos" && typeof window.loadArribos === "function") window.loadArribos();
     if(target === "horario" && typeof window.loadHorario === "function") window.loadHorario();
-    if(target === "xstore" && typeof window.loadXstore === "function") window.loadXstore();
+    if(target === "horarioslideres" && typeof window.loadHorariosLideres === "function") window.loadHorariosLideres();
     if(target === "gestionxstore" && typeof window.loadGestionXstore === "function") window.loadGestionXstore();
     if(target === "novedades" && typeof window.loadNovedadesPage === "function") window.loadNovedadesPage();
     if(target === "bitacora" && typeof window.loadBitacoraPage === "function") window.loadBitacoraPage();
@@ -245,4 +249,5 @@ var SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm
   });
   window.showApp = showApp;
   window.openAppPage = openAppPage;
+  window.applyViewPermissions = applyViewPermissions;
 })();

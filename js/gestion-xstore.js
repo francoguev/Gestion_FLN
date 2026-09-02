@@ -5,7 +5,7 @@
   var MONTHS = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
   var state = {
     profile: null, role: "", month: "", day: "", statusFilter: "", rows: [], deposits: [], pdvs: [], selectedPdvs: [],
-    payjoyItems: [], reviewingId: null, editingId: null, editingKind: "", loading: false
+    payjoyItems: [], reviewingId: null, editingId: null, editingCashId: null, editingCashEvidencePath: "", editingKind: "", loading: false
   };
 
   function el(id) { return document.getElementById(id); }
@@ -273,10 +273,19 @@
 
   function depositEvidencePaths(row) {
     var paths = [];
+    if (Array.isArray(row.deposit_vouchers)) {
+      row.deposit_vouchers.forEach(function (v) {
+        if (v && v.path && !paths.some(function (p) { return p.path === v.path; })) {
+          paths.push({ path: v.path, amount: Number(v.amount || 0), date: v.date });
+        }
+      });
+    }
     state.deposits.forEach(function (d) {
       (d.allocations || []).forEach(function (a) {
-        if (a.closure_id === row.closure_id && d.evidence_path) {
-          paths.push({ path: d.evidence_path, amount: Number(a.monto || a.allocated_amount || a.amount || 0), date: d.deposit_date });
+        if ((a.closure_id === row.closure_id || (a.fecha_caja === row.cash_date && d.pdv === row.pdv)) && d.evidence_path) {
+          if (!paths.some(function (p) { return p.path === d.evidence_path; })) {
+            paths.push({ path: d.evidence_path, amount: Number(a.monto || a.allocated_amount || a.amount || 0), date: d.deposit_date });
+          }
         }
       });
     });
@@ -307,16 +316,6 @@
       '<div class="gx-inline-review-fields"><label>Monto de caja correcto (Sistema)<input data-gx-correct-cash type="number" min="0" step="0.01" value="', sysCash.toFixed(2), '"></label>', choices,
       '<label style="grid-column: span 2;">Observación<input data-gx-review-note maxlength="240" placeholder="Comentario para el equipo" value="', esc(defaultNote), '"></label></div>',
       '<div class="gx-form-actions"><span data-gx-review-hint></span><button class="gx-action-btn" type="submit">', correctionOnly ? "Guardar corrección" : "Guardar validación", '</button></div></form></td></tr>'
-    ].join("");
-  }
-
-  function editRow(row) {
-    return [
-      '<tr class="gx-inline-review gx-inline-edit"><td colspan="10"><form class="gx-inline-review-card" data-gx-edit-form>',
-      '<input type="hidden" data-gx-edit-id value="', esc(row.closure_id), '">',
-      '<div class="gx-inline-review-header"><div><h3>Editar recaudo · ', esc(row.pdv), ' · ', dateEs(row.cash_date), '</h3><p>Modifica el monto registrado en caja para esta fecha.</p></div><button type="button" class="gx-close-panel" data-gx-close-edit aria-label="Cerrar">×</button></div>',
-      '<div class="gx-inline-review-fields"><label>Monto de recaudo correcto (Sistema)<input data-gx-edit-amount type="number" min="0" step="0.01" value="', Number(row.cash_amount || 0).toFixed(2), '"></label><label>Observación<input data-gx-edit-note maxlength="240" placeholder="Motivo de la corrección"></label></div>',
-      '<div class="gx-form-actions"><span data-gx-edit-hint></span><button class="gx-action-btn" type="submit">Guardar recaudo</button></div></form></td></tr>'
     ].join("");
   }
 
@@ -407,8 +406,7 @@
         "</tr>";
 
       return line +
-        (state.reviewingId && row.closure_id && state.reviewingId === row.closure_id ? reviewRow(row) : "") +
-        (state.editingId && row.closure_id && state.editingId === row.closure_id ? editRow(row) : "");
+        (state.reviewingId && row.closure_id && state.reviewingId === row.closure_id ? reviewRow(row) : "");
     }).join("");
     syncTopScroll();
   }
@@ -445,10 +443,23 @@
   function openPanel(name) {
     panel("cash", false); panel("deposit", false); panel(name, true);
     if (name === "cash") {
-      el("gxCashDate").value = today();
+      state.editingCashId = null;
+      state.editingCashEvidencePath = "";
+      if (el("gxCashPanelTitle")) el("gxCashPanelTitle").textContent = "Registrar recaudo de caja";
+      if (el("gxCashPanelSub")) el("gxCashPanelSub").textContent = "La fecha de hoy aparece seleccionada por defecto.";
+      if (el("gxCashDate")) el("gxCashDate").value = today();
+      if (el("gxCashAmount")) el("gxCashAmount").value = "";
+      if (el("gxCashFile")) {
+        el("gxCashFile").required = true;
+        el("gxCashFile").value = "";
+      }
+      if (el("gxCashFileHint")) el("gxCashFileHint").textContent = "";
+      if (el("gxStoreClosed")) el("gxStoreClosed").checked = false;
+      if (el("gxStoreClosedReason")) el("gxStoreClosedReason").value = "";
       state.payjoyItems = [];
       renderPayjoyItems();
       syncClosedFields();
+      recalculatePayjoyTotals();
     } else {
       el("gxDepositDate").value = today();
       populateAllocationList();
@@ -459,7 +470,7 @@
     var closed = el("gxStoreClosed").checked, amount = el("gxCashAmount"), file = el("gxCashFile"), pjSec = el("gxPayjoySection");
     amount.disabled = closed;
     if (closed) amount.value = "0";
-    file.required = !closed;
+    file.required = !closed && !state.editingCashId;
     el("gxStoreClosedReasonWrap").hidden = !closed;
     if (pjSec) pjSec.style.display = closed ? "none" : "block";
     recalculatePayjoyTotals();
@@ -491,8 +502,19 @@
     event.preventDefault();
     var pdv = currentPdv("cash"), closed = el("gxStoreClosed").checked, amount = Number(el("gxCashAmount").value || 0), file = el("gxCashFile").files[0];
     try {
-      if (!pdv) throw new Error("Selecciona un PDV."); setFormHint("gxCashFormHint", "Guardando…");
-      var path = closed ? "" : await uploadEvidence(file, "caja", pdv);
+      if (!pdv) throw new Error("Selecciona un PDV.");
+      setFormHint("gxCashFormHint", state.editingCashId ? "Guardando cambios de recaudo…" : "Guardando…");
+      var path = state.editingCashEvidencePath || "";
+      if (!closed) {
+        if (file) {
+          path = await uploadEvidence(file, "caja", pdv);
+        } else if (!path) {
+          throw new Error("Debes adjuntar la foto de caja.");
+        }
+      } else {
+        path = "";
+      }
+
       var result = await window.supabaseClient.rpc("xstore_submit_cash", {
         p_pdv: pdv, p_cash_date: el("gxCashDate").value, p_cash_amount: closed ? 0 : amount,
         p_evidence_path: path, p_store_closed: closed, p_store_closed_reason: el("gxStoreClosedReason").value,
@@ -501,6 +523,9 @@
       if (result.error) throw result.error;
       event.target.reset();
       state.payjoyItems = [];
+      state.editingCashId = null;
+      state.editingCashEvidencePath = "";
+      if (el("gxCashFileHint")) el("gxCashFileHint").textContent = "";
       panel("cash", false);
       await loadData();
     } catch (error) { setFormHint("gxCashFormHint", error.message || "No se pudo guardar el recaudo.", true); }
@@ -547,9 +572,57 @@
   function beginEdit(id) {
     var row = state.rows.find(function (item) { return item.closure_id === id; });
     if (!row) return;
+
     state.reviewingId = null;
-    state.editingId = id;
-    renderTable();
+    state.editingId = null;
+    state.editingCashId = id;
+    state.editingCashEvidencePath = row.evidence_path || "";
+
+    panel("cash", false); panel("deposit", false); panel("cash", true);
+
+    if (el("gxCashPanelTitle")) el("gxCashPanelTitle").textContent = "Editar recaudo de caja · " + (row.pdv || "") + " (" + dateEs(row.cash_date) + ")";
+    if (el("gxCashPanelSub")) el("gxCashPanelSub").textContent = "Modifica los datos del recaudo y equipos PayJoy para corregir la caja.";
+
+    var pdvSelect = el("gxCashPdv");
+    if (pdvSelect) pdvSelect.value = row.pdv || "";
+
+    if (el("gxCashDate")) el("gxCashDate").value = row.cash_date || today();
+    if (el("gxCashAmount")) el("gxCashAmount").value = Number(row.cash_amount || 0).toFixed(2);
+
+    var closedCb = el("gxStoreClosed");
+    if (closedCb) closedCb.checked = !!row.store_closed;
+
+    if (el("gxStoreClosedReason")) el("gxStoreClosedReason").value = row.store_closed_reason || "";
+
+    var fileInp = el("gxCashFile");
+    if (fileInp) {
+      fileInp.required = false;
+      fileInp.value = "";
+    }
+
+    var fileHint = el("gxCashFileHint");
+    if (fileHint) {
+      if (row.evidence_path) {
+        fileHint.innerHTML = '📷 <strong>Foto de caja registrada:</strong> <button type="button" class="gx-row-btn" onclick="gxOpenCashEvidence(\'' + esc(row.evidence_path) + '\')" style="padding:2px 8px; font-size:11px; margin-left:4px; display:inline-block;">Ver foto actual ↗</button><br><span style="color:#64748b; font-weight:400; display:inline-block; margin-top:2px;">(Opcional: Selecciona una nueva foto solo si deseas reemplazar la existente)</span>';
+      } else {
+        fileHint.textContent = "";
+      }
+    }
+
+    if (Array.isArray(row.payjoy_details) && row.payjoy_details.length > 0) {
+      state.payjoyItems = JSON.parse(JSON.stringify(row.payjoy_details));
+    } else {
+      state.payjoyItems = [];
+    }
+
+    renderPayjoyItems();
+    syncClosedFields();
+    recalculatePayjoyTotals();
+
+    var panelSection = el("gxCashPanel");
+    if (panelSection) {
+      panelSection.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
   }
 
   function closeEdit() {
@@ -601,6 +674,7 @@
   }
 
   async function openEvidence(path) { try { var result = await window.supabaseClient.storage.from("xstore-evidencias").createSignedUrl(path, 120); if (result.error) throw result.error; window.open(result.data.signedUrl, "_blank", "noopener"); } catch (_) { alert("No se pudo abrir la evidencia."); } }
+  window.gxOpenCashEvidence = function(path) { openEvidence(path); };
   function exportExcel() { if (!isOperations()) return; var rows = selectedRows(); var html = '<table><tr><th>Fecha</th><th>PDV</th><th>Recaudo Sistema</th><th>PayJoy Por Cobrar</th><th>Efectivo a Depositar</th><th>Depositado</th><th>Pendiente Banco</th><th>Estado</th><th>Registrado por</th></tr>' + rows.map(function (r) { var pj = Number(r.payjoy_pending_amount || r.payjoy_amount || 0); var real = Math.max(0, Number(r.cash_amount || 0) - pj); return "<tr><td>" + dateEs(r.cash_date) + "</td><td>" + esc(r.pdv) + "</td><td>" + Number(r.cash_amount || 0) + "</td><td>" + pj + "</td><td>" + real + "</td><td>" + Number(r.deposit_amount || 0) + "</td><td>" + Number(r.outstanding_amount || 0) + "</td><td>" + esc(statusLabel(r.status)) + "</td><td>" + esc(r.registered_by_name || r.registered_by_email || "") + "</td></tr>"; }).join("") + "</table>"; var blob = new Blob(["\ufeff", html], { type: "application/vnd.ms-excel;charset=utf-8" }), link = document.createElement("a"); link.href = URL.createObjectURL(blob); link.download = "gestion-xstore-" + state.month + ".xls"; link.click(); URL.revokeObjectURL(link.href); }
 
   window.loadGestionXstore = async function () { state.profile = window.currentUserProfile; if (!canRegister()) { setHint("No se pudo identificar tu usuario.", true); return; } state.role = state.profile.cargo || ""; populateMonths(); var actions = el("gxEntryActions"), exportBtn = el("gxExportBtn"); if (actions) actions.hidden = false; if (exportBtn) exportBtn.hidden = !isOperations(); await loadData(); };

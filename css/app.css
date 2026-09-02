@@ -2069,13 +2069,36 @@
      FRANJA AZUL SUPERIOR FIJA (STICKY TOPBAR) EN TODA LA APLICACIÓN
      ========================================================================== */
 
-  .main-content,
+  #appContent {
+    width: 100% !important;
+    min-height: 100vh !important;
+  }
+
+  .app-shell {
+    display: flex !important;
+    width: 100% !important;
+    min-height: 100vh !important;
+    align-items: stretch !important;
+  }
+
+  .main-content {
+    flex: 1 1 0% !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    overflow-x: hidden !important;
+    overflow-y: visible !important;
+  }
+
   .page {
+    width: 100% !important;
+    box-sizing: border-box !important;
     overflow: visible !important;
   }
 
   .topbar,
   .gx-topbar {
+    width: 100% !important;
+    box-sizing: border-box !important;
     position: sticky !important;
     top: 0 !important;
     z-index: 400 !important;
@@ -2498,8 +2521,17 @@
 
   /* 1. FRANJA AZUL (.topbar): ALTURA UNIFICADA 40px PARA TODOS LOS BOTONES Y FILTROS */
   .topbar {
-    min-height: 60px !important;
+    min-height: 68px !important;
+    padding: 14px clamp(16px, 4vw, 40px) !important;
+    box-sizing: border-box !important;
     align-items: center !important;
+  }
+  .topbar h1 {
+    margin: 0 !important;
+    font-size: clamp(16px, 2.2vw, 22px) !important;
+    font-weight: 700 !important;
+    color: #ffffff !important;
+    line-height: 1.2 !important;
   }
 
   .topbar .topbar-toggle,
@@ -3345,4 +3377,134 @@
 }
 .bitacora-node.node-sol {
   background: #16a34a !important;
+}
+
+/* Horarios Líderes Styles & Design Alignment */
+.hl-preset {
+  height: 34px !important;
+  line-height: 32px !important;
+  padding: 0 16px !important;
+  font-family: 'Space Grotesk', 'Inter', sans-serif !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  border-radius: 99px !important;
+  border: 1px solid #cbd5e1 !important;
+  background: #ffffff !important;
+  color: #334155 !important;
+  cursor: pointer !important;
+  transition: all 0.18s ease !important;
+}
+.hl-preset:hover {
+  border-color: #2563eb !important;
+  background: #eff6ff !important;
+  color: #1d4ed8 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 3px 8px rgba(37, 99, 235, 0.15) !important;
+}
+.hl-preset.horario-preset-off:hover {
+  border-color: #f43f5e !important;
+  background: #fff1f2 !important;
+  color: #e11d48 !important;
+}
+
+.hl-visit-card {
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 10px !important;
+  padding: 12px 14px !important;
+  display: grid !important;
+  grid-template-columns: 2fr 1.1fr 1.1fr auto !important;
+  gap: 12px !important;
+  align-items: center !important;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04) !important;
+  transition: all 0.15s ease !important;
+}
+@media (max-width: 768px) {
+  .hl-visit-card {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
+
+.hl-visit-card select,
+.hl-visit-card input[type="time"] {
+  height: 38px !important;
+  border-radius: 8px !important;
+  border: 1px solid #cbd5e1 !important;
+  padding: 0 10px !important;
+  font-family: 'Space Grotesk', 'Inter', sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: #1e293b !important;
+  background-color: #ffffff !important;
+  box-sizing: border-box !important;
+  transition: border-color 0.15s ease !important;
+}
+.hl-visit-card select:focus,
+.hl-visit-card input[type="time"]:focus {
+  outline: none !important;
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12) !important;
+}
+
+.hl-add-visit-btn {
+  height: 38px !important;
+  padding: 0 18px !important;
+  border-radius: 99px !important;
+  border: 1px dashed #3b82f6 !important;
+  background: #eff6ff !important;
+  color: #1d4ed8 !important;
+  font-family: 'Space Grotesk', 'Inter', sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  transition: all 0.18s ease !important;
+}
+.hl-add-visit-btn:hover {
+  background: #dbeafe !important;
+  border-color: #1d4ed8 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(29, 78, 216, 0.15) !important;
+}
+
+.hl-remove-visit-btn {
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 8px !important;
+  border: 1px solid #fca5a5 !important;
+  background: #fef2f2 !important;
+  color: #dc2626 !important;
+  font-size: 14px !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.18s ease !important;
+}
+.hl-remove-visit-btn:hover {
+  background: #fee2e2 !important;
+  border-color: #ef4444 !important;
+  transform: scale(1.05) !important;
+}
+
+.hl-pdv-badges {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 4px;
+  align-items: center;
+}
+.hl-pdv-badge {
+  font-size: 10.5px;
+  line-height: 1.2;
+  padding: 3px 7px;
+  background: #eff6ff;
+  color: #1e40af;
+  border: 1px solid #bfdbfe;
+  border-radius: 6px;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: 0 1px 2px rgba(30, 64, 175, 0.05);
 }

@@ -22,6 +22,8 @@
       return '<span class="gx-status" style="background:#dbeafe; color:#1e40af; border:1px solid #93c5fd;">' + escapeHtml(cargo || "Operaciones") + '</span>';
     } else if (c === "supervisor") {
       return '<span class="gx-status" style="background:#f3e8ff; color:#6b21a8; border:1px solid #d8b4fe;">' + escapeHtml(cargo) + '</span>';
+    } else if (c === "gestor") {
+      return '<span class="gx-status" style="background:#ccfbf1; color:#0f766e; border:1px solid #99f6e4;">Gestor</span>';
     } else if (c === "gerente") {
       return '<span class="gx-status" style="background:#fef3c7; color:#92400e; border:1px solid #fcd34d;">Gerente</span>';
     }
@@ -29,9 +31,6 @@
   }
 
   function formatVistasBadges(vistas, isAdm) {
-    if (isAdm) {
-      return '<span class="gx-status" style="background:#e0e7ff; color:#3730a3; border:1px solid #c7d2fe;">Todos los Módulos</span>';
-    }
     if (!vistas || !vistas.trim()) {
       return '<span style="color:#94a3b8; font-style:italic; font-size:12px;">Sin módulos asignados</span>';
     }
@@ -45,7 +44,7 @@
       "avancedia": "Avance Día",
       "arribos": "Arribos",
       "horario": "Horario",
-      "xstore": "Control Xstore",
+      "horarioslideres": "Horarios Líderes",
       "gestionxstore": "Gestión Xstore",
       "comprobante": "Comprobante",
       "bitacora": "Bitácora"
