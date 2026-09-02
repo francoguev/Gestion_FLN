@@ -1,4 +1,12 @@
 (function(){
+  var DEFAULT_PDVS = [
+    "CAPACITACIÓN", "OFICINA", "REFRIGERIO", "REMOTO", "RUTA",
+    "TE AYACUCHO", "TE HUANTA", "TE ICA", "TE ICA 3", "TE ICA II",
+    "TE ICA MODELO", "TE NAZCA", "TE PARCONA", "TE PISCO",
+    "TE SATELITE BARRIO CHINO", "TE SATELITE CAÑETE", "TE SATELITE CHALA",
+    "TE SATELITE PALPA", "TE SATELITE PUEBLO JOVEN"
+  ];
+
   var state = {
     weekStart: mondayOf(new Date()),
     profile: null,
@@ -6,7 +14,7 @@
     shifts: [],
     selected: null,
     copiedShift: null,
-    officialPdvs: [],
+    officialPdvs: DEFAULT_PDVS.slice(),
     loaded: false
   };
 
@@ -159,23 +167,23 @@
   }
 
   async function loadOfficialPdvs(){
+    var defaultPdvs = [
+      "TE AYACUCHO", "TE HUANTA", "TE ICA", "TE ICA 3", "TE ICA II",
+      "TE ICA MODELO", "TE NAZCA", "TE PARCONA", "TE PISCO",
+      "TE SATELITE BARRIO CHINO", "TE SATELITE CAÑETE", "TE SATELITE CHALA",
+      "TE SATELITE PALPA", "TE SATELITE PUEBLO JOVEN", "OFICINA", "REMOTO", "RUTA", "CAPACITACIÓN", "REFRIGERIO"
+    ];
+    var set = {};
+    defaultPdvs.forEach(function(p){ set[p] = true; });
     try{
       if(window.supabaseClient){
         var res = await window.supabaseClient.from("profiles").select("pdv");
         if(res && res.data){
-          var set = { "REMOTO": true, "OFICINA": true, "RUTA": true, "CAPACITACIÓN": true };
           res.data.forEach(function(r){ if(r.pdv && r.pdv.trim()) set[r.pdv.trim()] = true; });
-          var list = Object.keys(set).sort();
-          if(list.length > 0){ state.officialPdvs = list; return; }
         }
       }
     }catch(e){}
-    state.officialPdvs = [
-      "TE AYACUCHO", "TE HUANTA", "TE ICA", "TE ICA 3", "TE ICA II",
-      "TE ICA MODELO", "TE NAZCA", "TE PARCONA", "TE PISCO",
-      "TE SATELITE BARRIO CHINO", "TE SATELITE CAÑETE", "TE SATELITE CHALA",
-      "TE SATELITE PALPA", "TE SATELITE PUEBLO JOVEN", "OFICINA", "REMOTO", "RUTA", "CAPACITACIÓN"
-    ];
+    state.officialPdvs = Object.keys(set).sort();
   }
 
   async function loadProfile(){
@@ -693,4 +701,5 @@
       });
     });
   });
+  window.hlGetOfficialPdvs = function(){ return state.officialPdvs; };
 })();
