@@ -2071,13 +2071,17 @@
 
   #appContent {
     width: 100% !important;
-    min-height: 100vh !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow: hidden !important;
   }
 
   .app-shell {
     display: flex !important;
     width: 100% !important;
-    min-height: 100vh !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow: hidden !important;
     align-items: stretch !important;
   }
 
@@ -2085,8 +2089,12 @@
     flex: 1 1 0% !important;
     width: 100% !important;
     min-width: 0 !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow-y: auto !important;
     overflow-x: hidden !important;
-    overflow-y: visible !important;
+    position: relative !important;
+    box-sizing: border-box !important;
   }
 
   .page {
@@ -2100,6 +2108,7 @@
     width: 100% !important;
     box-sizing: border-box !important;
     position: sticky !important;
+    position: -webkit-sticky !important;
     top: 0 !important;
     z-index: 400 !important;
     background: linear-gradient(120deg, #09126e 0%, #0e1aa1 60%, #1e293b 100%) !important;
