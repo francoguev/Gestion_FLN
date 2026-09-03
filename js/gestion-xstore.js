@@ -5,7 +5,8 @@
   var MONTHS = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
   var state = {
     profile: null, role: "", month: "", day: "", statusFilter: "", rows: [], deposits: [], pdvs: [], selectedPdvs: [],
-    payjoyItems: [], reviewingId: null, editingId: null, editingCashId: null, editingCashEvidencePath: "", editingKind: "", loading: false
+    payjoyItems: [], reviewingId: null, editingId: null, editingCashId: null, editingCashEvidencePath: "",
+    editingDepositId: null, editingDepositEvidencePath: "", editingKind: "", loading: false
   };
 
   function el(id) { return document.getElementById(id); }
@@ -333,9 +334,12 @@
         actions.push('<button type="button" class="gx-row-btn" data-gx-multi-vouchers="' + row.closure_id + '">Fotos de voucher (' + vouchers.length + ')</button>');
       }
 
-      /* Regla de Edición: Siempre permite "Editar recaudo" por día mientras no esté validado de forma final. */
+      /* Regla de Edición: Permite "Editar recaudo" y "Editar depósito" por día mientras no esté validado de forma final. */
       if (row.closure_id && !row.store_closed && !row.review_started_at && !finalStatus(row.status)) {
         actions.push('<button type="button" class="gx-row-btn" data-gx-edit-cash="' + row.closure_id + '">Editar recaudo</button>');
+      }
+      if (row.closure_id && !finalStatus(row.status) && (vouchers.length > 0 || Number(row.deposit_amount || 0) > 0)) {
+        actions.push('<button type="button" class="gx-row-btn" data-gx-edit-deposit="' + row.closure_id + '">Editar depósito</button>');
       }
 
       /* Regla de Conciliación para Operaciones:
@@ -461,7 +465,16 @@
       syncClosedFields();
       recalculatePayjoyTotals();
     } else {
-      el("gxDepositDate").value = today();
+      state.editingDepositId = null;
+      state.editingDepositEvidencePath = "";
+      if (el("gxDepositPanelTitle")) el("gxDepositPanelTitle").textContent = "Registrar depósito";
+      if (el("gxDepositPanelSub")) el("gxDepositPanelSub").textContent = "Selecciona los días de caja que cubre este voucher y asigna el monto a cada uno.";
+      if (el("gxDepositFile")) {
+        el("gxDepositFile").required = true;
+        el("gxDepositFile").value = "";
+      }
+      if (el("gxDepositFileHint")) el("gxDepositFileHint").textContent = "";
+      if (el("gxDepositDate")) el("gxDepositDate").value = today();
       populateAllocationList();
     }
   }
@@ -486,6 +499,36 @@
     }).join("") : '<span class="hint">No hay días pendientes para este PDV.</span>';
   }
   function refreshDepositTotal() { var total = 0; document.querySelectorAll("[data-gx-allocation-amount]").forEach(function (input) { if (!input.disabled) total += Number(input.value || 0); }); el("gxDepositAmount").value = total ? total.toFixed(2) : ""; }
+
+  function populateAllocationListForDeposit(pdv, deposit, closureId) {
+    var holder = el("gxAllocationList"); if (!holder) return;
+    var currentAllocMap = {};
+    if (deposit && Array.isArray(deposit.allocations)) {
+      deposit.allocations.forEach(function (a) {
+        currentAllocMap[a.closure_id] = Number(a.monto || a.allocated_amount || a.amount || 0);
+      });
+    }
+
+    var candidates = state.rows.filter(function (r) {
+      if (r.pdv !== pdv || r.store_closed || finalStatus(r.status)) return false;
+      if (currentAllocMap.hasOwnProperty(r.closure_id)) return true;
+      return eligibleForDeposit(r, pdv);
+    });
+
+    holder.innerHTML = candidates.length ? candidates.map(function (r) {
+      var isAllocated = currentAllocMap.hasOwnProperty(r.closure_id);
+      var currentAlloc = isAllocated ? currentAllocMap[r.closure_id] : 0;
+      var maxVal = Number(r.outstanding_amount || 0) + currentAlloc;
+
+      var checkedAttr = isAllocated ? ' checked' : '';
+      var disabledAttr = isAllocated ? '' : ' disabled';
+      var valAttr = isAllocated ? ' value="' + currentAlloc.toFixed(2) + '"' : '';
+
+      return '<label class="gx-allocation-row"><input type="checkbox" data-gx-allocation="' + r.closure_id + '" data-gx-max="' + maxVal + '"' + checkedAttr + '><span>' + dateEs(r.cash_date) + " · Requerido Banco " + money(maxVal) + '</span><input type="number" min="0.01" step="0.01" placeholder="' + maxVal.toFixed(2) + '" data-gx-allocation-amount="' + r.closure_id + '"' + valAttr + disabledAttr + '></label>';
+    }).join("") : '<span class="hint">No hay días pendientes para este PDV.</span>';
+
+    refreshDepositTotal();
+  }
 
   async function compressImage(file) {
     if (!file || !/^image\/(jpeg|png|webp)$/.test(file.type)) throw new Error("Adjunta una imagen JPG, PNG o WebP.");
@@ -535,10 +578,33 @@
     event.preventDefault(); var pdv = currentPdv("deposit"), allocations = [];
     document.querySelectorAll("[data-gx-allocation]:checked").forEach(function (check) { var id = check.getAttribute("data-gx-allocation"), input = document.querySelector('[data-gx-allocation-amount="' + CSS.escape(id) + '"]'); allocations.push({ closure_id: id, amount: Number(input.value || 0) }); });
     try {
-      if (!pdv || !allocations.length) throw new Error("Selecciona un PDV y al menos un día de caja."); setFormHint("gxDepositFormHint", "Subiendo voucher…");
-      var amount = Number(el("gxDepositAmount").value || 0), path = await uploadEvidence(el("gxDepositFile").files[0], "deposito", pdv);
-      var result = await window.supabaseClient.rpc("xstore_submit_deposit", { p_pdv: pdv, p_deposit_date: el("gxDepositDate").value, p_deposit_amount: amount, p_evidence_path: path, p_allocations: allocations });
-      if (result.error) throw result.error; event.target.reset(); panel("deposit", false); await loadData();
+      if (!pdv || !allocations.length) throw new Error("Selecciona un PDV y al menos un día de caja.");
+      setFormHint("gxDepositFormHint", state.editingDepositId ? "Guardando cambios de depósito…" : "Subiendo voucher…");
+
+      var file = el("gxDepositFile").files[0];
+      var path = state.editingDepositEvidencePath || "";
+      if (file) {
+        path = await uploadEvidence(file, "deposito", pdv);
+      } else if (!path) {
+        throw new Error("Debes adjuntar la captura del depósito.");
+      }
+
+      var amount = Number(el("gxDepositAmount").value || 0);
+      var result = await window.supabaseClient.rpc("xstore_submit_deposit", {
+        p_pdv: pdv,
+        p_deposit_date: el("gxDepositDate").value,
+        p_deposit_amount: amount,
+        p_evidence_path: path,
+        p_allocations: allocations,
+        p_deposit_id: state.editingDepositId || null
+      });
+      if (result.error) throw result.error;
+      event.target.reset();
+      state.editingDepositId = null;
+      state.editingDepositEvidencePath = "";
+      if (el("gxDepositFileHint")) el("gxDepositFileHint").textContent = "";
+      panel("deposit", false);
+      await loadData();
     } catch (error) { setFormHint("gxDepositFormHint", error.message || "No se pudo guardar el depósito.", true); }
   }
 
@@ -620,6 +686,53 @@
     recalculatePayjoyTotals();
 
     var panelSection = el("gxCashPanel");
+    if (panelSection) {
+      panelSection.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }
+
+  function beginEditDeposit(closureId) {
+    var row = state.rows.find(function (item) { return item.closure_id === closureId; });
+    if (!row) return;
+
+    var deposit = state.deposits.find(function (d) {
+      return (d.allocations || []).some(function (a) { return a.closure_id === closureId; });
+    });
+
+    state.reviewingId = null;
+    state.editingId = null;
+    state.editingCashId = null;
+    state.editingDepositId = deposit ? (deposit.deposit_id || deposit.id) : null;
+    state.editingDepositEvidencePath = deposit ? (deposit.evidence_path || "") : (row.deposit_vouchers && row.deposit_vouchers[0] ? row.deposit_vouchers[0].path : "");
+
+    panel("cash", false); panel("deposit", false); panel("deposit", true);
+
+    if (el("gxDepositPanelTitle")) el("gxDepositPanelTitle").textContent = "Editar depósito bancario · " + (row.pdv || "") + " (" + dateEs(row.cash_date) + ")";
+    if (el("gxDepositPanelSub")) el("gxDepositPanelSub").textContent = "Modifica los días de caja, monto asignado o la captura del voucher.";
+
+    var pdvSelect = el("gxDepositPdv");
+    if (pdvSelect) pdvSelect.value = row.pdv || "";
+
+    if (el("gxDepositDate")) el("gxDepositDate").value = deposit ? (deposit.deposit_date || row.cash_date) : (row.cash_date || today());
+
+    var fileInp = el("gxDepositFile");
+    if (fileInp) {
+      fileInp.required = false;
+      fileInp.value = "";
+    }
+
+    var fileHint = el("gxDepositFileHint");
+    if (fileHint) {
+      if (state.editingDepositEvidencePath) {
+        fileHint.innerHTML = '📷 <strong>Foto de voucher registrada:</strong> <button type="button" class="gx-row-btn" onclick="gxOpenCashEvidence(\'' + esc(state.editingDepositEvidencePath) + '\')" style="padding:2px 8px; font-size:11px; margin-left:4px; display:inline-block;">Ver foto actual ↗</button><br><span style="color:#64748b; font-weight:400; display:inline-block; margin-top:2px;">(Opcional: Selecciona una nueva foto solo si deseas reemplazar la existente)</span>';
+      } else {
+        fileHint.textContent = "";
+      }
+    }
+
+    populateAllocationListForDeposit(row.pdv, deposit, closureId);
+
+    var panelSection = el("gxDepositPanel");
     if (panelSection) {
       panelSection.scrollIntoView({ behavior: "smooth", block: "start" });
     }
@@ -781,11 +894,12 @@
   });
 
   el("gxTbody").addEventListener("click", function (event) {
-    var evidence = event.target.closest("[data-gx-evidence]"), resolve = event.target.closest("[data-gx-resolve]"), close = event.target.closest("[data-gx-close-inline]"), closeEditButton = event.target.closest("[data-gx-close-edit]"), editCash = event.target.closest("[data-gx-edit-cash]"), deleteBtn = event.target.closest("[data-gx-delete]"), multiVouchers = event.target.closest("[data-gx-multi-vouchers]");
+    var evidence = event.target.closest("[data-gx-evidence]"), resolve = event.target.closest("[data-gx-resolve]"), close = event.target.closest("[data-gx-close-inline]"), closeEditButton = event.target.closest("[data-gx-close-edit]"), editCash = event.target.closest("[data-gx-edit-cash]"), editDeposit = event.target.closest("[data-gx-edit-deposit]"), deleteBtn = event.target.closest("[data-gx-delete]"), multiVouchers = event.target.closest("[data-gx-multi-vouchers]");
     if (evidence) openEvidence(evidence.getAttribute("data-gx-evidence"));
     if (multiVouchers) openMultiVouchers(multiVouchers.getAttribute("data-gx-multi-vouchers"));
     if (resolve) beginReview(resolve.getAttribute("data-gx-resolve"));
     if (editCash) beginEdit(editCash.getAttribute("data-gx-edit-cash"));
+    if (editDeposit) beginEditDeposit(editDeposit.getAttribute("data-gx-edit-deposit"));
     if (deleteBtn) deleteClosure(deleteBtn.getAttribute("data-gx-delete"));
     if (close) closeReview();
     if (closeEditButton) closeEdit();

@@ -657,12 +657,12 @@
         </section>
 
         <section class="gx-entry-panel" id="gxDepositPanel" hidden>
-          <div class="gx-panel-header"><div><h2>Registrar depósito</h2><p>Selecciona los días de caja que cubre este voucher y asigna el monto a cada uno.</p></div><button type="button" class="gx-close-panel" data-gx-close="deposit" aria-label="Cerrar">×</button></div>
+          <div class="gx-panel-header"><div><h2 id="gxDepositPanelTitle">Registrar depósito</h2><p id="gxDepositPanelSub">Selecciona los días de caja que cubre este voucher y asigna el monto a cada uno.</p></div><button type="button" class="gx-close-panel" data-gx-close="deposit" aria-label="Cerrar">×</button></div>
           <form id="gxDepositForm" class="gx-form-grid">
             <label class="gx-pdv-input-wrap" id="gxDepositPdvWrap">PDV<select id="gxDepositPdv"></select></label>
             <label>Fecha de depósito<input id="gxDepositDate" type="date" required></label>
             <label>Monto del voucher<input id="gxDepositAmount" type="number" min="0.01" step="0.01" inputmode="decimal" required placeholder="0.00" readonly></label>
-            <label class="gx-file-field">Captura del depósito<input id="gxDepositFile" type="file" accept="image/jpeg,image/png,image/webp" required></label>
+            <label class="gx-file-field">Captura del depósito<input id="gxDepositFile" type="file" accept="image/jpeg,image/png,image/webp" required><span id="gxDepositFileHint" style="display:block; margin-top:6px; font-size:12px;"></span></label>
             <div class="gx-allocation-wrap"><strong>Días de caja cubiertos</strong><div class="gx-allocation-list" id="gxAllocationList"></div></div>
             <div class="gx-form-actions"><span id="gxDepositFormHint"></span><button class="gx-action-btn" type="submit">Guardar depósito</button></div>
           </form>
@@ -1225,7 +1225,7 @@
 <script src="js/arribos.js"></script>
 <script src="js/horario.js"></script>
 <script src="js/horarios-lideres.js?v=lideres-v4"></script>
-<script src="js/gestion-xstore.js?v=full-recaudo-edit-v3"></script>
+<script src="js/gestion-xstore.js?v=full-deposit-edit-v4"></script>
 <script src="js/comprobante.js"></script>
 <script src="js/usuarios.js?v=exact-vistas-keys-1"></script>
 <script src="js/bitacora.js?v=dynamic-official-pdvs-v20"></script>
