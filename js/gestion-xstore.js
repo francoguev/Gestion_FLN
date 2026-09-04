@@ -590,14 +590,17 @@
       }
 
       var amount = Number(el("gxDepositAmount").value || 0);
-      var result = await window.supabaseClient.rpc("xstore_submit_deposit", {
+      var payload = {
         p_pdv: pdv,
         p_deposit_date: el("gxDepositDate").value,
         p_deposit_amount: amount,
         p_evidence_path: path,
-        p_allocations: allocations,
-        p_deposit_id: state.editingDepositId || null
-      });
+        p_allocations: allocations
+      };
+      if (state.editingDepositId) {
+        payload.p_deposit_id = state.editingDepositId;
+      }
+      var result = await window.supabaseClient.rpc("xstore_submit_deposit", payload);
       if (result.error) throw result.error;
       event.target.reset();
       state.editingDepositId = null;
