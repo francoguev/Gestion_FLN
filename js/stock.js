@@ -144,19 +144,42 @@
     if (wrap) wrap.style.display = isAdminOrOps() ? "inline-flex" : "none";
   }
 
-  function getLatestFechaCargaEs() {
-    var maxDate = "";
+  function getLatestCargaInfo() {
+    var maxDateStr = "";
+    var maxCreatedAtStr = "";
+
     stockItems.forEach(function (it) {
-      if (it.fecha_carga && it.fecha_carga > maxDate) {
-        maxDate = it.fecha_carga;
+      if (it.fecha_carga && it.fecha_carga > maxDateStr) {
+        maxDateStr = it.fecha_carga;
+      }
+      if (it.created_at && it.created_at > maxCreatedAtStr) {
+        maxCreatedAtStr = it.created_at;
       }
     });
-    if (maxDate) return formatDateEs(maxDate);
-    var hoy = new Date();
-    var y = hoy.getFullYear();
-    var m = String(hoy.getMonth() + 1).padStart(2, "0");
-    var d = String(hoy.getDate()).padStart(2, "0");
-    return d + "/" + m + "/" + y;
+
+    var fechaStr = "";
+    if (maxDateStr) {
+      fechaStr = formatDateEs(maxDateStr);
+    } else {
+      var hoy = new Date();
+      var y = hoy.getFullYear();
+      var m = String(hoy.getMonth() + 1).padStart(2, "0");
+      var d = String(hoy.getDate()).padStart(2, "0");
+      fechaStr = d + "/" + m + "/" + y;
+    }
+
+    var horaStr = "";
+    if (maxCreatedAtStr) {
+      var d = new Date(maxCreatedAtStr);
+      if (!isNaN(d.getTime())) {
+        horaStr = d.toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit", hour12: true });
+      }
+    }
+
+    return {
+      fecha: fechaStr,
+      hora: horaStr
+    };
   }
 
   function populateFilters() {
@@ -339,8 +362,9 @@
     if (hint) {
       var now = new Date();
       var timeStr = now.toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit", hour12: true });
-      var fechaCargaStr = getLatestFechaCargaEs();
-      hint.textContent = "Base actualizada al " + fechaCargaStr + " - Consulta a las " + timeStr;
+      var info = getLatestCargaInfo();
+      var horaCargaPart = info.hora ? " a las " + info.hora : "";
+      hint.textContent = "Base actualizada al " + info.fecha + horaCargaPart + " - Consulta a las " + timeStr;
     }
   }
 
