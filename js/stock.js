@@ -242,19 +242,28 @@
   }
 
   function formatModel(modelo) {
-    var raw = esc(modelo || "").trim();
+    var raw = (modelo || "").trim();
     if (!raw) return "";
 
-    if (/\b5G\s*$/i.test(raw)) {
-      return raw.replace(/\b5G\s*$/i, '<span class="stock-tech-tag is-5g">5G</span>');
+    // Strip leading SKU code if present
+    raw = raw.replace(/^[A-Z0-9_-]+\s*-\s*/i, "").trim();
+
+    // Strip "Contenido: ..." and everything after
+    raw = raw.replace(/\s*Contenido\s*:.*$/i, "").trim();
+    raw = raw.replace(/\s*Cont\s*:.*$/i, "").trim();
+
+    var cleanEscaped = esc(raw);
+
+    if (/\b5G\s*$/i.test(cleanEscaped)) {
+      return cleanEscaped.replace(/\b5G\s*$/i, '<span class="stock-tech-tag is-5g">5G</span>');
     }
-    if (/\b4G\s*$/i.test(raw)) {
-      return raw.replace(/\b4G\s*$/i, '<span class="stock-tech-tag is-4g">4G</span>');
+    if (/\b4G\s*$/i.test(cleanEscaped)) {
+      return cleanEscaped.replace(/\b4G\s*$/i, '<span class="stock-tech-tag is-4g">4G</span>');
     }
 
-    raw = raw.replace(/(?<!\d)\b5G\b/gi, '<span class="stock-tech-tag is-5g">5G</span>');
-    raw = raw.replace(/(?<!\d)\b4G\b/gi, '<span class="stock-tech-tag is-4g">4G</span>');
-    return raw;
+    cleanEscaped = cleanEscaped.replace(/(?<!\d)\b5G\b/gi, '<span class="stock-tech-tag is-5g">5G</span>');
+    cleanEscaped = cleanEscaped.replace(/(?<!\d)\b4G\b/gi, '<span class="stock-tech-tag is-4g">4G</span>');
+    return cleanEscaped;
   }
 
   function renderStockTable() {
@@ -370,6 +379,16 @@
           it.pdv_raw = it.pdv_raw.replace(/\?/g, "Ñ");
         }
         it.tipo = deriveTipo(it.sku, it.descripcion);
+        var rawMod = it.modelo || it.descripcion || "";
+        var cleanMod = rawMod
+          .replace(/^[A-Z0-9_-]+\s*-\s*/i, "")
+          .replace(/\s*Contenido\s*:.*$/i, "")
+          .replace(/\s*Cont\s*:.*$/i, "")
+          .trim();
+        if (cleanMod) {
+          it.modelo = cleanMod;
+          it.modelo_normalizado = cleanMod;
+        }
         return it;
       });
       stockLoadedAt = Date.now();
@@ -453,7 +472,11 @@
         var texNorm = normalizeTex(pdvRaw, org);
         var marca = deriveMarca(sku, desc);
         var tipo = deriveTipo(sku, desc);
-        var modeloClean = desc.replace(/^[A-Z0-9_-]+\s*-\s*/i, "").trim() || desc;
+        var modeloClean = desc
+          .replace(/^[A-Z0-9_-]+\s*-\s*/i, "")
+          .replace(/\s*Contenido\s*:.*$/i, "")
+          .replace(/\s*Cont\s*:.*$/i, "")
+          .trim() || desc;
 
         parsedItems.push({
           serie: serie,
