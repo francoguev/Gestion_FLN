@@ -89,7 +89,7 @@
 
   function deriveTipo(sku, desc) {
     var s = norm(sku), d = norm(desc);
-    if (s.indexOf("CHIP") !== -1 || s.indexOf("SUPE") === 0 || d.indexOf("CHIP") !== -1) return "CHIP";
+    if (s.indexOf("CHIP") !== -1 || s.indexOf("SUPERCHIP") !== -1 || d.indexOf("CHIP") !== -1) return "CHIP";
     if (d.indexOf("AUDIFONO") !== -1 || d.indexOf("CARGADOR") !== -1 || d.indexOf("FUNDA") !== -1 || d.indexOf("MAQUETA") !== -1) return "ACCESORIO";
     return "EQUIPO";
   }
@@ -106,13 +106,13 @@
     if (text.indexOf("MODELO") !== -1) return "TE ICA MODELO";
     if (text.indexOf("BARRIO CHINO") !== -1) return "TE SATELITE BARRIO CHINO";
     if (text.indexOf("CHALA") !== -1) return "TE SATELITE CHALA";
-    if (text.indexOf("CANETE") !== -1 || text.indexOf("CAÑETE") !== -1) return "TE SATELITE CAÑETE";
+    if (text.indexOf("CANETE") !== -1 || text.indexOf("CAÑETE") !== -1 || text.indexOf("CA?ETE") !== -1 || text.indexOf("LIMCA") !== -1) return "TE SATELITE CAÑETE";
     if (text.indexOf("PUEBLO JOVEN") !== -1 || text.indexOf("PUEJOVEN") !== -1) return "TE SATELITE PUEBLO JOVEN";
     if (text.indexOf("PALPA") !== -1) return "TE SATELITE PALPA";
     if (text.indexOf("ICA") !== -1) return "TE ICA";
 
     // Fallback limpio
-    var clean = (org || pdvRaw || "").replace(/^\d+\.\s*/, "").replace(/^TEXPRESS\s*/i, "TE ").trim();
+    var clean = (org || pdvRaw || "").replace(/^\d+\.\s*/, "").replace(/^TEXPRESS\s*/i, "TE ").replace(/\?/g, "Ñ").trim();
     return clean || "TE GENERAL";
   }
 
@@ -164,11 +164,11 @@
       marcas.map(function (m) { return '<option value="' + esc(m) + '">' + esc(m) + '</option>'; }).join("");
 
     if (tipos.length) {
-      tipoSelect.innerHTML = tipos.map(function (t) {
-        return '<option value="' + esc(t) + '">' + esc(t) + '</option>';
-      }).join("");
-      var defaultTipo = tipos.find(function (t) { return norm(t) === "EQUIPO"; }) || tipos[0];
-      tipoSelect.value = defaultTipo;
+      tipoSelect.innerHTML = '<option value="">TIPO · Todo</option>' +
+        tipos.map(function (t) {
+          return '<option value="' + esc(t) + '">' + esc(t) + '</option>';
+        }).join("");
+      tipoSelect.value = "";
     } else {
       tipoSelect.innerHTML = '<option value="">TIPO · Todo</option>';
     }
