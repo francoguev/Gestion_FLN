@@ -89,12 +89,14 @@
 
   function deriveTipo(sku, desc) {
     var s = norm(sku), d = norm(desc);
-    if (s.indexOf("CHIP") !== -1 || s.indexOf("SUPERCHIP") !== -1 || d.indexOf("CHIP") !== -1) return "CHIP";
-    if (d.indexOf("AUDIFONO") !== -1 || d.indexOf("CARGADOR") !== -1 || d.indexOf("FUNDA") !== -1 || d.indexOf("MAQUETA") !== -1) return "ACCESORIO";
+    if (s.indexOf("CHIP") === 0 || s.indexOf("SUPERCHIP") === 0 || d.indexOf("CHIP") === 0 || d.indexOf("SUPER CHIP") === 0 || d.indexOf("SUPERCHIP") === 0) return "CHIP";
+    if (s.indexOf("ACC") === 0 || s.indexOf("AUD") === 0 || s.indexOf("CARG") === 0 || s.indexOf("FUND") === 0 || d.indexOf("ACCESORIO") === 0 || d.indexOf("AUDIFONO") === 0 || d.indexOf("CARGADOR") === 0) return "ACCESORIO";
     return "EQUIPO";
   }
 
   function normalizeTex(pdvRaw, org) {
+    var rawStr = (org || pdvRaw || "").toUpperCase();
+    if (rawStr.indexOf("CANETE") !== -1 || rawStr.indexOf("CAÑETE") !== -1 || rawStr.indexOf("CA?ETE") !== -1 || rawStr.indexOf("LIMCA") !== -1) return "TE SATELITE CAÑETE";
     var text = norm(org || pdvRaw || "");
     if (text.indexOf("NAZCA") !== -1) return "TE NAZCA";
     if (text.indexOf("PARCONA") !== -1) return "TE PARCONA";
@@ -319,6 +321,30 @@
     return null;
   }
 
+  async function fetchAllStockItems() {
+    var allItems = [];
+    var pageSize = 1000;
+    var from = 0;
+    var hasMore = true;
+
+    while (hasMore) {
+      var res = await window.supabaseClient
+        .from("stock_items")
+        .select("*")
+        .range(from, from + pageSize - 1);
+
+      if (res.error) throw res.error;
+      var data = res.data || [];
+      allItems = allItems.concat(data);
+      if (data.length < pageSize) {
+        hasMore = false;
+      } else {
+        from += pageSize;
+      }
+    }
+    return allItems;
+  }
+
   window.loadStock = async function () {
     checkAdminUploadVisibility();
     var hint = document.getElementById("stockUpdatedHint");
@@ -331,13 +357,21 @@
     if (hint) hint.textContent = "Cargando stock desde la base de datos SQL…";
 
     try {
-      var res = await window.supabaseClient
-        .from("stock_items")
-        .select("*");
+      var rawData = await fetchAllStockItems();
 
-      if (res.error) throw res.error;
-
-      stockItems = res.data || [];
+      stockItems = rawData.map(function (it) {
+        if (it.tex_normalizado) {
+          it.tex_normalizado = it.tex_normalizado.replace(/\?/g, "Ñ");
+          if (it.tex_normalizado.indexOf("CA?ETE") !== -1 || it.tex_normalizado.indexOf("CANETE") !== -1 || it.tex_normalizado === "SAT CA?ETE") {
+            it.tex_normalizado = "TE SATELITE CAÑETE";
+          }
+        }
+        if (it.pdv_raw) {
+          it.pdv_raw = it.pdv_raw.replace(/\?/g, "Ñ");
+        }
+        it.tipo = deriveTipo(it.sku, it.descripcion);
+        return it;
+      });
       stockLoadedAt = Date.now();
       populateFilters();
 
