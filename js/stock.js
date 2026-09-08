@@ -144,10 +144,27 @@
     if (wrap) wrap.style.display = isAdminOrOps() ? "inline-flex" : "none";
   }
 
+  function getLatestFechaCargaEs() {
+    var maxDate = "";
+    stockItems.forEach(function (it) {
+      if (it.fecha_carga && it.fecha_carga > maxDate) {
+        maxDate = it.fecha_carga;
+      }
+    });
+    if (maxDate) return formatDateEs(maxDate);
+    var hoy = new Date();
+    var y = hoy.getFullYear();
+    var m = String(hoy.getMonth() + 1).padStart(2, "0");
+    var d = String(hoy.getDate()).padStart(2, "0");
+    return d + "/" + m + "/" + y;
+  }
+
   function populateFilters() {
     var puntoSelect = document.getElementById("stockFilterPunto");
     var marcaSelect = document.getElementById("stockFilterMarca");
     var tipoSelect = document.getElementById("stockFilterTipo");
+
+    var currentTipo = tipoSelect ? tipoSelect.value : "EQUIPO";
 
     var puntosSet = {}, marcasSet = {}, tiposSet = {};
     stockItems.forEach(function (it) {
@@ -170,7 +187,13 @@
         tipos.map(function (t) {
           return '<option value="' + esc(t) + '">' + esc(t) + '</option>';
         }).join("");
-      tipoSelect.value = "";
+      if (currentTipo && (currentTipo === "" || tipos.indexOf(currentTipo) !== -1)) {
+        tipoSelect.value = currentTipo;
+      } else if (tipos.indexOf("EQUIPO") !== -1) {
+        tipoSelect.value = "EQUIPO";
+      } else {
+        tipoSelect.value = "";
+      }
     } else {
       tipoSelect.innerHTML = '<option value="">TIPO · Todo</option>';
     }
@@ -313,8 +336,12 @@
     tbody.innerHTML = html;
 
     var hint = document.getElementById("stockUpdatedHint");
-    var now = new Date();
-    hint.textContent = "Base SQL actualizada · Consulta a las " + now.toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit" });
+    if (hint) {
+      var now = new Date();
+      var timeStr = now.toLocaleTimeString("es-PE", { hour: "2-digit", minute: "2-digit", hour12: true });
+      var fechaCargaStr = getLatestFechaCargaEs();
+      hint.textContent = "Base actualizada al " + fechaCargaStr + " - Consulta a las " + timeStr;
+    }
   }
 
   async function getAsesorPdv() {
