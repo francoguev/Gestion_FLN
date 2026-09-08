@@ -134,15 +134,23 @@
     return set;
   }
 
-  function isAdminOrOps() {
+  function isStockAdmin() {
     var p = window.currentUserProfile;
-    return !!(p && (p.es_administrador || norm(p.cargo) === "OPERACIONES" || norm(p.cargo) === "ADMINISTRADOR"));
+    if (!p) return false;
+    return p.es_administrador === true || p.es_administrador === "true";
   }
 
   function checkAdminUploadVisibility() {
     var wrap = document.getElementById("stockAdminUploadWrap");
-    if (wrap) wrap.style.display = isAdminOrOps() ? "inline-flex" : "none";
+    if (wrap) {
+      if (isStockAdmin()) {
+        wrap.style.setProperty("display", "inline-flex", "important");
+      } else {
+        wrap.style.setProperty("display", "none", "important");
+      }
+    }
   }
+  window.checkAdminUploadVisibility = checkAdminUploadVisibility;
 
   function getLatestCargaInfo() {
     var maxDateStr = "";
@@ -465,6 +473,10 @@
   };
 
   async function handleExcelUpload(file) {
+    if (!isStockAdmin()) {
+      alert("No tienes permisos de Administrador para realizar cargas de stock.");
+      return;
+    }
     if (!file || typeof XLSX === "undefined") {
       alert("La librería de lectura Excel (SheetJS) no está lista.");
       return;
@@ -593,6 +605,10 @@
   }
 
   async function confirmStockUpload() {
+    if (!isStockAdmin()) {
+      alert("No tienes permisos de Administrador para realizar la carga de stock.");
+      return;
+    }
     if (!pendingUploadPayload || !window.supabaseClient) return;
 
     var btnConfirm = document.getElementById("stockDiffConfirmBtn");

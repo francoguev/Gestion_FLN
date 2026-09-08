@@ -70,6 +70,10 @@ var SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm
         activo: (pData && pData.activo !== false)
       };
 
+      if (typeof window.checkAdminUploadVisibility === "function") {
+        window.checkAdminUploadVisibility();
+      }
+
       var isAdm = window.currentUserProfile.es_administrador || (window.currentUserProfile.cargo && window.currentUserProfile.cargo.toLowerCase() === "administrador");
       var vistasRaw = (pData && pData.vistas) ? pData.vistas : "";
       var allowed = vistasRaw.split(",").map(function(v){ return v.trim(); }).filter(Boolean);
