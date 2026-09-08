@@ -9,6 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.0/dist/umd/supabase.min.js" onerror="this.onerror=null;this.src='https://unpkg.com/@supabase/supabase-js@2.57.0/dist/umd/supabase.min.js';"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script async src="https://tally.so/widgets/embed.js"></script>
 <link rel="stylesheet" href="css/app.css?v=sticky-topbars-v6">
 </head>
@@ -830,6 +831,16 @@
         <div style="flex:1;">
           <h1>Stock</h1>
         </div>
+        <label id="stockAdminUploadWrap" class="gx-action-btn" style="background:linear-gradient(135deg,#0284c7,#0369a1); color:#fff; cursor:pointer; display:none; align-items:center; gap:6px; font-weight:600; padding:8px 14px; border-radius:8px; font-size:13px; box-shadow:0 2px 8px rgba(2,132,199,0.25);">
+          <span style="font-size:14px;">📤</span> Subir Excel Stock
+          <input type="file" id="stockFileInput" accept=".xlsx,.xls" style="display:none;">
+        </label>
+        <select id="stockFilterEstado" class="stock-filter-select" style="min-width:150px; font-weight:600;">
+          <option value="DISPONIBLE" selected>ESTADO · Disponibles</option>
+          <option value="VENDIDO">ESTADO · Vendidos</option>
+          <option value="FALTANTE">ESTADO · Faltantes</option>
+          <option value="">ESTADO · Todos</option>
+        </select>
         <select id="stockFilterPunto" class="stock-filter-select" style="min-width:180px;">
           <option value="">PUNTO DE VENTA · Todo</option>
         </select>
@@ -878,6 +889,9 @@
                   <th>Modelo</th>
                   <th>SKU</th>
                   <th>Serie</th>
+                  <th id="stockThIngreso">Fecha Ingreso</th>
+                  <th id="stockThVenta" style="display:none;">Fecha Venta</th>
+                  <th id="stockThEstado">Estado</th>
                 </tr>
               </thead>
               <tbody id="stockTbody"></tbody>
@@ -885,7 +899,40 @@
           </div>
         </section>
 
+      </div>
 
+      <!-- Modal de Previsualización Diferencial de Carga de Stock -->
+      <div class="gx-modal" id="stockDiffModal" hidden style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15,23,42,0.65); backdrop-filter:blur(4px); z-index:999; display:none; align-items:center; justify-content:center;">
+        <div style="background:#fff; border-radius:16px; width:90%; max-width:540px; padding:24px; box-shadow:0 20px 40px rgba(0,0,0,0.25); box-sizing:border-box;">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; border-bottom:1px solid #e2e8f0; padding-bottom:12px;">
+            <h3 style="margin:0; font-size:18px; font-weight:700; color:#0f172a;">Resumen Comparativo de Stock</h3>
+            <button type="button" id="stockDiffCloseBtn" style="background:none; border:none; font-size:20px; cursor:pointer; color:#64748b;">×</button>
+          </div>
+          <p style="font-size:13px; color:#475569; margin:0 0 16px 0;" id="stockDiffSub">Resumen diferencial respecto al inventario activo actual.</p>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:20px;">
+            <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:12px; text-align:center;">
+              <span style="display:block; font-size:11px; font-weight:700; color:#166534; text-transform:uppercase;">🟢 Nuevos / Continuos</span>
+              <strong style="font-size:22px; color:#15803d;" id="stockDiffNuevos">0</strong>
+            </div>
+            <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:10px; padding:12px; text-align:center;">
+              <span style="display:block; font-size:11px; font-weight:700; color:#991b1b; text-transform:uppercase;">🔴 Vendidos (Detectados)</span>
+              <strong style="font-size:22px; color:#b91c1c;" id="stockDiffVendidos">0</strong>
+              <span style="display:block; font-size:10px; color:#7f1d1d; margin-top:2px;" id="stockDiffFechaVenta">Fecha Venta: -</span>
+            </div>
+            <div style="background:#fffbe6; border:1px solid #ffe58f; border-radius:10px; padding:12px; text-align:center;">
+              <span style="display:block; font-size:11px; font-weight:700; color:#874d00; text-transform:uppercase;">⚠️ Faltantes en Lista</span>
+              <strong style="font-size:22px; color:#d48806;" id="stockDiffFaltantes">0</strong>
+            </div>
+            <div style="background:#f0f9ff; border:1px solid #bae6fd; border-radius:10px; padding:12px; text-align:center;">
+              <span style="display:block; font-size:11px; font-weight:700; color:#075985; text-transform:uppercase;">📦 Disponible Resultante</span>
+              <strong style="font-size:22px; color:#0284c7;" id="stockDiffTotal">0</strong>
+            </div>
+          </div>
+          <div style="display:flex; justify-content:flex-end; gap:10px;">
+            <button type="button" id="stockDiffCancelBtn" class="gx-row-btn" style="padding:8px 16px;">Cancelar</button>
+            <button type="button" id="stockDiffConfirmBtn" class="gx-action-btn" style="background:#0284c7; padding:8px 20px;">Confirmar y Cargar a Base SQL</button>
+          </div>
+        </div>
       </div>
 
     </section>
@@ -1220,7 +1267,7 @@
 <script src="js/auth.js?v=auth-login-diagnostic-v22"></script>
 <script src="js/novedades.js?v=timer-novedades-v21"></script>
 <script src="js/calculadora.js"></script>
-<script src="js/stock.js"></script>
+<script src="js/stock.js?v=sql-incremental-v2"></script>
 <script src="js/avance.js"></script>
 <script src="js/arribos.js"></script>
 <script src="js/horario.js"></script>
